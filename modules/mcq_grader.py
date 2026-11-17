@@ -1,6 +1,7 @@
 """Fixed-template OMR v1. Designed for upright sheets with four visible registration squares."""
 
 import io
+import os
 import cv2
 import numpy as np
 from PIL import Image
@@ -8,6 +9,8 @@ from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 from modules.schemas import CHOICES
 
+# OpenCV otherwise sizes its thread pool from host CPUs rather than container CPU quotas.
+cv2.setNumThreads(max(1, min(8, int(os.getenv("SMARTGRADE_CV_THREADS", "2")))))
 WIDTH, HEIGHT = 1240, 1754
 MARKERS = np.float32([[70, 70], [1170, 70], [1170, 1684], [70, 1684]])
 

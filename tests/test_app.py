@@ -1,10 +1,16 @@
 from pathlib import Path
+import pytest
 from streamlit.testing.v1 import AppTest
 import config
 from modules.review import Store
 from modules.schemas import ExamSpec
 from modules.mcq_grader import template
 from modules.preprocessing import png_bytes
+
+
+@pytest.fixture(autouse=True)
+def demo_mode(monkeypatch):
+    monkeypatch.setenv("SMARTGRADE_MODE", "demo")
 
 
 def test_app_create_exam_and_navigation(tmp_path, monkeypatch):

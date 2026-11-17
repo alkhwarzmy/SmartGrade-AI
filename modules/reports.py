@@ -35,10 +35,11 @@ def safe_cell(value):
 
 def frames(store, exam_id=None):
     summaries, details = [], []
+    specs = {exam.id: ExamSpec.model_validate(exam.spec) for exam in store.exams()}
     for row in store.submissions(exam_id):
         if row.status != "approved":
             continue
-        spec = ExamSpec.model_validate(store.exam(row.exam_id).spec)
+        spec = specs[row.exam_id]
         summaries.append(
             [
                 row.id,

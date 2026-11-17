@@ -59,10 +59,36 @@ def get_store(path):
     return Store(Path(path))
 
 
-store = get_store(str(DATA_DIR))
+MODE = os.getenv("SMARTGRADE_MODE", "commercial")
+if MODE not in {"commercial", "demo"}:
+    st.error("SMARTGRADE_MODE يجب أن يكون commercial أو demo")
+    st.stop()
+COMMERCIAL = MODE == "commercial"
+PRINCIPAL = None
+if COMMERCIAL:
+    from modules.auth import AuthService
+    from modules.workspace import Workspace
+    from modules.accounts_ui import sign_in, clear_session, account_page, organization_page, ROLES
+
+    @st.cache_resource
+    def get_identity(path):
+        return AuthService(Path(path))
+
+    identity = get_identity(str(DATA_DIR))
+    PRINCIPAL = sign_in(identity)
+    store = Workspace(identity, st.session_state["auth_token"])
+else:
+    store = get_store(str(DATA_DIR))
+    st.warning("نسخة تجريبية بدون حسابات؛ استخدم بيانات اصطناعية فقط.")
 STATUS = {"review": "بانتظار المراجعة", "approved": "معتمد", "failed": "فشلت المعالجة"}
 STATE = {"single": "اختيار واحد", "blank": "فارغ", "multiple": "تظليل متعدد", "unclear": "غير واضح"}
 PAGES = ["الاختبارات", "رفع الأوراق", "التصحيح والمراجعة", "النتائج والتصدير", "الإعدادات"]
+if COMMERCIAL:
+    if PRINCIPAL.role == "viewer":
+        PAGES = ["النتائج والتصدير"]
+    if PRINCIPAL.role == "admin":
+        PAGES.append("إدارة المؤسسة")
+    PAGES.append("حسابي")
 
 
 def notify_error(exc):
@@ -339,10 +365,19 @@ def essay_review(row, spec, reviewer):
     )
     if st.button(
         "اقتراح درجات بالذكاء الاصطناعي",
-        disabled=not (row.text.strip() and consent and all(provider_status().values())),
+        disabled=not (
+            row.text.strip()
+            and consent
+            and all(provider_status().values())
+            and (not COMMERCIAL or identity.organization(store.token)["external_ai_allowed"])
+        ),
     ):
         try:
             with st.spinner("جارٍ اقتراح الدرجات…"):
+                if COMMERCIAL:
+                    identity.actor(store.token, permission="write")
+                    if not identity.organization(store.token)["external_ai_allowed"]:
+                        raise ValueError("المؤسسة لم تسمح بإرسال الإجابات إلى مزود خارجي")
                 proposal = propose_grade(spec, row.text, consent=consent)
             store.save_proposal(row.id, proposal.model_dump(), row.revision)
             st.rerun()
@@ -421,7 +456,9 @@ def review_page():
     )
     row = mapping[sid]
     spec = ExamSpec.model_validate(exam.spec)
-    reviewer = st.text_input("اسم المراجع", value="المعلم", max_chars=100)
+    reviewer = st.text_input(
+        "اسم المراجع", value=PRINCIPAL.name if COMMERCIAL else "المعلم", max_chars=100, disabled=COMMERCIAL
+    )
     if row.status == "approved":
         st.success(f"نتيجة معتمدة: {row.total:g} / {spec.maximum:g}")
     left, right = st.columns([1, 1.3], gap="large")
@@ -430,7 +467,12 @@ def review_page():
         image = decode_image(store.image_path(row.aligned_name or row.image_name).read_bytes())
         if spec.kind == "mcq":
             image = annotate(image, row.original["readings"])
-        st.image(image, width="stretch")
+        if COMMERCIAL:
+            from modules.private_artifacts import image_html
+
+            st.markdown(image_html(image), unsafe_allow_html=True)
+        else:
+            st.image(image, width="stretch")
         if row.original.get("ocr_text"):
             with st.expander("نص OCR الأصلي"):
                 st.text(row.original["ocr_text"])
@@ -446,6 +488,8 @@ def review_page():
                 st.caption(event.reason)
             with st.expander(f"تفاصيل التغيير {event.id[:6]}"):
                 st.json({"قبل": event.before, "بعد": event.after}, expanded=False)
+    if COMMERCIAL and not PRINCIPAL.can("delete"):
+        return
     with st.expander("حذف بيانات هذه الورقة"):
         confirmed = st.checkbox("أريد حذف الصورة والنص والدرجات وسجل المراجعة نهائيًا")
         if st.button("حذف التسليم", disabled=not confirmed):
@@ -461,23 +505,52 @@ def results_page():
         return
     rows = store.submissions(exam.id)
     summary, details = frames(store, exam.id)
-    a, b, c = st.columns(3)
-    a.metric("نتائج معتمدة", len(summary))
-    b.metric("تحتاج مراجعة", sum(r.status != "approved" for r in rows))
-    c.metric("متوسط النسبة", f"{summary['النسبة %'].mean():.1f}%" if not summary.empty else "—")
+    metrics = st.columns(3)
+    metrics[0].metric("نتائج معتمدة", len(summary))
+    if COMMERCIAL and PRINCIPAL.role == "viewer":
+        metrics[1].metric("حالة العرض", "المعتمد فقط")
+    else:
+        metrics[1].metric("تحتاج مراجعة", sum(r.status != "approved" for r in rows))
+    metrics[2].metric("متوسط النسبة", f"{summary['النسبة %'].mean():.1f}%" if not summary.empty else "—")
     if summary.empty:
         st.info("لا توجد نتائج معتمدة بعد. أكمل المراجعة واعتمد أول ورقة.")
         return
     st.dataframe(summary, hide_index=True, width="stretch")
-    a, b = st.columns(2)
-    a.download_button(
-        "تصدير Excel مع تفاصيل التصحيح",
-        excel_bytes(summary, details),
-        "smartgrade-results.xlsx",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        width="stretch",
-    )
-    b.download_button("تصدير CSV", csv_bytes(summary), "smartgrade-results.csv", "text/csv", width="stretch")
+    a, b, c = st.columns(3)
+    from modules.pdf_reports import pdf_bytes
+
+    exports = [
+        (
+            a,
+            "تصدير Excel مع تفاصيل التصحيح",
+            excel_bytes(summary, details),
+            "smartgrade-results.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ),
+        (b, "تصدير CSV", csv_bytes(summary), "smartgrade-results.csv", "text/csv"),
+    ]
+    if len(summary) <= 2000:
+        exports.append(
+            (
+                c,
+                "تصدير PDF بالعربية",
+                pdf_bytes(summary, PRINCIPAL.organization_name if COMMERCIAL else "SmartGrade AI"),
+                "smartgrade-results.pdf",
+                "application/pdf",
+            )
+        )
+    else:
+        c.caption("PDF متاح حتى 2000 نتيجة في التقرير الواحد. استخدم Excel أو CSV لهذا الاختبار.")
+    for column, label, content, filename, mime in exports:
+        if COMMERCIAL:
+            from modules.private_artifacts import download_html
+
+            with column:
+                st.markdown(download_html(label, content, filename, mime), unsafe_allow_html=True)
+        else:
+            column.download_button(label, content, filename, mime, width="stretch")
+    if COMMERCIAL:
+        identity.audit(PRINCIPAL, "report.generated", exam.id)
     with st.expander("تفاصيل كل سؤال / معيار"):
         st.dataframe(details, hide_index=True, width="stretch")
     st.markdown("#### توزيع النتائج المعتمدة")
@@ -517,13 +590,15 @@ def settings_page():
         "يمكن حذف التسليم كاملًا مع سجل مراجعته. النسخ الاحتياطية مسؤولية المشغّل ويجب حذفها بصورة مستقلة."
     )
     st.write(
-        "التطبيق مخصص لمعلم موثوق على جهاز محلي. استخدامه لمؤسسة أو على الإنترنت يتطلب مصادقة وصلاحيات وعزل البيانات."
+        "الوضع التجاري يعزل بيانات المؤسسات ويفرض الصلاحيات. استخدم HTTPS وإعدادات التشغيل الموثقة قبل فتح الخدمة للمستخدمين."
+        if COMMERCIAL
+        else "هذه نسخة تجربة دون حسابات. استخدم الوضع التجاري عند تشغيل الخدمة لمؤسسة."
     )
     st.markdown("#### حدود النسخة")
     st.write(
         "قالب OMR واحد، صورة PNG/JPEG واحدة في كل عملية، سؤال مقالي واحد لكل اختبار مقالي. "
         "لم تُعتمد جودة التعرف على خط اليد أو اتفاق التصحيح الآلي على بيانات طلاب حقيقية. "
-        "التصدير المتاح Excel وCSV؛ تصدير النتائج إلى PDF مؤجل."
+        "التصدير متاح بصيغ Excel وCSV وPDF عربي. راجع تقرير حدود الجودة قبل استخدام الدرجات المقترحة."
     )
 
 
@@ -547,7 +622,15 @@ with st.sidebar:
     st.divider()
     st.caption("01 / رفع الورقة\n\n02 / مراجعة التصحيح\n\n03 / اعتماد النتيجة")
     st.divider()
-    st.caption("نسخة أولية · تخزين محلي\n\nقرار الاعتماد دائمًا للمعلم")
+    if COMMERCIAL:
+        st.caption(PRINCIPAL.organization_name + " · " + ROLES[PRINCIPAL.role])
+        st.caption(PRINCIPAL.name)
+        if st.button("تسجيل الخروج", width="stretch"):
+            identity.logout(st.session_state["auth_token"])
+            clear_session("تم تسجيل الخروج بأمان.")
+            st.rerun()
+    else:
+        st.caption("نسخة تجريبية · الاعتماد للمعلم")
 
 with st.container(key="mobile_nav"):
     st.selectbox(
@@ -560,13 +643,17 @@ with st.container(key="mobile_nav"):
     )
 
 try:
-    {
-        PAGES[0]: exams_page,
-        PAGES[1]: upload_page,
-        PAGES[2]: review_page,
-        PAGES[3]: results_page,
-        PAGES[4]: settings_page,
-    }[page]()
+    routes = {
+        "الاختبارات": exams_page,
+        "رفع الأوراق": upload_page,
+        "التصحيح والمراجعة": review_page,
+        "النتائج والتصدير": results_page,
+        "الإعدادات": settings_page,
+    }
+    if COMMERCIAL:
+        routes["حسابي"] = lambda: account_page(identity, PRINCIPAL)
+        routes["إدارة المؤسسة"] = lambda: organization_page(identity, store)
+    routes[page]()
     if "_flash" in st.session_state:
         st.success(st.session_state.pop("_flash"))
 except (ValueError, OSError, SQLAlchemyError) as exc:

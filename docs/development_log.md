@@ -82,3 +82,36 @@ git ls-remote origin refs/heads/main
 ```
 
 تُقارن البصمة البعيدة مع `git rev-parse HEAD` بعد الرفع. إذا تغير main أثناء العمل، لا يُستخدم force؛ تُدمج التغييرات وتُعاد الفحوص اللازمة. نتيجة الرفع الفعلية وبصمة commit تُذكر في رسالة التسليم، ويمكن التحقق منها من سجل GitHub. هذه الأوامر لا تنشر تطبيقًا عامًا أو ترفع بيانات الطلاب أو تُنشئ PR/رسائل خارجية.
+
+
+## 7. مرشح المؤسسات التجاري 1.0.0-rc1
+
+أُنشئ فرع تطوير `commercial-v1` من الإصدار السابق `abac231` للحفاظ على نسخة MVP. أُضيفت:
+
+- هوية مؤسسات ومستخدمين وجلسات وصلاحيات مدير/معلم/مشاهد، وتغيير إلزامي لكلمة المرور المؤقتة وإلغاء الجلسات وتقييد الدخول.
+- `Workspace` كنطاق خدمات موحد للواجهة وAPI، مع قواعد/صور منفصلة للمؤسسات، وهوية مراجع من الحساب، وحصص تحت قفل Linux عبر العمليات.
+- API موثق ومحمي، وحد جسم طلب فعلي وأخطاء لا تعيد كلمات المرور وno-store، ورفض المراجعات القديمة.
+- سياسة إرسال AI للمؤسسة تُفحص قبل الاتصال، إضافة إلى موافقات المشغل والمراجع.
+- PDF عربي بخط مضمن مرخص، وصور/تنزيلات تجارية inline بدل MediaFileManager العام.
+- لوحة فريق وسعة وسجل مؤسسة، وأدوات إعداد/ترخيص/نسخ/استيراد/إلغاء جلسات واحتفاظ dry-run.
+- صورة Docker غير جذريّة مع جذر قراءة، وCompose وCaddy لإعداد HTTPS. لم يُنشر نطاق عام أو تُحصّل رسوم.
+
+أُعيد توليد متطلبات الاختبار وملف runtime منفصل دون أدوات الاختبار للصورة. فشل بناء Docker أولًا بسبب CA لوكيل الشبكة؛ عولج بتركيب CA موثوقة كـBuildKit secret، دون تعطيل TLS أو حفظها في الصورة. أثناء فحص الموارد خُفِّض OpenCV إلى عاملين افتراضيًا بدل الاعتماد على عدد CPUs للمضيف. كُشفت كذلك صلاحيات ملفات COPY المتشددة التي منعت UID10001 من قراءة المصدر، وعُولجت بقراءة644 ومجلدات755 مع ملكيةroot وجذر تشغيل للقراءة. تجري اختبارات الحاويات ببيانات ومجلدات اصطناعية تُنظف بعدها.
+
+أوامر التحقق القابلة للإعادة:
+
+```bash
+uv pip compile requirements-dev.txt --python-version 3.12 --output-file requirements.lock
+uv pip compile requirements.txt --python-version 3.12 --output-file requirements-runtime.lock
+uv pip sync requirements.lock --python work/verify-env/bin/python
+work/verify-env/bin/python -m pytest -q
+work/verify-env/bin/python -m ruff check .
+.venv/bin/python -m scripts.commercial_browser_smoke
+SMARTGRADE_DOMAIN=smartgrade.example.test docker compose config --quiet
+docker build --secret id=proxy_ca,src=/path/to/trusted-ca-bundle.pem -t smartgrade:1.0.0-rc1 .
+python -m scripts.docker_smoke
+python -m scripts.build_colab_notebook
+python -m scripts.validate_colab_notebook --execute-smoke
+```
+
+نتائج النسخة التجارية وحدود ما اختُبر في `commercial_release.md` وأدلتها في docs/evidence. شارة Colab تبقى للتجربة بوضع demo صريح، مع تضمين المصدر الجديد واختباراته. بعد اجتياز التحقق تُراجع ملفات الرفع لاستبعاد البيانات والمفاتيح والسجلات، ويُدفع main دونforce مع وسم مرشح الإصدار والتحقق من البصمة البعيدة.

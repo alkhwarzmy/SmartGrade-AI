@@ -1,0 +1,63 @@
+name: smartgrade
+x-application: &application
+  image: smartgrade:1.0.0-rc1
+  build: .
+  restart: unless-stopped
+  read_only: true
+  tmpfs:
+    - /tmp:size=268435456,mode=1777
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  pids_limit: 256
+  environment: &environment
+    SMARTGRADE_MODE: commercial
+    SMARTGRADE_DATA_DIR: /var/lib/smartgrade
+    OCR_PROVIDER: tesseract
+    SMARTGRADE_API_DOCS: "false"
+    ALLOW_EXTERNAL_AI: ${ALLOW_EXTERNAL_AI:-false}
+    ALLOW_PAID_API: ${ALLOW_PAID_API:-false}
+    LLM_BASE_URL: ${LLM_BASE_URL:-https://api.openai.com/v1}
+    LLM_MODEL: ${LLM_MODEL:-}
+    LLM_API_KEY: ${LLM_API_KEY:-}
+  volumes:
+    - smartgrade_data:/var/lib/smartgrade
+  deploy:
+    resources:
+      limits:
+        cpus: "2"
+        memory: 2G
+        pids: 256
+services:
+  web:
+    <<: *application
+    expose: ["8501"]
+  api:
+    <<: *application
+    command: ["python", "-m", "uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--no-access-log"]
+    expose: ["8000"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/ready',timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+  proxy:
+    image: caddy:2.10
+    restart: unless-stopped
+    environment:
+      SMARTGRADE_DOMAIN: ${SMARTGRADE_DOMAIN:?Set SMARTGRADE_DOMAIN to your domain before starting}
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./deployment/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    security_opt: [no-new-privileges:true]
+volumes:
+  smartgrade_data:
+  caddy_data:
+  caddy_config:

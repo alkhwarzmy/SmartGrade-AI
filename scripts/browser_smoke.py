@@ -32,6 +32,7 @@ def running_server():
         env = {
             **os.environ,
             "SMARTGRADE_DATA_DIR": temporary,
+            "SMARTGRADE_MODE": "demo",
             "OCR_PROVIDER": "tesseract",
             "ALLOW_EXTERNAL_AI": "false",
             "ALLOW_PAID_API": "false",

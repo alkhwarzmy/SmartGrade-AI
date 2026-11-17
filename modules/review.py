@@ -12,6 +12,10 @@ from modules.preprocessing import decode_image, png_bytes
 from modules.mcq_grader import read_answers, score_answers
 
 
+class RevisionConflict(ValueError):
+    pass
+
+
 class Store:
     def __init__(self, root: Path):
         self.root = Path(root)
@@ -61,7 +65,16 @@ class Store:
         self.image_path(name).write_bytes(png_bytes(image))
         return name
 
-    def upload(self, exam_id, student_code, raw, blank_threshold=0.12, marked_threshold=0.55):
+    def upload(
+        self,
+        exam_id,
+        student_code,
+        raw,
+        blank_threshold=0.12,
+        marked_threshold=0.55,
+        *,
+        max_storage_bytes=None,
+    ):
         if not student_code.strip() or len(student_code) > 100:
             raise ValueError("أدخل رمز طالب من 1 إلى 100 حرف")
         spec = ExamSpec.model_validate(self.exam(exam_id).spec)
@@ -75,6 +88,13 @@ class Store:
             aligned, readings = read_answers(image, blank_threshold, marked_threshold)
             original = {"readings": readings, "thresholds": [blank_threshold, marked_threshold]}
             current = {"answers": [r["answer"] for r in readings]}
+        if max_storage_bytes is not None:
+            current_bytes = sum(
+                p.stat().st_size for p in self.root.rglob("*") if p.is_file() and not p.is_symlink()
+            )
+            needed = len(png_bytes(image)) + (len(png_bytes(aligned)) if aligned is not None else 0) + 65536
+            if current_bytes + needed > max_storage_bytes:
+                raise ValueError("مساحة المؤسسة لا تكفي لحفظ هذه الورقة")
         try:
             image_name = self._save_image(image)
             if aligned is not None:
@@ -113,7 +133,7 @@ class Store:
         if row is None:
             raise ValueError("التسليم غير موجود")
         if expected_revision is not None and expected_revision != row.revision:
-            raise ValueError("تم تعديل التسليم في جلسة أخرى؛ أعد تحميل الصفحة")
+            raise RevisionConflict("تم تعديل التسليم في جلسة أخرى؛ أعد تحميل الصفحة")
         return row
 
     @staticmethod

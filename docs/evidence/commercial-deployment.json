@@ -1,0 +1,8 @@
+{
+  "compose_configuration_validated": true,
+  "caddy_adapt_validated": true,
+  "public_deployment_performed": false,
+  "tls_certificate_issuance_tested": false,
+  "build_proxy_ca_mounted_as_secret": true,
+  "build_proxy_ca_present_in_runtime": false
+}

@@ -66,6 +66,7 @@ def launch_app(project_dir, python, data_dir, *, port=8501, browser_address="", 
     env = {
         **os.environ,
         "SMARTGRADE_DATA_DIR": str(data_dir),
+        "SMARTGRADE_MODE": "demo",
         "ALLOW_EXTERNAL_AI": "false",
         "ALLOW_PAID_API": "false",
         "OCR_PROVIDER": "tesseract" if shutil.which("tesseract") else "manual",

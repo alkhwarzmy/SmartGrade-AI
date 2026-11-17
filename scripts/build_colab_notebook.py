@@ -12,6 +12,11 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 TOP_FILES = [
     "app.py",
+    "api.py",
+    "Dockerfile",
+    ".dockerignore",
+    "compose.yaml",
+    "requirements-runtime.lock",
     "config.py",
     "README.md",
     ".env.example",
@@ -23,7 +28,7 @@ TOP_FILES = [
     "requirements.lock",
     ".streamlit/config.toml",
 ]
-SOURCE_DIRS = ["modules", "database", "scripts", "tests", "docs", "assets"]
+SOURCE_DIRS = ["modules", "database", "scripts", "tests", "docs", "assets", "deployment"]
 
 
 def source_files(root=ROOT):
@@ -70,7 +75,7 @@ def build_notebook(root=ROOT):
     cells = [
         markdown("""
         # SmartGrade AI — التشغيل على Google Colab
-        نسخة ذاتية الاحتواء: كود المشروع ونموذج اللغة العربية مضمنان في الدفتر.
+        نسخة تجربة ذاتية الاحتواء: كود المشروع ونموذج العربية مضمنان. إصدار المؤسسات التجاري يستخدم الحسابات على خادم؛ هذا الدفتر يعمل صراحةً بوضع demo دون حسابات.
         من **Runtime → Change runtime type** اختر **Python 3 / CPU**، ثم **Run all**.
         لا تحتاج GPU أو GitHub token أو API key لتصحيح الاختيارات والمراجعة اليدوية.
 
