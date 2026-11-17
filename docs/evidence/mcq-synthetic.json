@@ -1,0 +1,28 @@
+{
+  "source": "SYNTHETIC ONLY; not a real-exam accuracy estimate",
+  "sheets": 6,
+  "questions": 120,
+  "question_level_accuracy": 1.0,
+  "blank_detection_accuracy": 1.0,
+  "multiple_mark_detection_accuracy": 1.0,
+  "review_rate": 0.25,
+  "processing_seconds": 0.3163157679999813,
+  "state_correct_and_total": {
+    "single": [
+      90,
+      90
+    ],
+    "blank": [
+      18,
+      18
+    ],
+    "multiple": [
+      6,
+      6
+    ],
+    "unclear": [
+      6,
+      6
+    ]
+  }
+}

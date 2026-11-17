@@ -1,2 +1,112 @@
-# SmartGrade-AI
-AI-powered grading system for handweitten Arabic exams and MCQ answer sheets.
+# SmartGrade AI · مساحة المعلم للتصحيح والمراجعة
+
+نسخة أولية محلية بواجهة عربية: تصحيح ورقة OMR ثابتة من 20 سؤالًا، مراجعة إجابة مقالية وفق معايير، اعتماد المعلم، وتصدير Excel وCSV. لا توجد بيانات طلاب أو نتائج مولدة مخفية عند بدء التطبيق.
+
+
+## التشغيل على Google Colab
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/alkhwarzmy/SmartGrade-AI/blob/main/notebooks/SmartGrade_Colab.ipynb)
+
+افتح الدفتر ثم اختر **Python 3 / CPU → Run all**. كود المشروع مضمن؛ لا تحتاج clone أو GitHub token. يُثبت Python مستقلًا ويعرض Streamlit داخل Colab دون نفق عام. النسخ إلى Drive والاستعادة وLLM اختيارية ومعطلة افتراضيًا. قرص جلسة Colab مؤقت؛ استخدم خلية النسخ الاحتياطي قبل انتهاء الجلسة. راجع [دليل Colab](docs/colab_guide.md) و[سجل جميع خطوات التنفيذ والرفع](docs/development_log.md).
+
+اختُبر المصدر المستخرج من الدفتر وتشغيله محليًا؛ تشغيل iframe وDrive وSecrets داخل حساب Colab يحتاج تشغيل الدفتر من حسابك.
+
+## التشغيل السريع
+
+المتطلبات: Python 3.11+ (البيئة المختبرة Python 3.12)، وCPU. من مجلد المشروع:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m streamlit run app.py
+```
+
+على Windows استخدم `.venv\Scripts\activate`. افتح `http://localhost:8501`.
+للبيئة المثبتة بإصدارات محددة على Python 3.12 استخدم `python -m pip install -r requirements.lock` بدل requirements.txt؛ يتضمن ملف التثبيت المقفل أدوات الاختبار أيضًا.
+
+لا يتطلب مسار MCQ والمراجعة اليدوية أي مفتاح API أو اتصال بالإنترنت. تستخدم الواجهة الخطوط المحلية دون تحميل خطوط من خدمة خارجية.
+
+## تجربة خلال دقائق
+
+1. أنشئ اختبار اختيارات؛ المفتاح الافتراضي `A B C D` مكرر خمس مرات.
+2. من «قالب الإجابة» حمّل القالب PDF للطباعة أو العينة **الاصطناعية** المظللة.
+3. افتح «رفع الأوراق»، اختر الاختبار، أدخل رمز طالب، وارفع الصورة.
+4. افتح «التصحيح والمراجعة»، افحص الصورة والإجابات، وعدّلها عند الحاجة، ثم أكد المراجعة واعتمد النتيجة.
+5. افتح «النتائج والتصدير» لتنزيل Excel مع تفاصيل الأسئلة أو CSV.
+
+العينة الاصطناعية الكاملة تحصل على 20/20 بالمفتاح الافتراضي. هذا تحقق وظيفي، وليس ادعاء دقة على صور امتحانات حقيقية.
+
+## الإجابات المقالية
+
+أنشئ اختبارًا مقاليًا من سؤال واحد ومعايير مجموع حدودها يساوي الدرجة الكاملة. ارفع صورة مقصوصة للإجابة، ثم أدخل النص أو شغّل OCR المحلي، وصحح النص واحفظه. أدخل درجة كل معيار وتبريرها، ثم اعتمدها بعد المراجعة. أي تعديل لاحق في النص يلغي الاعتماد والمقترح السابقين.
+
+### OCR المحلي الاختياري
+
+ملف اللغة `assets/tessdata/ara.traineddata` مضمن من مشروع Tesseract الرسمي مع ترخيصه. يلزم تثبيت برنامج Tesseract نفسه على الجهاز؛ على Debian/Ubuntu مثلًا:
+
+```bash
+sudo apt-get install tesseract-ocr
+```
+
+يستخدم التطبيق ملف اللغة المضمن تلقائيًا. `OCR_PROVIDER=tesseract` هو الافتراضي، ويمكن ضبطه على `manual` في `.env` لتعطيله. إذا غاب البرنامج يبقى إدخال النص متاحًا. Tesseract خط أساس للنص العربي المطبوع؛ **لم تُعتمد جودته للتعرف على خط اليد**، لذلك يجب تدقيق كل نص.
+
+### مزود التصحيح الآلي الاختياري
+
+انسخ `.env.example` إلى `.env`، واضبط `LLM_BASE_URL` و`LLM_MODEL` و`LLM_API_KEY` لمزود يدعم واجهة JSON chat-completions. لا تغيّر `ALLOW_EXTERNAL_AI` و`ALLOW_PAID_API` إلى `true` إلا بعد الموافقة على إرسال البيانات والتكلفة. إعادة تشغيل التطبيق مطلوبة بعد تعديل البيئة.
+
+لا يجري التطبيق أي اتصال عند فتحه. يلزم أيضًا تأكيد الإرسال والتكلفة من صفحة المراجعة لكل طلب. يُرسل **النص** والسؤال والإجابة النموذجية والمعايير، دون الصورة أو رمز الطالب. تُتحقق المخرجات برمجيًا، ولا تُعتمد دون المعلم. لا تعني صحة JSON صحة التقييم التربوي.
+
+اختبارات المزود تستخدم HTTP وهميًا للتحقق من العقد والفشل؛ لم تُرسل طلبات مدفوعة أو بيانات طلاب أثناء التطوير.
+
+## الاختبارات والتقييم
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m pytest -q
+python -m ruff check .
+python -m scripts.generate_omr --output outputs/demo
+python -m scripts.evaluate mcq-synthetic --output outputs/evaluation/mcq-synthetic.json
+```
+
+للتقييم على نصوص أو درجات مرجعية:
+
+```bash
+python -m scripts.evaluate ocr --input data/ocr-evaluation.json
+python -m scripts.evaluate essay --input data/essay-evaluation.json
+python -m scripts.prepare_data data/local/samples.json
+```
+
+ملف OCR: `{"references":["نص مرجعي"],"predictions":["نص مستخرج"]}`.
+ملف المقالات: `{"references":[2,4],"predictions":[3,4],"maximum":4}`.
+راجع `docs/local_samples.example.json` لبنية استيراد العينات المحلية. لا تُرفع العينات إلى أي خدمة.
+
+## الحفظ والخصوصية
+
+- البيانات داخل `storage/`، أو مجلد `SMARTGRADE_DATA_DIR`. الصور بأسماء عشوائية، وقاعدة البيانات SQLite.
+- لا تضمّن مجلد البيانات أو `.env` في Git؛ القواعد مضافة إلى `.gitignore`.
+- الحفظ مستمر حتى الحذف من صفحة المراجعة. الحذف يشمل الصورة والنص والدرجات وسجلها؛ لا يستهدف النسخ الاحتياطية أو الاستعادة الجنائية للقرص.
+- احتفظ بنسخ احتياطية مشفرة وفق سياسة المؤسسة، وأوقف التطبيق قبل نسخ مجلد التخزين كاملًا.
+- النسخة لمعلم موثوق على جهاز محلي؛ لا توفر تسجيل دخول أو عزل مؤسسات، ولا تصلح للنشر العام دون تطويرهما.
+
+## النطاق والوثائق
+
+القالب `OMR v1`: صورة PNG/JPEG واحدة، 20 سؤالًا × أربعة اختيارات، باتجاه رأسي وعلامات ظاهرة. الحد 10 MB و16 مليون بكسل. لا يدعم رفع PDF أو القوالب الحرة أو التدريب. تصدير **نتائج** PDF مؤجل؛ PDF المتاح هو قالب الطباعة.
+
+- `docs/architecture.md`: فصل الوحدات وتدفق البيانات.
+- `docs/user_guide.md`: دليل المعلم وسياسة التصحيح.
+- `docs/dataset_report.md`: مصادر البيانات وقيود الوصول والترخيص.
+- `docs/evaluation_report.md`: نتائج التحقق وحدود الاستدلال.
+- `docs/limitations.md`: القيود وخطوات التوسع.
+- `docs/implementation_plan.md`: تتبع تنفيذ خطة اليوم.
+
+### اختبار رحلة المستخدم في المتصفح (اختياري)
+
+على Linux مع Chromium وخط `NotoNaskhArabic` وTesseract:
+
+```bash
+python -m pip install -r requirements-browser.txt
+python -m scripts.browser_smoke
+```
+
+يشغّل الاختبار خادمًا مع قاعدة بيانات مؤقتة معزولة، وينشئ صورًا اصطناعية، ويتحقق من رفع MCQ واعتماده وتنزيل Excel، ثم OCR عربي مطبوع وتصحيح مقالي يدوي وإلغاء الاعتماد عند تغيير النص. يحفظ التقرير واللقطات داخل `outputs/browser/` ويوقف خادم الاختبار. مسار Chromium الافتراضي `/usr/bin/chromium` في برنامج الاختبار؛ عدّله إذا كان مختلفًا في جهازك.

@@ -1,0 +1,12 @@
+{
+  "dataset": "SYNTHETIC browser workflow; no real student data",
+  "checks": [
+    "MCQ: create -> upload -> read -> review -> approve 20/20",
+    "Excel download: approved score 20; 20 question detail rows; Arabic preserved",
+    "Local Arabic OCR: real Tesseract execution on SYNTHETIC PRINTED Arabic",
+    "Essay: OCR -> corrected text -> manual rubric grades -> teacher approval 7/10",
+    "Editing approved essay text invalidates the previous approval",
+    "Mobile 390px: top navigation visible, sidebar hidden, no horizontal overflow"
+  ],
+  "passed": true
+}

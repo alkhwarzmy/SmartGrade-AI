@@ -1,0 +1,20 @@
+[
+  {
+    "sample_id": "authorized-local-001",
+    "image": "answer.png",
+    "reference_text": "نص مرجعي يدققه المعلم قبل التقييم",
+    "exam": {
+      "title": "سؤال محلي",
+      "kind": "essay",
+      "question": "لماذا الماء مهم؟",
+      "model_answer": "الماء ضروري للحياة",
+      "maximum": 4,
+      "criteria": [
+        {"id": "c1", "description": "شرح أهمية الماء للحياة", "maximum": 4}
+      ]
+    },
+    "human_scores": [3, 4],
+    "split": "test",
+    "synthetic": false
+  }
+]

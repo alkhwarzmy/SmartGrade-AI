@@ -218,3 +218,20 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# SmartGrade: student data and local artifacts
+storage/
+data/
+outputs/
+work/
+*.sqlite*
+*.db
+.env
+.env.*
+!.env.example
+*.log
+
+# Colab runtime state and private backups
+.colab/
+.ipynb_checkpoints/
+smartgrade-backup-*.zip
