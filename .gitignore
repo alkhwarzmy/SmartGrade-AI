@@ -235,3 +235,6 @@ work/
 .colab/
 .ipynb_checkpoints/
 smartgrade-backup-*.zip
+*.sgb
+*.key
+security-results/

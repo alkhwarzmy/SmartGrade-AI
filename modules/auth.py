@@ -138,7 +138,7 @@ class AuthService:
     def _migrate(self):
         with self.connection() as db:
             version = db.execute("PRAGMA user_version").fetchone()[0]
-            if version > 1:
+            if version > 2:
                 raise RuntimeError("قاعدة الهوية أحدث من إصدار التطبيق؛ لا يمكن خفضها")
             db.execute("PRAGMA journal_mode=WAL")
             if version == 0:
@@ -175,12 +175,15 @@ class AuthService:
                 PRAGMA user_version=1;
                 COMMIT;
                 """)
+        with self.connection(write=True) as db:
+            db.execute("CREATE TABLE IF NOT EXISTS audit_receipts(event_id TEXT PRIMARY KEY)")
+            db.execute("PRAGMA user_version=2")
         self.path.chmod(0o600)
 
     def ready(self):
         with self.connection() as db:
             return (
-                db.execute("PRAGMA user_version").fetchone()[0] == 1
+                db.execute("PRAGMA user_version").fetchone()[0] == 2
                 and db.execute("SELECT 1").fetchone()[0] == 1
             )
 
@@ -203,8 +206,12 @@ class AuthService:
             (*content[:-1], previous, digest),
         )
 
-    def audit(self, actor, action, object_id=""):
+    def audit(self, actor, action, object_id="", *, event_id=None):
         with self.connection(write=True) as db:
+            if event_id:
+                inserted = db.execute("INSERT OR IGNORE INTO audit_receipts VALUES(?)", (event_id,))
+                if not inserted.rowcount:
+                    return
             self._audit(db, actor.organization_id, actor.user_id, action, object_id)
 
     def provision_organization(
@@ -238,7 +245,7 @@ class AuthService:
     def login(self, slug, email, password, *, client_id="local"):
         slug, email = str(slug).strip().lower()[:48], str(email).strip().lower()[:254]
         identifier = hashlib.sha256((slug + ":" + email).encode()).hexdigest()
-        client = hashlib.sha256(str(client_id).encode()).hexdigest()
+        client = hashlib.sha256((slug + ":" + str(client_id)).encode()).hexdigest()
         buckets = [("user:" + identifier, 5), ("client:" + client, 30)]
         timestamp = int(self.clock())
         # Password verification is deliberately outside the write lock; recheck limits and account before commit.
@@ -327,7 +334,7 @@ class AuthService:
             raise AuthError("يلزم تسجيل الدخول")
         digest = hashlib.sha256(token.encode()).hexdigest()
         timestamp = int(self.clock())
-        with self.connection(write=True) as db:
+        with self.connection() as db:
             row = db.execute(
                 "SELECT s.*,u.organization_id,u.name,u.email,u.role,u.active,u.must_change_password,"
                 "o.name AS org_name,o.active AS org_active,o.renewal_until FROM sessions s "
@@ -343,7 +350,13 @@ class AuthService:
                 or row["last_seen"] + self.idle_seconds <= timestamp
             ):
                 raise AuthError("انتهت الجلسة أو أُلغيت؛ سجّل الدخول مجددًا")
-            db.execute("UPDATE sessions SET last_seen=? WHERE token_hash=?", (timestamp, digest))
+        # Verify membership on every request, but avoid serializing all readers behind an idle-clock write.
+        if timestamp - row["last_seen"] >= min(30, self.idle_seconds // 2):
+            with self.connection(write=True) as db:
+                db.execute(
+                    "UPDATE sessions SET last_seen=? WHERE token_hash=? AND last_seen<?",
+                    (timestamp, digest, timestamp),
+                )
         actor = Actor(
             row["user_id"],
             row["organization_id"],
@@ -552,3 +565,23 @@ class AuthService:
             )
             self._audit(db, row[0], "operator", "organization.sessions_revoked")
             return result.rowcount
+
+    def recover_admin(self, slug, email, temporary_password):
+        """Operator-only, for an EXISTING administrator; does not alter a suspended organization/license."""
+        slug, email = _slug(slug), _email(email)
+        encoded = hash_password(temporary_password)
+        with self.connection(write=True) as db:
+            row = db.execute(
+                "SELECT u.id,u.organization_id FROM users u JOIN organizations o ON o.id=u.organization_id WHERE o.slug=? AND u.email=? AND u.role='admin'",
+                (slug, email),
+            ).fetchone()
+            if not row:
+                raise ValueError("حساب مدير مطابق غير موجود")
+            db.execute(
+                "UPDATE users SET password_hash=?,active=1,must_change_password=1 WHERE id=?",
+                (encoded, row["id"]),
+            )
+            db.execute("DELETE FROM sessions WHERE user_id=?", (row["id"],))
+            identifier = hashlib.sha256((slug + ":" + email).encode()).hexdigest()
+            db.execute("DELETE FROM login_limits WHERE bucket=?", ("user:" + identifier,))
+            self._audit(db, row["organization_id"], "operator", "admin.recovered_sessions_revoked", row["id"])

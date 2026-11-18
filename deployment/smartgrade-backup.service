@@ -1,0 +1,11 @@
+[Unit]
+Description=SmartGrade encrypted offline backup
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/smartgrade
+EnvironmentFile=/etc/smartgrade-backup.env
+ExecStart=/usr/bin/bash /opt/smartgrade/deployment/backup.sh
+UMask=0077

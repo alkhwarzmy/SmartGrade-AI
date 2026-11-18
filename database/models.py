@@ -68,3 +68,49 @@ class ReviewHistory(Base):
     after: Mapped[dict] = mapped_column(JSON)
     reason: Mapped[str] = mapped_column(String(1000))
     created_at: Mapped[str] = mapped_column(default=now)
+
+
+class Outbox(Base):
+    __tablename__ = "audit_outbox"
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=uid)
+    payload: Mapped[dict] = mapped_column(JSON)
+    attempts: Mapped[int] = mapped_column(default=0)
+    created_at: Mapped[str] = mapped_column(default=now)
+
+
+class RequestReceipt(Base):
+    __tablename__ = "request_receipts"
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    fingerprint: Mapped[str] = mapped_column(String(64))
+    submission_id: Mapped[str] = mapped_column(String(32))
+    created_at: Mapped[str] = mapped_column(default=now)
+
+
+class PendingDeletion(Base):
+    __tablename__ = "pending_deletions"
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    names: Mapped[list] = mapped_column(JSON)
+    audit: Mapped[dict | None] = mapped_column(JSON(none_as_null=True), nullable=True)
+    attempts: Mapped[int] = mapped_column(default=0)
+    created_at: Mapped[str] = mapped_column(default=now)
+
+
+class Job(Base):
+    __tablename__ = "jobs"
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=uid)
+    user_id: Mapped[str] = mapped_column(String(32), index=True)
+    kind: Mapped[str] = mapped_column(String(16))
+    payload: Mapped[dict] = mapped_column(JSON)
+    state: Mapped[str] = mapped_column(String(16), default="queued", index=True)
+    progress: Mapped[int] = mapped_column(default=0)
+    result: Mapped[dict | None] = mapped_column(JSON(none_as_null=True), nullable=True)
+    attempts: Mapped[int] = mapped_column(default=0)
+    error: Mapped[str] = mapped_column(String(100), default="")
+    created_at: Mapped[str] = mapped_column(default=now)
+    updated_at: Mapped[str] = mapped_column(default=now)
+
+
+class FileAsset(Base):
+    __tablename__ = "file_assets"
+    name: Mapped[str] = mapped_column(String(80), primary_key=True)
+    size: Mapped[int] = mapped_column()

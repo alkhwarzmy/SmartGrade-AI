@@ -1,13 +1,15 @@
 """Authenticated commercial REST API. Same Workspace boundary as the teacher UI."""
 
 from dataclasses import asdict
+import json
+import logging
 import os
 from pathlib import Path
 from typing import Literal
 import sqlite3
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, Form
+from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, Form, Header, Query, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse, Response, FileResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, ConfigDict, Field, SecretStr
 from sqlalchemy.exc import SQLAlchemyError
@@ -17,41 +19,12 @@ from modules.auth import AuthService, AuthError, PermissionDenied, CapacityError
 from modules.workspace import Workspace
 from modules.schemas import ExamSpec, GradeProposal
 from modules.review import RevisionConflict
+from modules.http_limits import RequestSizeLimit
+from modules.proxy import client_address
+from modules.resources import bounded_processing
 from modules.essay_grader import propose_grade, ProviderError
 from modules.handwriting_ocr import recognize
 from modules.reports import frames, excel_bytes, csv_bytes
-
-
-class RequestSizeLimit:
-    def __init__(self, app, maximum=11 * 1024 * 1024):
-        self.app, self.maximum = app, maximum
-
-    async def __call__(self, scope, receive, send):
-        if scope["type"] != "http":
-            return await self.app(scope, receive, send)
-        body = bytearray()
-        while True:
-            message = await receive()
-            if message["type"] == "http.disconnect":
-                return
-            body.extend(message.get("body", b""))
-            if len(body) > self.maximum:
-                await JSONResponse({"detail": "حجم الطلب أكبر من الحد المسموح"}, status_code=413)(
-                    scope, receive, send
-                )
-                return
-            if not message.get("more_body", False):
-                break
-        delivered = False
-
-        async def replay():
-            nonlocal delivered
-            if not delivered:
-                delivered = True
-                return {"type": "http.request", "body": bytes(body), "more_body": False}
-            return await receive()
-
-        await self.app(scope, replay, send)
 
 
 class Input(BaseModel):
@@ -116,22 +89,53 @@ class AIPolicy(Input):
     enabled: bool
 
 
+class ReportJob(Input):
+    format: Literal["csv", "xlsx", "pdf"] = "xlsx"
+
+
 def create_app(root: Path = DATA_DIR):
     service = AuthService(root)
     api = FastAPI(
         title="SmartGrade Commercial API",
-        version="1.0.0-rc1",
+        version="1.0.0-rc2",
         docs_url="/docs" if os.getenv("SMARTGRADE_API_DOCS") == "true" else None,
         redoc_url=None,
         openapi_url="/openapi.json" if os.getenv("SMARTGRADE_API_DOCS") == "true" else None,
     )
     api.state.auth = service
+    api.state.metrics = {}
     api.add_middleware(RequestSizeLimit)
     security = HTTPBearer(auto_error=False)
 
     @api.middleware("http")
     async def security_headers(request, call_next):
+        import time
+        from uuid import uuid4
+
+        started = time.monotonic()
+        request_id = uuid4().hex
         response = await call_next(request)
+        elapsed = round(time.monotonic() - started, 4)
+        organization_id = getattr(request.state, "organization_id", None)
+        if organization_id:
+            metrics = api.state.metrics.setdefault(
+                organization_id, {"requests": 0, "errors": 0, "last_request_seconds": 0}
+            )
+            metrics["requests"] += 1
+            metrics["errors"] += int(response.status_code >= 500)
+            metrics["last_request_seconds"] = elapsed
+        logging.getLogger("uvicorn.error").info(
+            json.dumps(
+                {
+                    "request_id": request_id,
+                    "method": request.method,
+                    "route": getattr(request.scope.get("route"), "path", "unmatched"),
+                    "status": response.status_code,
+                    "seconds": elapsed,
+                }
+            )
+        )
+        response.headers["X-Request-ID"] = request_id
         response.headers["Cache-Control"] = "no-store"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
@@ -175,27 +179,37 @@ def create_app(root: Path = DATA_DIR):
     @api.exception_handler(SQLAlchemyError)
     @api.exception_handler(sqlite3.Error)
     async def database_error(request, exc):
-        return JSONResponse({"detail": "تعذر حفظ العملية؛ تحقق من الإصدار وأعد المحاولة"}, status_code=409)
+        return JSONResponse(
+            {"detail": "التخزين غير متاح مؤقتًا؛ أعد المحاولة بالمفتاح نفسه"},
+            status_code=503,
+            headers={"Retry-After": "5"},
+        )
 
     def token(credentials: HTTPAuthorizationCredentials | None = Depends(security)):
         if not credentials or credentials.scheme.lower() != "bearer":
             raise HTTPException(401, "يلزم تسجيل الدخول", headers={"WWW-Authenticate": "Bearer"})
         return credentials.credentials
 
-    def space(value: str = Depends(token)):
-        return Workspace(service, value)
+    def space(request: Request, value: str = Depends(token)):
+        workspace = Workspace(service, value)
+        request.state.organization_id = workspace.organization_id
+        return workspace
 
     @api.get("/health")
     def health():
-        return {"status": "ok", "version": "1.0.0-rc1"}
+        return {"status": "ok", "version": "1.0.0-rc2"}
 
     @api.get("/ready")
     def ready():
-        if not service.ready():
+        from modules.operations import storage_ready
+
+        try:
+            available = service.ready() and storage_ready(service.root)
+        except (sqlite3.Error, OSError):
+            available = False
+        if not available:
             raise HTTPException(503, "التخزين غير جاهز")
         return {"status": "ready"}
-
-    from fastapi import Request
 
     @api.post("/auth/login")
     def login(body: Login, request: Request):
@@ -203,7 +217,7 @@ def create_app(root: Path = DATA_DIR):
             body.organization,
             body.email,
             body.password.get_secret_value(),
-            client_id=request.client.host if request.client else "unknown",
+            client_id=client_address(request),
         )
         return {
             "access_token": raw,
@@ -233,11 +247,15 @@ def create_app(root: Path = DATA_DIR):
         return workspace.usage()
 
     @api.get("/exams")
-    def exams(workspace: Workspace = Depends(space)):
+    def exams(
+        workspace: Workspace = Depends(space),
+        limit: int = Query(50, ge=1, le=200),
+        offset: int = Query(0, ge=0),
+    ):
         actor = service.actor(workspace.token)
         return [
             {"id": e.id, "title": e.title, "kind": e.kind, **({"spec": e.spec} if actor.can("read") else {})}
-            for e in workspace.exams()
+            for e in workspace.exams(limit, offset)
         ]
 
     @api.post("/exams", status_code=201)
@@ -248,6 +266,7 @@ def create_app(root: Path = DATA_DIR):
     async def upload(
         exam_id: str,
         student_code: str = Form(max_length=100),
+        idempotency_key: str | None = Header(None, min_length=1, max_length=128),
         file: UploadFile = File(),
         workspace: Workspace = Depends(space),
     ):
@@ -255,11 +274,19 @@ def create_app(root: Path = DATA_DIR):
         await file.close()
         if len(raw) > MAX_FILE_BYTES:
             raise HTTPException(413, "حجم الصورة أكبر من الحد المسموح")
-        sid = await run_in_threadpool(workspace.upload, exam_id, student_code, raw)
+        sid = await run_in_threadpool(
+            workspace.upload, exam_id, student_code, raw, idempotency_key=idempotency_key
+        )
         return {"id": sid}
 
     @api.get("/exams/{exam_id}/submissions")
-    def submissions(exam_id: str, workspace: Workspace = Depends(space)):
+    def submissions(
+        exam_id: str,
+        workspace: Workspace = Depends(space),
+        limit: int = Query(50, ge=1, le=200),
+        offset: int = Query(0, ge=0),
+        status: Literal["review", "approved", "failed"] | None = None,
+    ):
         return [
             {
                 "id": r.id,
@@ -268,7 +295,7 @@ def create_app(root: Path = DATA_DIR):
                 "total": r.total,
                 "revision": r.revision,
             }
-            for r in workspace.submissions(exam_id)
+            for r in workspace.submissions(exam_id, limit=limit, offset=offset, status=status)
         ]
 
     @api.get("/submissions/{sid}")
@@ -301,6 +328,7 @@ def create_app(root: Path = DATA_DIR):
         return {"revision": workspace.submission(sid).revision}
 
     @api.post("/submissions/{sid}/ocr")
+    @bounded_processing
     def ocr(sid: str, body: RevisionRequest, workspace: Workspace = Depends(space)):
         service.actor(workspace.token, permission="write")
         row = workspace.submission(sid)
@@ -323,7 +351,7 @@ def create_app(root: Path = DATA_DIR):
             raise PermissionDenied("المؤسسة لم تسمح باستخدام مزود خارجي")
         row = workspace.submission(sid)
         if row.revision != body.revision:
-            raise ValueError("تغيرت الإجابة؛ أعد تحميلها قبل الطلب")
+            raise RevisionConflict("تغيرت الإجابة؛ أعد تحميلها قبل الطلب")
         spec = ExamSpec.model_validate(workspace.exam(row.exam_id).spec)
         if spec.kind != "essay":
             raise ValueError("اقتراح الدرجات الآلي مخصص للأسئلة المقالية")
@@ -334,6 +362,46 @@ def create_app(root: Path = DATA_DIR):
             raise
         workspace.save_proposal(sid, grade.model_dump(), body.revision)
         return {"proposal": grade.model_dump(), "revision": workspace.submission(sid).revision}
+
+    @api.post("/submissions/{sid}/ocr-jobs", status_code=202)
+    def queue_ocr(sid: str, body: RevisionRequest, workspace: Workspace = Depends(space)):
+        from modules.jobs import Jobs
+
+        return {"id": Jobs(workspace).create("ocr", {"sid": sid, "revision": body.revision})}
+
+    @api.post("/exams/{exam_id}/report-jobs", status_code=202)
+    def queue_report(exam_id: str, body: ReportJob, workspace: Workspace = Depends(space)):
+        from modules.jobs import Jobs
+
+        return {"id": Jobs(workspace).create("report", {"exam_id": exam_id, "format": body.format})}
+
+    @api.get("/jobs/{job_id}")
+    def job_status(job_id: str, workspace: Workspace = Depends(space)):
+        from modules.jobs import Jobs
+
+        row = Jobs(workspace).get(job_id)
+        return {
+            "id": row.id,
+            "kind": row.kind,
+            "state": row.state,
+            "progress": row.progress,
+            "error": row.error,
+            "result": row.result,
+        }
+
+    @api.post("/jobs/{job_id}/{action}")
+    def job_action(job_id: str, action: Literal["cancel", "retry"], workspace: Workspace = Depends(space)):
+        from modules.jobs import Jobs
+
+        Jobs(workspace).change(job_id, action)
+        return {"updated": True}
+
+    @api.get("/jobs/{job_id}/result")
+    def job_result(job_id: str, workspace: Workspace = Depends(space)):
+        from modules.jobs import Jobs
+
+        path = Jobs(workspace).result_path(job_id)
+        return FileResponse(path, filename=path.name)
 
     @api.post("/submissions/{sid}/approve-mcq")
     def approve_mcq(sid: str, body: MCQApproval, workspace: Workspace = Depends(space)):
@@ -351,12 +419,19 @@ def create_app(root: Path = DATA_DIR):
 
     @api.delete("/submissions/{sid}", status_code=204)
     def delete(sid: str, revision: int, workspace: Workspace = Depends(space)):
-        workspace.delete_submission(sid, revision)
-        return Response(status_code=204)
+        complete = workspace.delete_submission(sid, revision)
+        return (
+            Response(status_code=204)
+            if complete
+            else JSONResponse({"status": "deleting", "id": sid}, status_code=202)
+        )
 
     @api.get("/exams/{exam_id}/report.{kind}")
+    @bounded_processing
     def report(exam_id: str, kind: Literal["xlsx", "csv", "pdf"], workspace: Workspace = Depends(space)):
         workspace.exam(exam_id)
+        if workspace.counts(exam_id)["approved"] > 200:
+            raise HTTPException(409, "استخدم report-jobs لإعداد تقرير كبير في الخلفية")
         summary, details = frames(workspace, exam_id)
         if kind == "xlsx":
             content, mime = (
@@ -372,12 +447,22 @@ def create_app(root: Path = DATA_DIR):
             )
         else:
             content, mime = csv_bytes(summary), "text/csv"
-        service.audit(service.actor(workspace.token), "report.exported", exam_id)
+        workspace.record_event("report.exported", exam_id)
         return Response(
             content,
             media_type=mime,
             headers={"Content-Disposition": f'attachment; filename="smartgrade-results.{kind}"'},
         )
+
+    @api.get("/admin/operations")
+    def operations(workspace: Workspace = Depends(space)):
+        service.actor(workspace.token, permission="audit")
+        from modules.operations import tenant_status
+
+        return {
+            "http": dict(api.state.metrics.get(workspace.organization_id, {})),
+            **tenant_status(workspace._core),
+        }
 
     @api.get("/admin/users")
     def users(value: str = Depends(token)):

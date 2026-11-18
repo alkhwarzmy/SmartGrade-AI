@@ -65,7 +65,7 @@ print('DOCKER_SMOKE_PASSED: non-root, read-only, no build CA, authenticated ASGI
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--image", default="smartgrade:1.0.0-rc1")
+    parser.add_argument("--image", default="smartgrade:1.0.0-rc2")
     parser.add_argument("--socket", default="unix:///var/run/docker.sock")
     args = parser.parse_args()
     command = ["docker", "--host=" + args.socket]

@@ -1,0 +1,16 @@
+{
+  "image": "smartgrade:1.0.0-rc2",
+  "source": "disposable SYNTHETIC Docker data",
+  "passed": true,
+  "checks": [
+    "uid=10001",
+    "read-only root",
+    "build CA absent",
+    "unauthenticated API denied",
+    "in-container ASGI login/upload/approval 20/20",
+    "Arabic PDF",
+    "valid audit chain",
+    "container UI login/results",
+    "real HTTP readiness/login/exams"
+  ]
+}

@@ -54,8 +54,62 @@ def main():
     )
     migrate.add_argument("--slug", required=True)
     migrate.add_argument("--source", type=Path, required=True)
+    keygen = sub.add_parser("backup-keygen")
+    keygen.add_argument("--output", type=Path, required=True)
+    full = sub.add_parser("backup-full")
+    full.add_argument("--output", type=Path, required=True)
+    full.add_argument("--key-file", type=Path, required=True)
+    full.add_argument("--services-stopped", action="store_true")
+    restore = sub.add_parser("restore-full")
+    restore.add_argument("--archive", type=Path, required=True)
+    restore.add_argument("--destination", type=Path, required=True)
+    restore.add_argument("--key-file", type=Path, required=True)
+    recovery = sub.add_parser("recover-admin")
+    recovery.add_argument("--slug", required=True)
+    recovery.add_argument("--email", required=True)
+    recovery.add_argument("--password-file", type=Path)
+    sub.add_parser("monitor")
     args = parser.parse_args()
+    if args.command in {"backup-keygen", "backup-full", "restore-full"}:
+        from modules.full_backup import create_key, backup_full, restore_full
+
+        if args.command == "backup-keygen":
+            create_key(args.output)
+        elif args.command == "backup-full":
+            backup_full(args.data_dir, args.output, args.key_file, services_stopped=args.services_stopped)
+        else:
+            restore_full(args.archive, args.destination, args.key_file)
+        print("Completed. No credentials were printed.")
+        return
     auth = AuthService(args.data_dir)
+    if args.command == "monitor":
+        from modules.operations import storage_ready, tenant_status
+        from modules.review import Store
+
+        with auth.connection() as db:
+            ids = [r[0] for r in db.execute("SELECT id FROM organizations")]
+        report = {
+            oid: tenant_status(Store(auth.root / "organizations" / oid))
+            for oid in ids
+            if (auth.root / "organizations" / oid / "smartgrade.sqlite3").exists()
+        }
+        ready = auth.ready() and storage_ready(auth.root)
+        print(json.dumps({"ready": ready, "organizations": report}))
+        if not ready or any(item["alerts"] for item in report.values()):
+            raise SystemExit(1)
+        return
+    if args.command == "recover-admin":
+        if args.password_file:
+            if args.password_file.is_symlink() or args.password_file.stat().st_mode & 0o077:
+                raise ValueError("ملف كلمة المرور يجب أن يكون خاصًا بالمالك")
+            password = args.password_file.read_text().rstrip("\r\n")
+        else:
+            password = getpass("كلمة مرور بديلة مؤقتة للمدير: ")
+            if password != getpass("تأكيد كلمة المرور: "):
+                raise ValueError("كلمتا المرور غير متطابقتين")
+        auth.recover_admin(args.slug, args.email, password)
+        print("Administrator recovered; sessions revoked; password change required.")
+        return
     if args.command == "init":
         if args.password_file:
             if args.password_file.stat().st_mode & 0o077:
@@ -84,7 +138,7 @@ def main():
         print(
             json.dumps(
                 {
-                    "identity_schema": 1,
+                    "identity_schema": 2,
                     "ready": auth.ready(),
                     "organizations_configured": auth.has_organizations(),
                 }

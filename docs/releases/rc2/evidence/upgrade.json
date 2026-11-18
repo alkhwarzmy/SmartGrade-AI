@@ -1,0 +1,9 @@
+{
+  "source": "SYNTHETIC disposable data",
+  "actual_rc1_code_executed": true,
+  "upgrade_grade_20_preserved": true,
+  "image_preserved": true,
+  "rollback_with_actual_rc1_code": true,
+  "sessions_revoked_on_restore": true,
+  "passed": true
+}

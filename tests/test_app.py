@@ -59,3 +59,25 @@ def test_manual_essay_review_ui(tmp_path, monkeypatch, essay_spec):
     next(c for c in app.checkbox if c.label == "راجعت نص الإجابة وجميع المعايير وأوافق على الدرجات").check()
     next(b for b in app.button if b.label == "اعتماد الدرجة المقالية").click().run()
     assert not app.exception and store.submission(sid).total == 3
+
+
+def test_unsaved_essay_draft_survives_navigation_without_overwriting_concurrent_edit(
+    tmp_path, monkeypatch, essay_spec
+):
+    monkeypatch.setattr(config, "DATA_DIR", tmp_path)
+    store = Store(tmp_path)
+    eid = store.create_exam(essay_spec)
+    sid = store.upload(eid, "SYNTHETIC", png_bytes(template()))
+    app = AppTest.from_file(str(Path(__file__).parents[1] / "app.py"), default_timeout=30).run()
+    app.radio(key="navigation").set_value("التصحيح والمراجعة").run()
+    app.text_area[0].set_value("مسودة المعلم").run()
+    app.radio(key="navigation").set_value("الاختبارات").run()
+    app.radio(key="navigation").set_value("التصحيح والمراجعة").run()
+    assert app.text_area[0].value == "مسودة المعلم" and store.submission(sid).text == ""
+    store.save_text(sid, "تعديل من جلسة أخرى", "another-reviewer", 1)
+    app.run()
+    next(b for b in app.button if b.label == "حفظ النص").click().run()
+    assert app.error and store.submission(sid).text == "تعديل من جلسة أخرى"
+    assert app.text_area[0].value == "مسودة المعلم"
+    next(b for b in app.button if b.label == "تحميل النص المحفوظ الأحدث").click().run()
+    assert not app.exception and app.text_area[0].value == "تعديل من جلسة أخرى"

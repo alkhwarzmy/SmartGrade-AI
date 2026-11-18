@@ -1,0 +1,6 @@
+2026-11-18T13:28:25Z	INFO	[vulndb] Need to update DB
+2026-11-18T13:28:25Z	INFO	[vulndb] Downloading vulnerability DB...
+2026-11-18T13:28:25Z	INFO	[vulndb] Downloading artifact...	repo="ghcr.io/aquasec/trivy-db:2"
+2026-11-18T13:28:27Z	WARN	See https://trivy.dev/docs/v0.76/guide/references/troubleshooting#db
+2026-11-18T13:28:27Z	FATAL	Fatal error	run error: init error: DB error: failed to download vulnerability DB: OCI artifact error: failed to download vulnerability DB: failed to download artifact from ghcr.io/aquasec/trivy-db:2: OCI repository error: 1 error occurred:
+	* GET https://ghcr.io/token?scope=repository%3Aaquasec%2Ftrivy-db%3Apull&service=ghcr.io: DENIED: requested access to the resource is denied

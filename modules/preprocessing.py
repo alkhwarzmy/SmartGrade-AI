@@ -33,3 +33,37 @@ def png_bytes(image: np.ndarray) -> bytes:
     out = io.BytesIO()
     Image.fromarray(image).save(out, format="PNG")
     return out.getvalue()
+
+
+def prepare_image(raw, rotation=0, horizontal=(0, 100), vertical=(0, 100)):
+    """Explicit teacher-selected orientation and crop; preserve conservative OMR rejection."""
+    if (
+        not isinstance(rotation, int)
+        or not -360 <= rotation <= 360
+        or not all(0 <= low < high <= 100 for low, high in (horizontal, vertical))
+    ):
+        raise ValueError("منطقة القص أو التدوير غير صالحة")
+    image = decode_image(raw)
+    if rotation % 90 == 0:
+        image = np.rot90(image, rotation // 90)
+    else:
+        import cv2
+
+        height, width = image.shape[:2]
+        matrix = cv2.getRotationMatrix2D((width / 2, height / 2), rotation, 1)
+        cosine, sine = abs(matrix[0, 0]), abs(matrix[0, 1])
+        new_width, new_height = int(height * sine + width * cosine), int(height * cosine + width * sine)
+        if new_width * new_height > MAX_IMAGE_PIXELS:
+            raise ValueError("الأبعاد بعد التدوير كبيرة جدًا؛ استخدم دقة أقل")
+        matrix[0, 2] += (new_width - width) / 2
+        matrix[1, 2] += (new_height - height) / 2
+        image = cv2.warpAffine(image, matrix, (new_width, new_height), borderValue=(255, 255, 255))
+    height, width = image.shape[:2]
+    left, right = (round(width * value / 100) for value in horizontal)
+    top, bottom = (round(height * value / 100) for value in vertical)
+    if min(right - left, bottom - top) < 100:
+        raise ValueError("منطقة القص صغيرة جدًا؛ أبقِ الورقة وعلاماتها واضحة")
+    result = png_bytes(np.ascontiguousarray(image[top:bottom, left:right]))
+    if len(result) > MAX_FILE_BYTES:
+        raise ValueError("الصورة بعد القص أكبر من 10 MB؛ استخدم دقة أقل")
+    return result

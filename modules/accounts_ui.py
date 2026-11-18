@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 import streamlit as st
 from modules.auth import AuthError, PermissionDenied
+from modules.proxy import trusted_client_address
 
 ROLES = {"admin": "مدير المؤسسة", "teacher": "معلم / مصحح", "viewer": "مشاهد النتائج"}
 
@@ -61,6 +62,7 @@ def sign_in(auth):
         if submitted:
             try:
                 client = getattr(st.context, "ip_address", None) or "streamlit-local"
+                client = trusted_client_address(client, getattr(st.context, "headers", {}))
                 token = auth.login(slug, email, password, client_id=client)
                 clear_session()
                 st.session_state["auth_token"] = token
@@ -107,6 +109,8 @@ def organization_page(auth, workspace):
     st.title("إدارة المؤسسة")
     st.caption(actor.organization_name)
     usage = workspace.usage()
+    if usage["storage_warning"]:
+        st.warning("استهلاك التخزين تجاوز 80%؛ راجع الاحتفاظ والنسخ والسعة مع المشغل.")
     labels = {
         "users": "المستخدمون النشطون",
         "exams": "الاختبارات",

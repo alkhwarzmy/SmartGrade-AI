@@ -11,7 +11,7 @@ from config import DATA_DIR
 from modules.schemas import ExamSpec, Criterion, GradeProposal
 from modules.review import Store
 from modules.mcq_grader import template, template_pdf, annotate, score_answers
-from modules.preprocessing import png_bytes, decode_image
+from modules.preprocessing import png_bytes, decode_image, prepare_image
 from modules.handwriting_ocr import recognize, ocr_status
 from modules.essay_grader import propose_grade, provider_status, ProviderError
 from modules.reports import frames, excel_bytes, csv_bytes
@@ -103,7 +103,16 @@ def notify_error(exc):
 
 
 def choose_exam(label="اختر الاختبار", key="exam"):
-    exams = store.exams()
+    page = 1
+    if COMMERCIAL and store.counts()["exams"] > 50:
+        page = st.number_input(
+            "صفحة الاختبارات",
+            min_value=1,
+            max_value=(store.counts()["exams"] + 49) // 50,
+            step=1,
+            key=key + "_page",
+        )
+    exams = store.exams(limit=50, offset=(page - 1) * 50) if COMMERCIAL else store.exams()
     if not exams:
         st.info("أنشئ اختبارك الأول من صفحة الاختبارات للبدء.")
         return None
@@ -146,12 +155,18 @@ def exams_page():
         "<p>اجمع أوراق الاختبار، راجع الإجابات، واعتمد النتائج من مكان واحد.</p></div>",
         unsafe_allow_html=True,
     )
-    exams, submissions = store.exams(), store.submissions()
+    counts = store.counts()
+    page = 1
+    if counts["exams"] > 50:
+        page = st.number_input(
+            "صفحة قائمة الاختبارات", min_value=1, max_value=(counts["exams"] + 49) // 50, step=1
+        )
+    exams = store.exams(limit=50, offset=(page - 1) * 50)
     a, b, c, d = st.columns(4)
-    a.metric("الاختبارات", len(exams))
-    b.metric("الأوراق المستلمة", len(submissions))
-    c.metric("بانتظار المراجعة", sum(s.status != "approved" for s in submissions))
-    d.metric("النتائج المعتمدة", sum(s.status == "approved" for s in submissions))
+    a.metric("الاختبارات", counts["exams"])
+    b.metric("الأوراق المستلمة", counts["submissions"])
+    c.metric("بانتظار المراجعة", counts["review"])
+    d.metric("النتائج المعتمدة", counts["approved"])
     st.write("")
     new, existing, templates = st.tabs(["إنشاء اختبار", "اختباراتي", "قالب الإجابة"])
     with new:
@@ -264,6 +279,31 @@ def upload_page():
     file = st.file_uploader(
         "صورة الإجابة", type=["png", "jpg", "jpeg"], help="PNG أو JPEG · حتى 10 MB · حتى 16 مليون بكسل"
     )
+    prepared = None
+    if file:
+        prepared = file.getvalue()
+        if st.checkbox("تحسين الصورة قبل الرفع"):
+            rotation = st.selectbox(
+                "تدوير الصورة عكس عقارب الساعة", [0, 90, 180, 270], format_func=lambda x: f"{x}°"
+            )
+            horizontal = st.slider("القص الأفقي %", 0, 100, (0, 100))
+            vertical = st.slider("القص الرأسي %", 0, 100, (0, 100))
+            correction = st.slider("تصحيح الميل الدقيق بالدرجات", -15, 15, 0)
+            prepared = prepare_image(prepared, rotation + correction, horizontal, vertical)
+            if COMMERCIAL:
+                from modules.private_artifacts import image_html
+
+                st.markdown(image_html(decode_image(prepared)), unsafe_allow_html=True)
+            else:
+                st.image(decode_image(prepared), width="stretch")
+            st.caption("أبقِ علامات OMR الأربع ظاهرة؛ المعاينة لا تعتمد نتيجة تلقائيًا.")
+        if COMMERCIAL:
+            from uuid import uuid4
+
+            st.session_state.setdefault("upload_attempt", uuid4().hex)
+            if st.button("بدء محاولة جديدة للورقة نفسها"):
+                st.session_state["upload_attempt"] = uuid4().hex
+                st.info("سيُحفظ الرفع التالي كمحاولة جديدة مقصودة.")
     with st.form("upload", clear_on_submit=False):
         code = st.text_input("رمز الطالب", placeholder="مثال: ST-024 — استخدم رمزًا بدل الاسم", max_chars=100)
         submit = st.form_submit_button(
@@ -274,12 +314,26 @@ def upload_page():
             st.warning("اختر صورة الإجابة أولًا.")
         else:
             with st.spinner("جارٍ فحص الصورة ومعالجة الإجابات…"):
+                options = {}
+                if COMMERCIAL:
+                    import hashlib
+
+                    key = hashlib.sha256(
+                        (
+                            exam.id
+                            + code
+                            + hashlib.sha256(prepared).hexdigest()
+                            + st.session_state["upload_attempt"]
+                        ).encode()
+                    ).hexdigest()
+                    options["idempotency_key"] = key
                 sid = store.upload(
                     exam.id,
                     code,
-                    file.getvalue(),
+                    prepared,
                     st.session_state.get("blank_threshold", 0.12),
                     st.session_state.get("marked_threshold", 0.55),
+                    **options,
                 )
             st.success(f"تم حفظ الورقة ({sid[:8]}) وهي بانتظار المراجعة. انتقل إلى التصحيح والمراجعة.")
     if exam.kind == "mcq":
@@ -332,22 +386,63 @@ def mcq_review(row, spec, reviewer):
 def essay_review(row, spec, reviewer):
     st.markdown("#### 1. تدقيق نص الإجابة")
     st.write(spec.question)
-    with st.form(f"text_{row.id}_{row.revision}"):
-        text = st.text_area(
-            "النص المستخدم للتصحيح",
-            value=row.text,
-            height=190,
-            max_chars=30000,
-            key=f"text_input_{row.id}_{row.revision}",
-        )
-        save = st.form_submit_button("حفظ النص")
+    draft = "essay_draft_" + row.id
+    base_revision = draft + "_revision"
+    base_text = draft + "_base_text"
+    widget = f"text_input_{row.id}_{row.revision}"
+    if draft not in st.session_state:
+        st.session_state[draft] = row.text
+        st.session_state[base_revision] = row.revision
+        st.session_state[base_text] = row.text
+    elif st.session_state[base_revision] != row.revision and st.session_state[draft] == st.session_state.get(
+        base_text, row.text
+    ):
+        st.session_state[draft] = row.text
+        st.session_state[base_revision] = row.revision
+        st.session_state[base_text] = row.text
+
+    def keep_draft():
+        st.session_state[draft] = st.session_state[widget]
+
+    text = st.text_area(
+        "النص المستخدم للتصحيح",
+        value=st.session_state[draft],
+        height=190,
+        max_chars=30000,
+        key=widget,
+        on_change=keep_draft,
+    )
+    st.session_state[draft] = text
+    if st.session_state[base_revision] != row.revision:
+        st.warning("تغير النص المحفوظ في جلسة أو مهمة أخرى. مسودتك محفوظة؛ راجع النص الأحدث قبل الحفظ.")
+        if st.button("تحميل النص المحفوظ الأحدث"):
+            st.session_state[draft] = row.text
+            st.session_state[base_revision] = row.revision
+            st.session_state[base_text] = row.text
+            del st.session_state[widget]
+            st.rerun()
+    save = st.button("حفظ النص")
     if save:
-        store.save_text(row.id, text, reviewer, row.revision)
-        st.session_state["_flash"] = "تم حفظ النص. الورقة بانتظار مراجعة الدرجات."
+        changed = store.save_text(row.id, text, reviewer, st.session_state[base_revision])
+        current = store.submission(row.id)
+        st.session_state[base_revision] = current.revision
+        st.session_state[base_text] = current.text
+        st.session_state["_flash"] = (
+            "تم حفظ النص. الورقة بانتظار مراجعة الدرجات."
+            if changed
+            else "النص لم يتغير؛ بقي الاعتماد والدرجة كما هما."
+        )
         st.rerun()
     if st.button(
         "استخراج النص بمحرك OCR المحلي", disabled=os.getenv("OCR_PROVIDER", "tesseract") != "tesseract"
     ):
+        if COMMERCIAL:
+            from modules.jobs import Jobs
+
+            st.session_state["ocr_job_" + row.id] = Jobs(store).create(
+                "ocr", {"sid": row.id, "revision": row.revision}
+            )
+            st.rerun()
         try:
             with st.spinner("جارٍ استخراج النص محليًا…"):
                 extracted = recognize(store.image_path(row.image_name).read_bytes())
@@ -357,6 +452,31 @@ def essay_review(row, spec, reviewer):
         except ValueError:
             store.record_processing_failure(row.id, "ocr", row.revision)
             st.warning("تعذر استخراج نص صالح. أدخل النص يدويًا واحفظه؛ لم تُمنح درجة.")
+    if COMMERCIAL and st.session_state.get("ocr_job_" + row.id):
+        from modules.jobs import Jobs
+
+        jobs = Jobs(store)
+        job_id = st.session_state["ocr_job_" + row.id]
+        task = jobs.get(job_id)
+        labels = {
+            "queued": "استخراج النص بانتظار العامل",
+            "running": "جارٍ استخراج النص",
+            "succeeded": "اكتمل استخراج النص؛ راجعه قبل اعتماد الدرجة",
+            "failed": "تعذر الاستخراج؛ يمكنك إدخال النص يدويًا أو إعادة المحاولة",
+            "cancelled": "أُلغيت مهمة استخراج النص",
+        }
+        st.info(labels[task.state])
+        if st.button("تحديث حالة استخراج النص"):
+            st.rerun()
+        if task.state in {"queued", "running"} and st.button("إلغاء استخراج النص"):
+            jobs.change(job_id, "cancel")
+            st.rerun()
+        if task.state in {"failed", "cancelled"} and st.button("إعادة محاولة استخراج النص"):
+            # Queue a fresh revision; replaying an obsolete OCR task must never overwrite a teacher edit.
+            st.session_state["ocr_job_" + row.id] = jobs.create(
+                "ocr", {"sid": row.id, "revision": row.revision}
+            )
+            st.rerun()
     st.caption(ocr_status()[1])
     st.markdown("#### 2. اقتراح الدرجة ومراجعتها")
     consent = st.checkbox(
@@ -443,7 +563,13 @@ def review_page():
     exam = choose_exam(key="review_exam")
     if not exam:
         return
-    rows = store.submissions(exam.id)
+    page = 1
+    count = store.counts(exam.id)["submissions"]
+    if count > 50:
+        page = st.number_input(
+            "صفحة الأوراق", min_value=1, max_value=(count + 49) // 50, step=1, key="review_page"
+        )
+    rows = store.submissions(exam.id, limit=50, offset=(page - 1) * 50)
     if not rows:
         st.info("لا توجد أوراق لهذا الاختبار. ابدأ برفع صورة من صفحة رفع الأوراق.")
         return
@@ -493,8 +619,59 @@ def review_page():
     with st.expander("حذف بيانات هذه الورقة"):
         confirmed = st.checkbox("أريد حذف الصورة والنص والدرجات وسجل المراجعة نهائيًا")
         if st.button("حذف التسليم", disabled=not confirmed):
-            store.delete_submission(sid, row.revision)
+            complete = store.delete_submission(sid, row.revision)
+            st.session_state["_flash"] = (
+                "اكتمل الحذف." if complete else "الورقة قيد الحذف؛ سيستكمل العامل مسح الملفات المتعثرة."
+            )
             st.rerun()
+
+
+def report_jobs(exam_id):
+    from modules.jobs import Jobs
+    from modules.private_artifacts import download_html
+
+    jobs = Jobs(store)
+    formats = {"xlsx": "Excel", "csv": "CSV", "pdf": "PDF"}
+    kind = st.selectbox("صيغة التقرير الكامل", list(formats), format_func=formats.get)
+    if st.button("إعداد التقرير في الخلفية", type="primary"):
+        st.session_state["report_job_" + exam_id] = jobs.create(
+            "report", {"exam_id": exam_id, "format": kind}
+        )
+    job_id = st.session_state.get("report_job_" + exam_id)
+    if not job_id:
+        return
+    row = jobs.get(job_id)
+    labels = {
+        "queued": "بانتظار المعالجة",
+        "running": "جارٍ إعداد التقرير",
+        "succeeded": "جاهز للتنزيل",
+        "failed": "تعذرت المعالجة؛ راجع البيانات وأعد المحاولة",
+        "cancelled": "أُلغيت المهمة",
+        "expired": "انتهت صلاحية الملف؛ أنشئ تقريرًا جديدًا",
+    }
+    st.write(labels[row.state])
+    st.progress(row.progress / 100)
+    if st.button("تحديث حالة التقرير"):
+        st.rerun()
+    if row.state in {"queued", "running"} and st.button("إلغاء إعداد التقرير"):
+        jobs.change(job_id, "cancel")
+        st.rerun()
+    if row.state in {"failed", "cancelled"} and st.button("إعادة محاولة التقرير"):
+        jobs.change(job_id, "retry")
+        st.rerun()
+    if row.state == "succeeded":
+        path = jobs.result_path(job_id)
+        mime = {
+            "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "csv": "text/csv",
+            "pdf": "application/pdf",
+        }[path.suffix[1:]]
+        st.markdown(
+            download_html("تنزيل التقرير الكامل", path.read_bytes(), path.name, mime), unsafe_allow_html=True
+        )
+    st.caption(
+        "ملف التقرير متاح لساعة واحدة. إلغاء المهمة يمنع نشر النتيجة؛ تتوقف المعالجة خلال المهلة القصوى."
+    )
 
 
 def results_page():
@@ -503,7 +680,16 @@ def results_page():
     exam = choose_exam(key="result_exam")
     if not exam:
         return
-    rows = store.submissions(exam.id)
+    count = store.counts(exam.id)["approved"]
+    if COMMERCIAL and count > 200:
+        page = st.number_input("صفحة النتائج المعتمدة", min_value=1, max_value=(count + 49) // 50, step=1)
+        summary, details = frames(store, exam.id, limit=50, offset=(page - 1) * 50)
+        st.metric("إجمالي النتائج المعتمدة", count)
+        st.caption("عرض 50 نتيجة في الصفحة. التقرير الكامل يُعالج في الخلفية.")
+        st.dataframe(summary, hide_index=True, width="stretch")
+        report_jobs(exam.id)
+        return
+    rows = store.submissions(exam.id, limit=200)
     summary, details = frames(store, exam.id)
     metrics = st.columns(3)
     metrics[0].metric("نتائج معتمدة", len(summary))
@@ -550,7 +736,7 @@ def results_page():
         else:
             column.download_button(label, content, filename, mime, width="stretch")
     if COMMERCIAL:
-        identity.audit(PRINCIPAL, "report.generated", exam.id)
+        store.record_event("report.generated", exam.id)
     with st.expander("تفاصيل كل سؤال / معيار"):
         st.dataframe(details, hide_index=True, width="stretch")
     st.markdown("#### توزيع النتائج المعتمدة")

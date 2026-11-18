@@ -1,6 +1,6 @@
 name: smartgrade
 x-application: &application
-  image: smartgrade:1.0.0-rc1
+  image: smartgrade:1.0.0-rc2
   build: .
   restart: unless-stopped
   read_only: true
@@ -14,6 +14,7 @@ x-application: &application
     SMARTGRADE_DATA_DIR: /var/lib/smartgrade
     OCR_PROVIDER: tesseract
     SMARTGRADE_API_DOCS: "false"
+    SMARTGRADE_TRUSTED_PROXY_CIDRS: "172.31.77.10/32"
     ALLOW_EXTERNAL_AI: ${ALLOW_EXTERNAL_AI:-false}
     ALLOW_PAID_API: ${ALLOW_PAID_API:-false}
     LLM_BASE_URL: ${LLM_BASE_URL:-https://api.openai.com/v1}
@@ -31,22 +32,40 @@ services:
   web:
     <<: *application
     expose: ["8501"]
+    networks:
+      internal: {}
   api:
     <<: *application
-    command: ["python", "-m", "uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--no-access-log"]
+    command: ["python", "-m", "uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--no-access-log", "--no-proxy-headers"]
     expose: ["8000"]
+    networks:
+      internal: {}
     healthcheck:
       test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/ready',timeout=3)"]
       interval: 30s
       timeout: 5s
       start_period: 30s
       retries: 3
+  worker:
+    <<: *application
+    command: ["python", "-m", "scripts.worker"]
+    networks:
+      internal: {}
+    healthcheck:
+      test: ["CMD", "python", "-c", "from pathlib import Path; import time; assert time.time()-Path('/var/lib/smartgrade/worker-heartbeat').stat().st_mtime < 180"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
   proxy:
-    image: caddy:2.10
+    image: caddy:2.10@sha256:c3d7ee5d2b11f9dc54f947f68a734c84e9c9666c92c88a7f30b9cba5da182adb
     restart: unless-stopped
     environment:
       SMARTGRADE_DOMAIN: ${SMARTGRADE_DOMAIN:?Set SMARTGRADE_DOMAIN to your domain before starting}
     ports: ["80:80", "443:443"]
+    networks:
+      internal:
+        ipv4_address: 172.31.77.10
     volumes:
       - ./deployment/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
@@ -61,3 +80,8 @@ volumes:
   smartgrade_data:
   caddy_data:
   caddy_config:
+networks:
+  internal:
+    ipam:
+      config:
+        - subnet: 172.31.77.0/24

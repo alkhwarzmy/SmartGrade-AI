@@ -9,11 +9,17 @@ from functools import lru_cache
 from pathlib import Path
 from types import SimpleNamespace
 import fcntl
+import hashlib
+import json
+import logging
+import sqlite3
 import time
 from sqlalchemy import func, select
+from sqlalchemy.exc import SQLAlchemyError
 from database.models import Exam, Submission
 from modules.auth import AuthService, CapacityError, PermissionDenied
 from modules.review import Store
+from modules.outbox import flush_outbox
 
 
 @lru_cache(maxsize=256)
@@ -58,13 +64,19 @@ class Workspace:
             raise PermissionDenied("الوصول إلى النتائج غير مسموح")
         return actor
 
-    def exams(self):
+    def exams(self, limit=None, offset=0):
         self._actor(results=True)
-        return self._core.exams()
+        return self._core.exams(limit, offset)
 
     def exam(self, exam_id):
         self._actor(results=True)
         return self._core.exam(exam_id)
+
+    def counts(self, exam_id=None):
+        self._actor(results=True)
+        if exam_id:
+            self._core.exam(exam_id)
+        return self._core.counts(exam_id)
 
     @staticmethod
     def _result(row):
@@ -87,11 +99,13 @@ class Workspace:
             }
         )
 
-    def submissions(self, exam_id=None):
+    def submissions(self, exam_id=None, *, limit=None, offset=0, status=None):
         actor = self._actor(results=True)
         if exam_id:
             self._core.exam(exam_id)  # Do not silently accept a foreign tenant's exam ID.
-        rows = self._core.submissions(exam_id)
+        rows = self._core.submissions(
+            exam_id, limit=limit, offset=offset, status=status if actor.can("read") else "approved"
+        )
         return rows if actor.can("read") else [self._result(r) for r in rows if r.status == "approved"]
 
     def submission(self, submission_id):
@@ -112,7 +126,7 @@ class Workspace:
         with self._core.sessions() as db:
             exams = db.scalar(select(func.count()).select_from(Exam))
             submissions = db.scalar(select(func.count()).select_from(Submission))
-        used = sum(p.stat().st_size for p in self._root.rglob("*") if p.is_file() and not p.is_symlink())
+        used = self._core.storage_bytes()
         org = self.auth.organization(self.token)
         if actor.can("users"):
             users = sum(bool(u["active"]) for u in self.auth.list_users(self.token))
@@ -126,25 +140,68 @@ class Workspace:
             "submissions": submissions,
             "users": users,
             "storage_mb": round(used / 1024**2, 2),
+            "storage_warning": used >= org["limits"]["storage_mb"] * 1024**2 * 0.8,
             "limits": org["limits"],
             "plan": org["plan"],
             "renewal_until": org["renewal_until"],
             "external_ai_allowed": bool(org["external_ai_allowed"]),
         }
 
+    @staticmethod
+    def _audit(actor, action):
+        return {"organization_id": actor.organization_id, "user_id": actor.user_id, "action": action}
+
+    def _deliver(self):
+        try:
+            flush_outbox(self._core, self.auth)
+        except (sqlite3.Error, SQLAlchemyError, OSError):
+            # The transaction and its outbox already committed. Delivery must never turn that into a failed save.
+            logging.getLogger(__name__).warning(
+                "audit_delivery_deferred", extra={"organization_id": self.organization_id}
+            )
+
+    def _guard_storage(self):
+        maximum = self.auth.organization(self.token)["limits"]["storage_mb"] * 1024**2
+        if self._core.storage_bytes() + 262144 > maximum:
+            raise CapacityError("مساحة المؤسسة لا تكفي لحفظ تعديل جديد؛ احذف بيانات أو زد السعة")
+
+    def record_event(self, action, object_id):
+        actor = self._actor(results=True)
+        with tenant_write_lock(self._root):
+            self._core.record_event(self._audit(actor, action), object_id)
+            self._deliver()
+
     def create_exam(self, spec):
         actor = self._actor("write")
         with tenant_write_lock(self._root):
+            actor = self._actor("write")
+            self._guard_storage()
             usage = self.usage()
             if usage["exams"] >= usage["limits"]["exams"]:
                 raise CapacityError("وصلت المؤسسة إلى الحد الأقصى للاختبارات")
-            eid = self._core.create_exam(spec)
-            self.auth.audit(actor, "exam.created", eid)
+            eid = self._core.create_exam(spec, audit=self._audit(actor, "exam.created"))
+            self._deliver()
             return eid
 
-    def upload(self, exam_id, student_code, raw, blank_threshold=0.12, marked_threshold=0.55):
+    def upload(
+        self, exam_id, student_code, raw, blank_threshold=0.12, marked_threshold=0.55, *, idempotency_key=None
+    ):
         actor = self._actor("write")
+        key = fingerprint = None
+        if idempotency_key is not None:
+            if not isinstance(idempotency_key, str) or not 1 <= len(idempotency_key) <= 128:
+                raise ValueError("مفتاح الطلب يجب أن يكون بين 1 و128 حرفًا")
+            key = hashlib.sha256(json.dumps([actor.user_id, exam_id, idempotency_key]).encode()).hexdigest()
+            fingerprint = hashlib.sha256(
+                json.dumps(
+                    [student_code.strip(), hashlib.sha256(raw).hexdigest(), blank_threshold, marked_threshold]
+                ).encode()
+            ).hexdigest()
         with tenant_write_lock(self._root):
+            actor = self._actor("write")
+            previous = self._core.receipt(key, fingerprint)
+            if previous:
+                return previous
             usage = self.usage()
             if usage["submissions"] >= usage["limits"]["submissions"]:
                 raise CapacityError("وصلت المؤسسة إلى الحد الأقصى للأوراق")
@@ -155,44 +212,89 @@ class Workspace:
                 blank_threshold,
                 marked_threshold,
                 max_storage_bytes=usage["limits"]["storage_mb"] * 1024**2,
+                audit=self._audit(actor, "submission.uploaded"),
+                request_key=key,
+                fingerprint=fingerprint,
             )
-            self.auth.audit(actor, "submission.uploaded", sid)
+            self._deliver()
             return sid
 
     def save_text(self, sid, text, reviewer, revision, source="manual"):
         actor = self._actor("write")
         with tenant_write_lock(self._root):
-            self._core.save_text(sid, text, actor.user_id, revision, source)
-            self.auth.audit(actor, "submission.text_changed", sid)
+            actor = self._actor("write")
+            if self._core.submission(sid).text != text:
+                self._guard_storage()
+            changed = self._core.save_text(
+                sid,
+                text,
+                actor.user_id,
+                revision,
+                source,
+                audit=self._audit(actor, "submission.text_changed"),
+            )
+            self._deliver()
+            return changed
 
     def save_proposal(self, sid, proposal, revision):
         actor = self._actor("write")
         if not self.auth.organization(self.token)["external_ai_allowed"]:
             raise PermissionDenied("المؤسسة لم تسمح بإرسال الإجابات إلى مزود خارجي")
         with tenant_write_lock(self._root):
-            self._core.save_proposal(sid, proposal, revision)
-            self.auth.audit(actor, "submission.ai_proposed", sid)
+            actor = self._actor("write")
+            self._guard_storage()
+            self._core.save_proposal(
+                sid, proposal, revision, audit=self._audit(actor, "submission.ai_proposed")
+            )
+            self._deliver()
 
     def approve_mcq(self, sid, answers, reviewer, reason, revision, reviewed):
         actor = self._actor("approve")
         with tenant_write_lock(self._root):
-            self._core.approve_mcq(sid, answers, actor.user_id, reason, revision, reviewed)
-            self.auth.audit(actor, "submission.mcq_approved", sid)
+            actor = self._actor("approve")
+            self._guard_storage()
+            self._core.approve_mcq(
+                sid,
+                answers,
+                actor.user_id,
+                reason,
+                revision,
+                reviewed,
+                audit=self._audit(actor, "submission.mcq_approved"),
+            )
+            self._deliver()
 
     def approve_essay(self, sid, proposal, reviewer, reason, revision, reviewed):
         actor = self._actor("approve")
         with tenant_write_lock(self._root):
-            self._core.approve_essay(sid, proposal, actor.user_id, reason, revision, reviewed)
-            self.auth.audit(actor, "submission.essay_approved", sid)
+            actor = self._actor("approve")
+            self._guard_storage()
+            self._core.approve_essay(
+                sid,
+                proposal,
+                actor.user_id,
+                reason,
+                revision,
+                reviewed,
+                audit=self._audit(actor, "submission.essay_approved"),
+            )
+            self._deliver()
 
     def delete_submission(self, sid, revision):
         actor = self._actor("delete")
         with tenant_write_lock(self._root):
-            self._core.delete_submission(sid, revision)
-            self.auth.audit(actor, "submission.deleted", sid)
+            actor = self._actor("delete")
+            complete = self._core.delete_submission(
+                sid, revision, audit=self._audit(actor, "submission.deleted")
+            )
+            self._deliver()
+            return complete
 
     def record_processing_failure(self, sid, stage, revision):
         actor = self._actor("write")
         with tenant_write_lock(self._root):
-            self._core.record_processing_failure(sid, stage, revision)
-            self.auth.audit(actor, "submission.processing_failed", sid)
+            actor = self._actor("write")
+            self._core.record_processing_failure(
+                sid, stage, revision, audit=self._audit(actor, "submission.processing_failed")
+            )
+            self._deliver()

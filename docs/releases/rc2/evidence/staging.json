@@ -1,0 +1,13 @@
+{
+  "source": "isolated SYNTHETIC loopback staging only",
+  "public_domain_verified": false,
+  "https_api_ca_and_hostname_verified": true,
+  "browser_private_ca_exception": true,
+  "wss_ui_and_keyboard_login": true,
+  "mcq_score": 20,
+  "background_xlsx_real_child_process": true,
+  "private_download_verified": true,
+  "audit_chain_valid": true,
+  "test_ca_sha256": "f3d0c728b56499cfb15d53e787ce0db6cd3ef50aadb638ad2cc1bd0eecaab451",
+  "passed": true
+}

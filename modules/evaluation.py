@@ -39,7 +39,8 @@ def essay_metrics(references, predictions, maximum: int):
     diff = np.abs(a - b)
     qwk = None
     # QWK is reported only for integer score categories; no silent rounding of fractional grades.
-    if np.all(a == np.floor(a)) and np.all(b == np.floor(b)):
+    if float(maximum).is_integer() and np.all(a == np.floor(a)) and np.all(b == np.floor(b)):
+        maximum = int(maximum)
         counts = np.zeros((maximum + 1, maximum + 1))
         for x, y in zip(a.astype(int), b.astype(int)):
             counts[x, y] += 1
