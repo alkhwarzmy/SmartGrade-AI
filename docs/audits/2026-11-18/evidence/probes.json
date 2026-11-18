@@ -1,0 +1,80 @@
+{
+  "source_commit": "40fe03940c42c696577c4866f8769349fdb0dca6",
+  "synthetic_data_only": true,
+  "live_provider_calls": 0,
+  "observations": [
+    {
+      "id": "F01",
+      "observed": {
+        "wrong_attempts": 30,
+        "different_organization_valid_login_blocked": true,
+        "shared_client": "simulated reverse-proxy/NAT",
+        "lockout_seconds": 900
+      },
+      "proposed_acceptance": "Scope account/institution throttles and configure trusted proxy client addresses without a cross-tenant hard lock.",
+      "recommended_priority": "P1",
+      "evidence_kind": "reproduced"
+    },
+    {
+      "id": "F02",
+      "observed": {
+        "http_status": 409,
+        "exams_persisted_despite_error": 1,
+        "fault": "injected audit failure after exam commit"
+      },
+      "proposed_acceptance": "Use a transactional outbox/durable event so success and client-visible outcome are unambiguous.",
+      "recommended_priority": "P1",
+      "evidence_kind": "fault_injection"
+    },
+    {
+      "id": "F03",
+      "observed": {
+        "identical_replays": 2,
+        "distinct_submission_ids": 2,
+        "same_idempotency_key": true,
+        "response_statuses": [
+          201,
+          201
+        ]
+      },
+      "proposed_acceptance": "Persist request keys per institution and operation; replay returns the same result, while an intentional new attempt has a new key.",
+      "recommended_priority": "P1",
+      "evidence_kind": "reproduced_missing_capability"
+    },
+    {
+      "id": "F06",
+      "observed": {
+        "stale_proposal_http_status": 400,
+        "other_revision_routes_use": 409,
+        "provider_called": false
+      },
+      "proposed_acceptance": "Return 409 consistently for every stale revision.",
+      "recommended_priority": "P2",
+      "evidence_kind": "reproduced"
+    },
+    {
+      "id": "F04",
+      "observed": {
+        "submission_row_deleted": true,
+        "original_image_still_exists": true,
+        "fault": "injected unlink failure after DB commit"
+      },
+      "proposed_acceptance": "Mark deletion pending, retry file erasure, then finalize; monitor and reconcile orphaned images.",
+      "recommended_priority": "P1",
+      "evidence_kind": "fault_injection"
+    },
+    {
+      "id": "F05",
+      "observed": {
+        "text_changed": false,
+        "before_status": "approved",
+        "before_total": 3.0,
+        "after_status": "review",
+        "after_total": null
+      },
+      "proposed_acceptance": "A no-op save preserves approval; a real text change continues to invalidate it.",
+      "recommended_priority": "P1",
+      "evidence_kind": "reproduced"
+    }
+  ]
+}

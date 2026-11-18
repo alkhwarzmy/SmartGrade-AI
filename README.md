@@ -107,6 +107,8 @@ python -m scripts.validate_colab_notebook --execute-smoke
 
 ## وثائق المشروع
 
+- [تقرير الاختبار والتحسينات — 18 نوفمبر 2026](docs/audits/2026-11-18/report.md)
+- [خطة تنفيذ التحسينات ومعايير القبول](docs/audits/2026-11-18/action_plan.md) · [التقرير والخطة بصيغة PDF](docs/audits/2026-11-18/report_and_plan.pdf)
 - [التشغيل والنسخ والاستعادة والترقية](docs/operations.md)
 - [بنية المؤسسات وحدود الثقة](docs/architecture.md)
 - [دليل المعلم والأدوار](docs/user_guide.md)

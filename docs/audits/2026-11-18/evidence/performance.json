@@ -1,0 +1,52 @@
+{
+  "source_commit": "40fe039",
+  "dataset": "SYNTHETIC only: 1 institution, 1 exam, 50 approved papers, 20 questions each",
+  "scope": "loopback HTTP; no TLS/network delay, no OCR/LLM calls, not a production capacity certification",
+  "python": "3.12.14",
+  "workers": 1,
+  "docker_resource_limits_applied": false,
+  "host_reported_cpu_count": 3,
+  "rss_before_mb": {
+    "VmHWM": 159.93,
+    "VmRSS": 159.93
+  },
+  "workloads": {
+    "list_exams": {
+      "requests": 100,
+      "concurrency": 8,
+      "statuses": {
+        "200": 100
+      },
+      "p50_ms": 9.79,
+      "p95_ms": 59.89,
+      "max_ms": 351.06,
+      "response_bytes": 352
+    },
+    "list_50_papers": {
+      "requests": 100,
+      "concurrency": 8,
+      "statuses": {
+        "200": 100
+      },
+      "p50_ms": 20.06,
+      "p95_ms": 144.93,
+      "max_ms": 677.46,
+      "response_bytes": 5951
+    },
+    "excel_50_students_1000_detail_rows": {
+      "requests": 12,
+      "concurrency": 3,
+      "statuses": {
+        "200": 12
+      },
+      "p50_ms": 487.03,
+      "p95_ms": 590.25,
+      "max_ms": 590.25,
+      "response_bytes": 41644
+    }
+  },
+  "rss_after_mb": {
+    "VmHWM": 186.14,
+    "VmRSS": 186.14
+  }
+}

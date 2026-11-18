@@ -1,0 +1,11 @@
+{
+  "source": "SYNTHETIC institutions and credentials; no real student data",
+  "checks": [
+    "Anonymous access blocked; invalid login rejected; administrator login succeeds",
+    "Authenticated MCQ review 20/20; reviewer identity fixed; private image inline, not on global media route",
+    "Private inline Excel and Arabic PDF download; approved score verified from downloaded workbook",
+    "Logout clears workspace; first-login password change enforced; viewer only sees approved results and account",
+    "Mobile layout valid; second organization cannot see first organization's exams"
+  ],
+  "passed": true
+}

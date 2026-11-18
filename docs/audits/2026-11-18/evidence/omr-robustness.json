@@ -1,0 +1,184 @@
+{
+  "source": "CONTROLLED SYNTHETIC PERTURBATIONS; same template generator, not independent real data",
+  "cases": 27,
+  "accepted_cases": 20,
+  "rejected_cases": 7,
+  "wrong_single_count": 0,
+  "results": [
+    {
+      "case": "baseline",
+      "accepted": true,
+      "correct_single": 20,
+      "wrong_single": 0,
+      "flagged_for_review": 0
+    },
+    {
+      "case": "resize_0.45",
+      "accepted": true,
+      "correct_single": 20,
+      "wrong_single": 0,
+      "flagged_for_review": 0
+    },
+    {
+      "case": "resize_0.6",
+      "accepted": true,
+      "correct_single": 20,
+      "wrong_single": 0,
+      "flagged_for_review": 0
+    },
+    {
+      "case": "resize_0.8",
+      "accepted": true,
+      "correct_single": 20,
+      "wrong_single": 0,
+      "flagged_for_review": 0
+    },
+    {
+      "case": "resize_1.25",
+      "accepted": true,
+      "correct_single": 20,
+      "wrong_single": 0,
+      "flagged_for_review": 0
+    },
+    {
+      "case": "brightness_0.45",
+      "accepted": true,
+      "correct_single": 20,
+      "wrong_single": 0,
+      "flagged_for_review": 0
+    },
+    {
+      "case": "brightness_0.65",
+      "accepted": true,
+      "correct_single": 20,
+      "wrong_single": 0,
+      "flagged_for_review": 0
+    },
+    {
+      "case": "brightness_0.85",
+      "accepted": true,
+      "correct_single": 20,
+      "wrong_single": 0,
+      "flagged_for_review": 0
+    },
+    {
+      "case": "gaussian_blur_sigma_1",
+      "accepted": true,
+      "correct_single": 20,
+      "wrong_single": 0,
+      "flagged_for_review": 0
+    },
+    {
+      "case": "gaussian_blur_sigma_2",
+      "accepted": true,
+      "correct_single": 20,
+      "wrong_single": 0,
+      "flagged_for_review": 0
+    },
+    {
+      "case": "gaussian_blur_sigma_3",
+      "accepted": true,
+      "correct_single": 20,
+      "wrong_single": 0,
+      "flagged_for_review": 0
+    },
+    {
+      "case": "gaussian_blur_sigma_5",
+      "accepted": false,
+      "message": "الورقة لا تطابق القالب أو جودتها لا تسمح بالقراءة"
+    },
+    {
+      "case": "jpeg_quality_15",
+      "accepted": true,
+      "correct_single": 20,
+      "wrong_single": 0,
+      "flagged_for_review": 0
+    },
+    {
+      "case": "jpeg_quality_35",
+      "accepted": true,
+      "correct_single": 20,
+      "wrong_single": 0,
+      "flagged_for_review": 0
+    },
+    {
+      "case": "jpeg_quality_60",
+      "accepted": true,
+      "correct_single": 20,
+      "wrong_single": 0,
+      "flagged_for_review": 0
+    },
+    {
+      "case": "jpeg_quality_85",
+      "accepted": true,
+      "correct_single": 20,
+      "wrong_single": 0,
+      "flagged_for_review": 0
+    },
+    {
+      "case": "rotation_-12",
+      "accepted": false,
+      "message": "تعذر العثور على العلامات الأربع بوضوح؛ ارفع القالب كاملًا بخلفية بسيطة"
+    },
+    {
+      "case": "rotation_-7",
+      "accepted": false,
+      "message": "تعذر العثور على العلامات الأربع بوضوح؛ ارفع القالب كاملًا بخلفية بسيطة"
+    },
+    {
+      "case": "rotation_-3",
+      "accepted": true,
+      "correct_single": 20,
+      "wrong_single": 0,
+      "flagged_for_review": 0
+    },
+    {
+      "case": "rotation_3",
+      "accepted": true,
+      "correct_single": 20,
+      "wrong_single": 0,
+      "flagged_for_review": 0
+    },
+    {
+      "case": "rotation_7",
+      "accepted": false,
+      "message": "تعذر العثور على العلامات الأربع بوضوح؛ ارفع القالب كاملًا بخلفية بسيطة"
+    },
+    {
+      "case": "rotation_12",
+      "accepted": false,
+      "message": "تعذر العثور على العلامات الأربع بوضوح؛ ارفع القالب كاملًا بخلفية بسيطة"
+    },
+    {
+      "case": "noise_std_10",
+      "accepted": true,
+      "correct_single": 20,
+      "wrong_single": 0,
+      "flagged_for_review": 0
+    },
+    {
+      "case": "noise_std_25",
+      "accepted": true,
+      "correct_single": 20,
+      "wrong_single": 0,
+      "flagged_for_review": 0
+    },
+    {
+      "case": "noise_std_45",
+      "accepted": true,
+      "correct_single": 20,
+      "wrong_single": 0,
+      "flagged_for_review": 0
+    },
+    {
+      "case": "upside_down_expected_rejection",
+      "accepted": false,
+      "message": "اتجاه الورقة أو إصدار القالب غير صحيح؛ استخدم OMR v1 بوضع رأسي"
+    },
+    {
+      "case": "cropped_markers_expected_rejection",
+      "accepted": false,
+      "message": "تعذر العثور على العلامات الأربع بوضوح؛ ارفع القالب كاملًا بخلفية بسيطة"
+    }
+  ]
+}
