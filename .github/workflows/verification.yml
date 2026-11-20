@@ -18,6 +18,7 @@ jobs:
           ALLOW_EXTERNAL_AI: 'false'
           ALLOW_PAID_API: 'false'
       - run: python -m scripts.validate_colab_notebook --execute-smoke
+      - run: python -m scripts.validate_colab_notebook --notebook notebooks/SmartGrade_Institution_Colab.ipynb
       - run: python -m pip install pip-audit cyclonedx-bom
       - run: pip-audit --no-deps --disable-pip -r requirements-runtime.lock --format json --output python-audit.json
       - run: cyclonedx-py requirements requirements-runtime.lock --of JSON -o sbom.cdx.json

@@ -1,0 +1,10 @@
+{
+  "synthetic_isolated_credentials": true,
+  "actual_commercial_login_required": true,
+  "anonymous_exam_form_blocked": true,
+  "valid_account_login_succeeded": true,
+  "no_demo_mode_banner": true,
+  "real_worker_started": true,
+  "public_google_colab_session_exercised": false,
+  "passed": true
+}

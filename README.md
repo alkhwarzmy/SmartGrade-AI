@@ -99,18 +99,30 @@ python -m ruff check .
 python -m scripts.commercial_browser_smoke  # Chromium + Playwright، متطلبات requirements-browser.txt
 python -m scripts.docker_smoke             # بعد بناء صورة smartgrade:1.0.0-rc2
 python -m scripts.build_colab_notebook
+python -m scripts.build_institution_notebook
 python -m scripts.validate_colab_notebook --execute-smoke
+python -m scripts.validate_colab_notebook --notebook notebooks/SmartGrade_Institution_Colab.ipynb
 ```
 
 تستخدم الاختبارات بيانات ومؤسسات وكلمات مرور اصطناعية معزولة؛ لا تُنشئ حسابات على نسخة الإنتاج. راجع [نتائج RC2 وحدود التحقق](docs/releases/rc2/implementation.md)، و[الأدلة المحفوظة](docs/releases/rc2/evidence/)، و[أوامر إعادة التحقق](docs/releases/rc2/verify.md).
 
-## تجربة Colab
+## تشغيل المؤسسات على Colab
+
+[![Open Institutions In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/alkhwarzmy/SmartGrade-AI/blob/main/notebooks/SmartGrade_Institution_Colab.ipynb)
+
+[افتح نسخة المؤسسات بحسابات فعلية](https://colab.research.google.com/github/alkhwarzmy/SmartGrade-AI/blob/main/notebooks/SmartGrade_Institution_Colab.ipynb)، واختر CPU ثم Run all. أدخل بيانات مؤسستك وكلمة مرور مخفية؛ يبدأ التطبيق ببيانات فارغة، مع عامل المهام والنسخ الكامل المشفر. [دليل الإعداد والحفظ والاستئناف](docs/institution_colab.md).
+
+التشغيل داخل Colab يستمر مع جلسة Google، والبيانات المحلية مؤقتة؛ احفظ النسخة المشفرة ومفتاحها لاستئناف العمل. التشغيل الدائم يستخدم نسخة الخادم بقرص دائم وHTTPS.
+
+## تجربة Colab بدون حسابات
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/alkhwarzmy/SmartGrade-AI/blob/main/notebooks/SmartGrade_Colab.ipynb)
 
 الدفتر ذاتي الاحتواء يعمل صراحةً بوضع **demo** للتجربة، مع CPU وRun all، وليس بديلًا لخادم المؤسسات. وضع demo بدون حسابات؛ استخدم عينات اصطناعية. الحفظ على Drive اختياري ويقتصر على ZIP؛ SQLite الحية تبقى على قرص الجلسة. [دليل Colab](docs/colab_guide.md).
 
 ## وثائق المشروع
+
+- [تشغيل المؤسسات الفعلي داخل Colab](docs/institution_colab.md)
 
 - [تقرير الاختبار والتحسينات — 18 نوفمبر 2026](docs/audits/2026-11-18/report.md)
 - [خطة تنفيذ التحسينات ومعايير القبول](docs/audits/2026-11-18/action_plan.md) · [التقرير والخطة بصيغة PDF](docs/audits/2026-11-18/report_and_plan.pdf)

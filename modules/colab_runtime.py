@@ -43,7 +43,11 @@ class AppRuntime:
                 self.process.wait(timeout=5)
 
 
-def launch_app(project_dir, python, data_dir, *, port=8501, browser_address="", extra_env=None, timeout=45):
+def launch_app(
+    project_dir, python, data_dir, *, port=8501, browser_address="", extra_env=None, timeout=45, mode="demo"
+):
+    if mode not in {"demo", "commercial"}:
+        raise ValueError("وضع التشغيل يجب أن يكون commercial أو demo")
     project_dir, data_dir = Path(project_dir).resolve(), Path(data_dir).resolve()
     python = Path(python).absolute()  # Keep a venv's symlink; resolve() would select its base interpreter.
     if not (project_dir / "app.py").is_file() or not python.is_file():
@@ -66,7 +70,7 @@ def launch_app(project_dir, python, data_dir, *, port=8501, browser_address="", 
     env = {
         **os.environ,
         "SMARTGRADE_DATA_DIR": str(data_dir),
-        "SMARTGRADE_MODE": "demo",
+        "SMARTGRADE_MODE": mode,
         "ALLOW_EXTERNAL_AI": "false",
         "ALLOW_PAID_API": "false",
         "OCR_PROVIDER": "tesseract" if shutil.which("tesseract") else "manual",

@@ -1,0 +1,19 @@
+{
+  "date": "2026-11-20",
+  "timezone": "Asia/Riyadh",
+  "application_mode": "commercial",
+  "test_credentials_and_images": "isolated synthetic fixtures only",
+  "unit_tests_passed": 101,
+  "mode_and_live_worker_verified": true,
+  "account_setup_cells_executed_locally": true,
+  "no_initial_exam_or_student_seeds": true,
+  "password_not_printed": true,
+  "restart_preserves_data": true,
+  "full_encrypted_restore_verified": true,
+  "worker_children_stopped_before_backup": true,
+  "user_google_colab_session_executed": false,
+  "user_private_account_created_by_assistant": false,
+  "permanent_hosting_deployed": false,
+  "extracted_institution_notebook_tests_passed": 101,
+  "data_lifetime": "Colab session; full encrypted snapshots required between sessions"
+}
