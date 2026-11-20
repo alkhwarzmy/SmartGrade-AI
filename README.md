@@ -49,7 +49,7 @@ docker compose run --rm --no-deps web python -m scripts.manage init --slug my-sc
 docker compose up -d
 ```
 
-لا ينشئ هذا المستودع نطاقًا أو استضافة. يلزم فتح 80/443 على خادمك وDNS صحيح لإصدار الشهادة. لا تعرض منافذ web/API الداخلية مباشرة. اقرأ [دليل التشغيل والاستعادة](docs/operations.md) قبل خدمة مستخدمين حقيقيين. عند وجود CA مؤسسية في شبكة البناء يمكن تمريرها كـBuildKit secret دون حفظها في الصورة أو تعطيل TLS.
+لا ينشئ هذا المستودع نطاقًا أو استضافة. يلزم فتح 80/443 على خادمك وDNS صحيح لإصدار الشهادة. لا تعرض منافذ web/API الداخلية مباشرة. اقرأ [دليل تشغيل RC2 والاستعادة](docs/releases/rc2/operations.md) قبل خدمة مستخدمين حقيقيين. عند وجود CA مؤسسية في شبكة البناء يمكن تمريرها كـBuildKit secret دون حفظها في الصورة أو تعطيل TLS.
 
 ## الاستخدام
 
@@ -84,7 +84,7 @@ python -m scripts.manage license --slug my-school --plan school --until 2027-12-
 python -m uvicorn api:app --host 127.0.0.1 --port 8000 --no-access-log
 ```
 
-المسارات تتطلب Bearer token من `/auth/login`، عدا `/health` و`/ready`. لا يُقبل دور أو مؤسسة من ترويسة العميل. عند التشغيل خلف Caddy تصبح المسارات تحت `/api/`. التوثيق التفاعلي مغلق افتراضيًا؛ فعّل `SMARTGRADE_API_DOCS=true` في بيئة تطوير موثوقة فقط. راجع [مرجع API](docs/api.md).
+المسارات تتطلب Bearer token من `/auth/login`، عدا `/health` و`/ready`. لا يُقبل دور أو مؤسسة من ترويسة العميل. عند التشغيل خلف Caddy تصبح المسارات تحت `/api/`. التوثيق التفاعلي مغلق افتراضيًا؛ فعّل `SMARTGRADE_API_DOCS=true` في بيئة تطوير موثوقة فقط. راجع [عقد API الحالي والمهام الخلفية](docs/releases/rc2/operations.md)، و[مرجع المسارات الأساسي](docs/api.md).
 
 ## مزود المقالات الاختياري
 
@@ -93,7 +93,7 @@ python -m uvicorn api:app --host 127.0.0.1 --port 8000 --no-access-log
 ## الاختبارات
 
 ```bash
-python -m pip install -r requirements.lock
+python -m pip install --require-hashes -r requirements.lock
 python -m pytest -q
 python -m ruff check .
 python -m scripts.commercial_browser_smoke  # Chromium + Playwright، متطلبات requirements-browser.txt
@@ -102,7 +102,7 @@ python -m scripts.build_colab_notebook
 python -m scripts.validate_colab_notebook --execute-smoke
 ```
 
-تستخدم الاختبارات بيانات ومؤسسات وكلمات مرور اصطناعية معزولة؛ لا تُنشئ حسابات على نسخة الإنتاج. تقارير التحقق في [تقرير الإصدار](docs/commercial_release.md) و`docs/evidence/`.
+تستخدم الاختبارات بيانات ومؤسسات وكلمات مرور اصطناعية معزولة؛ لا تُنشئ حسابات على نسخة الإنتاج. راجع [نتائج RC2 وحدود التحقق](docs/releases/rc2/implementation.md)، و[الأدلة المحفوظة](docs/releases/rc2/evidence/)، و[أوامر إعادة التحقق](docs/releases/rc2/verify.md).
 
 ## تجربة Colab
 
