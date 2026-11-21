@@ -21,6 +21,10 @@ def prepare():
         ], check=True)
         shutil.copytree(generated / "android", target,
                         ignore=shutil.ignore_patterns("local.properties", ".gradle", "*.jks", "*.keystore"))
+    # Track launchers too: the notebook's embedded bundle must match a fresh Git checkout.
+    ignore = target / ".gitignore"
+    ignore.write_text("\n".join(line for line in ignore.read_text().splitlines()
+                               if line not in {"gradle-wrapper.jar", "/gradlew", "/gradlew.bat"}) + "\n")
     manifest = target / "app/src/main/AndroidManifest.xml"
     text = manifest.read_text()
     text = text.replace("<application", '<uses-permission android:name="android.permission.INTERNET"/>\\n    <application', 1)

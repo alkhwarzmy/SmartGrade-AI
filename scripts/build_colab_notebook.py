@@ -27,6 +27,7 @@ TOP_FILES = [
     "requirements-browser.txt",
     "requirements.lock",
     ".streamlit/config.toml",
+    ".github/workflows/verification.yml",
 ]
 SOURCE_DIRS = ["modules", "database", "scripts", "tests", "docs", "assets", "deployment"]
 
