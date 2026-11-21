@@ -1,0 +1,22 @@
+{
+  "tested_source_commit": "2e1ffcc5d77d25f14a8f7c1131ece3a52679dbee",
+  "workflow_run": "https://github.com/alkhwarzmy/SmartGrade-AI/actions/runs/44911638475",
+  "passed": [
+    "python_tests",
+    "direct_launcher_tests",
+    "extracted_notebook_tests",
+    "notebook_source_validation",
+    "python_dependency_audit",
+    "container_security_gate",
+    "flutter_analysis",
+    "flutter_tests",
+    "dart_real_api_smoke",
+    "android_debug_apk_build"
+  ],
+  "limits": [
+    "No live Google Colab account execution",
+    "No physical Android camera test",
+    "No measured Arabic handwriting or essay grading accuracy",
+    "APK is internal debug, not store-signed"
+  ]
+}
