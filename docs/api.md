@@ -52,3 +52,18 @@
 - 400: صورة/سؤال/قيمة أعمال غير صالحة أو معرف غير موجود داخل المؤسسة.
 
 كل الردود عليها no-store. لا يوجد CORS عام أو auth cookie للـAPI؛ إذا بنيت عميلًا آخر فاحفظ الرمز بطريقة ملائمة، واستخدم TLS. التوثيق التفاعلي اختياري عبر `SMARTGRADE_API_DOCS=true` في بيئة موثوقة.
+
+
+## تحديث تعدد الأسئلة وعميل Android
+- GET /exams?include_spec=false&limit=20&offset=0: قائمة خفيفة مع maximum وquestion_count دون rubric.
+- GET /exams/{id}: تفاصيل الاختبار وcounts؛ spec للمدير والمعلم فقط.
+- GET /submissions/{id}/image?preview_width=1000: معاينة PNG محمية بعرض200..1600 دون تغيير الأصل.
+- PUT /submissions/{id}/essay-answers: {"revision":N,"answers":{"question-id":"نص الإجابة"}}.
+  الخريطة تشمل جميع الأسئلة، ومجموع النصوص حتى30000 حرف. الحفظ المطابق لا يغير revision أو الاعتماد.
+- ExamSpec للمقالي الجديد يستخدم questions:[{id,question,model_answer,instructions,maximum,criteria}].
+  لا يجمع حقول question/model_answer/criteria القديمة مع قائمة الأسئلة. المعرّف فريد للسؤال، والمعيار فريد داخل سؤاله.
+  مجموع درجات المعايير يساوي درجة السؤال، ويحسب maximum للاختبار من مجموع درجات الأسئلة.
+- proposal للمقالي المتعدد يستخدم questions:[{question_id,criteria:[{criterion_id,score,evidence,rationale,missing}]}].
+  يجب إدراج كل الأسئلة والمعايير مرة واحدة، مع دليل من إجابة السؤال ذاته، وصفر ودليل فارغ لأي إجابة فارغة.
+  صيغة السؤال الواحد القديمة تبقى مقروءة دون تحويل السجلات السابقة.
+- 409 يحفظ مسودة عميل Flutter، ويطلب تحميل آخر مراجعة صراحة. التصريح النهائي يراجع الصلاحية ورقم المراجعة في الخادم.

@@ -101,15 +101,16 @@ class SmartGradeApi {
   Future<Uint8List> jobResult(String id) => send(http.Request('GET', base.resolve('jobs/$id/result')));
   void close() => client.close();
 }
+Json objectValue(dynamic value) => value is Map ? Map<String, dynamic>.from(value) : <String, dynamic>{};
 List<Json> essayQuestions(Json exam) {
-  final spec = exam['spec'] as Json;
+  final spec = objectValue(exam['spec']);
   final questions = spec['questions'] as List? ?? [];
   return questions.isEmpty ? [{...spec, 'id': 'q1'}] : questions.cast<Json>();
 }
 bool multiEssay(Json exam) => ((exam['spec'] as Json)['questions'] as List? ?? []).isNotEmpty;
 Map<String, String> answerTexts(Json exam, Json paper) {
   final questions = essayQuestions(exam);
-  final saved = (paper['current'] as Json?)?['essay_answers'] as Json? ?? {};
+  final saved = objectValue(objectValue(paper['current'])['essay_answers']);
   return {for (final q in questions) q['id'] as String:
     saved[q['id']] as String? ?? (questions.length == 1 ? paper['text'] as String? ?? '' : '')};
 }

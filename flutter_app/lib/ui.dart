@@ -18,16 +18,20 @@ mixin TaskState<T extends StatefulWidget> on State<T> {
       if (mounted) { setState(() { busy = false; }); }
     }
   }
+  Widget input(TextEditingController controller, String label, {int lines = 1,
+    int? maxLength, bool secret = false, TextInputType? keyboard, ValueChanged<String>? onChanged}) =>
+    editor(controller, label, lines: lines, maxLength: maxLength, secret: secret,
+      keyboard: keyboard, onChanged: onChanged, enabled: !busy);
   Widget status() => Column(children: [
     if (busy) const LinearProgressIndicator(),
     if (error.isNotEmpty) Padding(padding: const EdgeInsets.all(12),
       child: SelectableText(error, style: TextStyle(color: Theme.of(context).colorScheme.error))),
   ]);
 }
-Widget input(TextEditingController controller, String label, {int lines = 1,
-  int? maxLength, bool secret = false, TextInputType? keyboard, ValueChanged<String>? onChanged}) =>
+Widget editor(TextEditingController controller, String label, {int lines = 1,
+  int? maxLength, bool secret = false, TextInputType? keyboard, ValueChanged<String>? onChanged, bool enabled = true}) =>
   Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: TextField(
-    controller: controller, obscureText: secret, maxLines: lines, maxLength: maxLength,
+    controller: controller, enabled: enabled, obscureText: secret, maxLines: lines, maxLength: maxLength,
     keyboardType: keyboard, onChanged: onChanged,
     decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
   ));

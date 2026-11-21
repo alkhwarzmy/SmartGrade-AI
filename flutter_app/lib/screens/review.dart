@@ -150,13 +150,17 @@ class _ReviewState extends State<ReviewScreen> with TaskState<ReviewScreen> {
       if (mounted) { await load(); }
     }
   }
-  Future<void> saveSource() async { await task(() async {
+  Future<void> saveSource() async {
+    if ((answersDirty || gradeDirty) && !await confirm(context, 'حفظ النص سيعيد تحميل الإجابات والدرجات ويلغي مسودتها. متابعة؟')) { return; }
+    await task(() async {
     final api = widget.session.api!;
     await api.json('PUT', 'submissions/${widget.id}/text', body: {'revision': row!['revision'], 'text': source.text});
     final fresh = await api.paper(widget.id);
     if (mounted) { setState(() => hydrate(fresh)); }
   }); }
-  Future<void> saveAnswers() async { await task(() async {
+  Future<void> saveAnswers() async {
+    if (gradeDirty && !await confirm(context, 'تغيير الإجابات يعيد بدء مراجعة الدرجات. متابعة؟')) { return; }
+    await task(() async {
     final api = widget.session.api!;
     await api.json('PUT', 'submissions/${widget.id}/essay-answers', body: {
       'revision': row!['revision'], 'answers': {for (final e in answers.entries) e.key: e.value.text},
@@ -241,6 +245,8 @@ class _ReviewState extends State<ReviewScreen> with TaskState<ReviewScreen> {
       onChanged: busy ? null : (v) => setState(() { mcq[i] = v == '' ? null : v; gradeDirty = true; reviewed = false; })),
   ];
   List<Widget> essayFields() => [
+    if (((widget.exam['spec'] as Json)['instructions'] as String? ?? '').isNotEmpty)
+      Text((widget.exam['spec'] as Json)['instructions'] as String),
     input(source, 'النص الكامل للورقة', lines: 6, maxLength: 30000,
       onChanged: (_) => setState(() { sourceDirty = true; reviewed = false; })),
     Wrap(spacing: 8, children: [
@@ -251,6 +257,7 @@ class _ReviewState extends State<ReviewScreen> with TaskState<ReviewScreen> {
     for (final q in essayQuestions(widget.exam)) Card(key: ValueKey(q['id']),
       child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(q['question'] as String, style: Theme.of(context).textTheme.titleLarge),
+        if ((q['instructions'] as String? ?? '').isNotEmpty) Text(q['instructions'] as String),
         if ((q['model_answer'] as String? ?? '').isNotEmpty) ExpansionTile(
           title: const Text('الإجابة النموذجية'), children: [SelectableText(q['model_answer'] as String)]),
         if (isMulti) input(answers[q['id']]!, 'إجابة هذا السؤال', lines: 4, maxLength: 30000,
