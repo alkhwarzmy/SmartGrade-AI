@@ -39,6 +39,18 @@ def source_files(root=ROOT):
             for p in (root / directory).rglob("*")
             if p.is_file() and "__pycache__" not in p.parts and p.suffix != ".pyc"
         )
+    flutter = root / "flutter_app"
+    for name in ["pubspec.yaml", "pubspec.lock", "analysis_options.yaml", ".gitignore", "README.md"]:
+        path = flutter / name
+        if path.is_file():
+            files.append(path)
+    excluded = {".gradle", ".dart_tool", "build", ".idea", ".git", "__pycache__"}
+    for directory in ["lib", "test", "tool", "android"]:
+        for path in (flutter / directory).rglob("*"):
+            if (path.is_file() and not set(path.relative_to(flutter).parts) & excluded
+                    and path.name not in {"local.properties", "key.properties", ".env"}
+                    and path.suffix not in {".jks", ".keystore", ".pyc"}):
+                files.append(path)
     return sorted(files, key=lambda p: p.relative_to(root).as_posix())
 
 

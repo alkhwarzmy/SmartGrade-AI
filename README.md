@@ -138,3 +138,7 @@ python -m scripts.validate_colab_notebook --notebook notebooks/SmartGrade_Instit
 - [التقييم العلمي وحدوده](docs/evaluation_report.md)
 
 لا تتضمن النسخة تدريب HTR معتمدًا، أو SSO/MFA، أو دفعًا محصّلًا، أو بنية موزعة، أو اعتمادًا قانونيًا/أمنيًا. يجب إكمال تقييم الجودة والأمن والبيانات والتشغيل الخاص بالعميل قبل إطلاق عام أو استخدام درجات AI دون مراجعة.
+
+## الدفتر الشامل وAndroid
+
+[افتح أحدث دفتر شامل في Colab](https://colab.research.google.com/github/alkhwarzmy/SmartGrade-AI/blob/main/notebooks/SmartGrade_Complete_Colab.ipynb) — تشغيل المؤسسات الفعلي، وتعدد الأسئلة، وجميع مصادر Flutter Android مضمنة. [دليل التشغيل](docs/complete_colab.md) · [Android](flutter_app/README.md).
