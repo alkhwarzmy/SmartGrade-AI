@@ -222,7 +222,7 @@ class _ExamState extends State<ExamScreen> with TaskState<ExamScreen> {
       Wrap(spacing: 8, children: ['xlsx', 'csv', 'pdf'].map((v) => OutlinedButton(
         onPressed: busy || exam == null ? null : () => report(v), child: Text('تصدير ${v.toUpperCase()}'))).toList()),
       if (exam != null) Padding(padding: const EdgeInsets.all(8), child: Text(
-        'الدرجة الكاملة: ${exam!['maximum']} · الأوراق: ${exam!['counts']}')),
+        'الدرجة الكاملة: ${exam!['maximum']} · الأوراق: ${exam!['counts']['submissions']} · المعتمد: ${exam!['counts']['approved']}')),
       Expanded(child: ListView.builder(itemCount: rows.length, itemBuilder: (context, i) {
         final row = rows[i];
         return Card(child: ListTile(title: Text(row['student_code'] as String), subtitle: Text(

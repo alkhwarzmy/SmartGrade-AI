@@ -1,6 +1,5 @@
 """Build the complete authenticated Colab notebook, including Android source."""
 import json
-from pathlib import Path
 from scripts.build_colab_notebook import ROOT, code, markdown
 from scripts.build_institution_notebook import build_institution_notebook
 

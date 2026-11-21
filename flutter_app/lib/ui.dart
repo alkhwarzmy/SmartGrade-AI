@@ -6,6 +6,7 @@ mixin TaskState<T extends StatefulWidget> on State<T> {
   String error = '';
   Future<bool> task(Future<void> Function() action) async {
     if (busy) { return false; }
+    FocusManager.instance.primaryFocus?.unfocus();
     setState(() { busy = true; error = ''; });
     try {
       await action();

@@ -44,12 +44,13 @@ def source_files(root=ROOT):
         path = flutter / name
         if path.is_file():
             files.append(path)
-    excluded = {".gradle", ".dart_tool", "build", ".idea", ".git", "__pycache__"}
+    excluded = {".gradle", ".dart_tool", ".kotlin", ".cxx", "build", ".idea", ".git", "__pycache__"}
     for directory in ["lib", "test", "tool", "android"]:
         for path in (flutter / directory).rglob("*"):
             if (path.is_file() and not set(path.relative_to(flutter).parts) & excluded
-                    and path.name not in {"local.properties", "key.properties", ".env"}
-                    and path.suffix not in {".jks", ".keystore", ".pyc"}):
+                    and path.name not in {"local.properties", "key.properties"}
+                    and not path.name.startswith(".env")
+                    and path.suffix not in {".jks", ".keystore", ".pyc", ".key", ".pem", ".p12", ".pfx"}):
                 files.append(path)
     return sorted(files, key=lambda p: p.relative_to(root).as_posix())
 

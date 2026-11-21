@@ -78,6 +78,7 @@ jobs:
         working-directory: flutter_app
         run: |
           flutter pub get
+          dart fix --apply
           dart format lib test tool
       - name: Analyze and test native client
         working-directory: flutter_app
