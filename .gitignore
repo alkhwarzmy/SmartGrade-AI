@@ -238,3 +238,7 @@ smartgrade-backup-*.zip
 *.sgb
 *.key
 security-results/
+
+# Flutter source is not a Python installation/build directory.
+!/flutter_app/lib/
+!/flutter_app/lib/**
