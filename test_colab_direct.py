@@ -79,6 +79,35 @@ class DirectColabTests(unittest.TestCase):
         direct.backup_project()
         self.assertEqual(direct._smartgrade_direct_scope["_probe"], ("download", True))
 
+    def test_default_display_keeps_launch_settings_and_uses_a_window(self):
+        notebook = json.loads((ROOT / "notebooks/SmartGrade_Institution_Colab.ipynb").read_text())
+        original = next(
+            direct._source(cell) for cell in notebook["cells"]
+            if cell["cell_type"] == "code" and "output.serve_kernel_port_as_iframe(" in direct._source(cell)
+        )
+        displayed = direct._display_source(original)
+        self.assertIn("output.serve_kernel_port_as_window(PORT)", displayed)
+        self.assertIn("launch_institution(", displayed)
+        self.assertIn("browser_address=address", displayed)
+        self.assertNotIn("enableXsrfProtection", displayed)
+
+    def test_embedded_display_can_be_selected_explicitly(self):
+        source = "output.serve_kernel_port_as_iframe(PORT, height=1000, cache_in_notebook=False)"
+        with mock.patch.object(direct, "OPEN_IN_NEW_TAB", False):
+            self.assertEqual(direct._display_source(source), source)
+
+    def test_window_uses_the_running_notebook_port(self):
+        google = types.ModuleType("google")
+        google.__path__ = []
+        colab = types.ModuleType("google.colab")
+        output = types.SimpleNamespace(serve_kernel_port_as_window=mock.Mock())
+        colab.output = output
+        google.colab = colab
+        direct._smartgrade_direct_scope = {"PORT": 8655}
+        with mock.patch.dict(sys.modules, {"google": google, "google.colab": colab}):
+            direct.open_project_window()
+        output.serve_kernel_port_as_window.assert_called_once_with(8655)
+
     def test_commands_require_an_initialized_project(self):
         with self.assertRaises(RuntimeError):
             direct.backup_project()
