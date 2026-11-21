@@ -236,6 +236,18 @@ class Workspace:
             self._deliver()
             return changed
 
+    def save_answers(self, sid, answers, reviewer, revision):
+        with tenant_write_lock(self._root):
+            actor = self._actor("write")
+            if self._core.submission(sid).current.get("essay_answers") != answers:
+                self._guard_storage()
+            changed = self._core.save_answers(
+                sid, answers, actor.user_id, revision,
+                audit=self._audit(actor, "submission.essay_answers_changed"),
+            )
+            self._deliver()
+            return changed
+
     def save_proposal(self, sid, proposal, revision):
         actor = self._actor("write")
         if not self.auth.organization(self.token)["external_ai_allowed"]:

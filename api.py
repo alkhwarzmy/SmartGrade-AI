@@ -17,7 +17,7 @@ from starlette.concurrency import run_in_threadpool
 from config import DATA_DIR, MAX_FILE_BYTES
 from modules.auth import AuthService, AuthError, PermissionDenied, CapacityError, LoginRateLimited
 from modules.workspace import Workspace
-from modules.schemas import ExamSpec, GradeProposal
+from modules.schemas import ExamSpec, GradeProposal, EssayGradeProposal
 from modules.review import RevisionConflict
 from modules.http_limits import RequestSizeLimit
 from modules.proxy import client_address
@@ -66,6 +66,10 @@ class TextUpdate(RevisionRequest):
     text: str = Field(max_length=30000)
 
 
+class EssayAnswersUpdate(RevisionRequest):
+    answers: dict[str, str]
+
+
 class Review(Input):
     revision: int = Field(ge=1)
     reviewed: Literal[True]
@@ -77,7 +81,7 @@ class MCQApproval(Review):
 
 
 class EssayApproval(Review):
-    proposal: GradeProposal
+    proposal: GradeProposal | EssayGradeProposal
 
 
 class AIRequest(Input):
@@ -246,17 +250,24 @@ def create_app(root: Path = DATA_DIR):
     def usage(workspace: Workspace = Depends(space)):
         return workspace.usage()
 
+    def exam_info(exam, include_spec):
+        spec = ExamSpec.model_validate(exam.spec)
+        return {
+            "id": exam.id, "title": exam.title, "kind": exam.kind, "maximum": spec.maximum,
+            "question_count": 20 if spec.kind == "mcq" else len(spec.essay_questions()),
+            **({"spec": exam.spec} if include_spec else {}),
+        }
+
     @api.get("/exams")
-    def exams(
-        workspace: Workspace = Depends(space),
-        limit: int = Query(50, ge=1, le=200),
-        offset: int = Query(0, ge=0),
-    ):
+    def exams(workspace: Workspace = Depends(space), limit: int = Query(50, ge=1, le=200),
+              offset: int = Query(0, ge=0), include_spec: bool = True):
         actor = service.actor(workspace.token)
-        return [
-            {"id": e.id, "title": e.title, "kind": e.kind, **({"spec": e.spec} if actor.can("read") else {})}
-            for e in workspace.exams(limit, offset)
-        ]
+        return [exam_info(e, include_spec and actor.can("read")) for e in workspace.exams(limit, offset)]
+
+    @api.get("/exams/{exam_id}")
+    def exam_detail(exam_id: str, workspace: Workspace = Depends(space)):
+        actor = service.actor(workspace.token)
+        return {**exam_info(workspace.exam(exam_id), actor.can("read")), "counts": workspace.counts(exam_id)}
 
     @api.post("/exams", status_code=201)
     def create_exam(body: ExamSpec, workspace: Workspace = Depends(space)):
@@ -316,15 +327,29 @@ def create_app(root: Path = DATA_DIR):
         }
 
     @api.get("/submissions/{sid}/image")
-    def image(sid: str, workspace: Workspace = Depends(space)):
+    @bounded_processing
+    def image(sid: str, preview_width: int | None = Query(None, ge=200, le=1600),
+              workspace: Workspace = Depends(space)):
         row = workspace.submission(sid)
-        return Response(
-            workspace.image_path(row.aligned_name or row.image_name).read_bytes(), media_type="image/png"
-        )
+        path = workspace.image_path(row.aligned_name or row.image_name)
+        if preview_width:
+            import io
+            from PIL import Image
+            with Image.open(path) as picture:
+                picture.thumbnail((preview_width, preview_width * 2))
+                output = io.BytesIO()
+                picture.save(output, format="PNG")
+            return Response(output.getvalue(), media_type="image/png")
+        return Response(path.read_bytes(), media_type="image/png")
 
     @api.put("/submissions/{sid}/text")
     def text(sid: str, body: TextUpdate, workspace: Workspace = Depends(space)):
         workspace.save_text(sid, body.text, "", body.revision)
+        return {"revision": workspace.submission(sid).revision}
+
+    @api.put("/submissions/{sid}/essay-answers")
+    def essay_answers(sid: str, body: EssayAnswersUpdate, workspace: Workspace = Depends(space)):
+        workspace.save_answers(sid, body.answers, "", body.revision)
         return {"revision": workspace.submission(sid).revision}
 
     @api.post("/submissions/{sid}/ocr")
@@ -356,7 +381,7 @@ def create_app(root: Path = DATA_DIR):
         if spec.kind != "essay":
             raise ValueError("اقتراح الدرجات الآلي مخصص للأسئلة المقالية")
         try:
-            grade = propose_grade(spec, row.text, consent=body.consent_to_external_processing_and_cost)
+            grade = propose_grade(spec, row.text, current=row.current, consent=body.consent_to_external_processing_and_cost)
         except ProviderError:
             workspace.record_processing_failure(sid, "llm", body.revision)
             raise

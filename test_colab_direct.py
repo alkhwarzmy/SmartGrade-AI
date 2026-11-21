@@ -29,13 +29,13 @@ class DirectColabTests(unittest.TestCase):
             compile(direct._source(cell), cell["id"], "exec")
 
     def test_pinned_published_notebook_verifies_and_compiles(self):
-        payload = (ROOT / "notebooks/SmartGrade_Institution_Colab.ipynb").read_bytes()
+        payload = (ROOT / "notebooks/SmartGrade_Legacy_Source.ipynb").read_bytes()
         with mock.patch.object(direct, "urlopen", return_value=io.BytesIO(payload)):
             cells = direct._fetch_notebook()
         self.assertEqual(len(cells), 10)
 
     def test_modified_download_is_rejected(self):
-        payload = (ROOT / "notebooks/SmartGrade_Institution_Colab.ipynb").read_bytes() + b" "
+        payload = (ROOT / "notebooks/SmartGrade_Legacy_Source.ipynb").read_bytes() + b" "
         with mock.patch.object(direct, "urlopen", return_value=io.BytesIO(payload)):
             with self.assertRaises(ValueError):
                 direct._fetch_notebook()
@@ -80,7 +80,7 @@ class DirectColabTests(unittest.TestCase):
         self.assertEqual(direct._smartgrade_direct_scope["_probe"], ("download", True))
 
     def test_default_display_keeps_launch_settings_and_uses_a_window(self):
-        notebook = json.loads((ROOT / "notebooks/SmartGrade_Institution_Colab.ipynb").read_text())
+        notebook = json.loads((ROOT / "notebooks/SmartGrade_Legacy_Source.ipynb").read_text())
         original = next(
             direct._source(cell) for cell in notebook["cells"]
             if cell["cell_type"] == "code" and "output.serve_kernel_port_as_iframe(" in direct._source(cell)

@@ -24,6 +24,9 @@ DETAIL_COLUMNS = [
     "الإجابة الصحيحة / التبرير",
     "الدرجة",
     "الدرجة الكاملة",
+    "رقم السؤال",
+    "معرف السؤال",
+    "نص السؤال",
 ]
 
 
@@ -66,24 +69,23 @@ def frames(store, exam_id=None, *, limit=None, offset=0):
                         key,
                         spec.points_per_question if answer == key else 0,
                         spec.points_per_question,
+                        i + 1, str(i + 1), "",
                     ]
                 )
         else:
-            rubric = {c.id: c for c in spec.criteria}
-            for grade in row.approved["criteria"]:
-                c = rubric[grade["criterion_id"]]
-                details.append(
-                    [
-                        row.id,
-                        row.student_code,
-                        spec.title,
-                        c.description,
-                        grade["evidence"],
-                        grade["rationale"],
-                        grade["score"],
-                        c.maximum,
-                    ]
-                )
+            question_grades = row.approved.get("questions") if spec.questions else [
+                {"question_id": "q1", "criteria": row.approved["criteria"]}
+            ]
+            by_question = {g["question_id"]: g for g in question_grades}
+            for number, q in enumerate(spec.essay_questions(), 1):
+                rubric = {c.id: c for c in q.criteria}
+                for grade in by_question[q.id]["criteria"]:
+                    c = rubric[grade["criterion_id"]]
+                    details.append([
+                        row.id, row.student_code, spec.title, f"س{number} · {c.description}",
+                        grade["evidence"], grade["rationale"], grade["score"], c.maximum,
+                        number, q.id, q.question,
+                    ])
     return (
         pd.DataFrame(summaries, columns=SUMMARY_COLUMNS).map(safe_cell),
         pd.DataFrame(details, columns=DETAIL_COLUMNS).map(safe_cell),
@@ -95,6 +97,11 @@ def excel_bytes(summary, details):
     with pd.ExcelWriter(out, engine="openpyxl") as writer:
         summary.map(safe_cell).to_excel(writer, sheet_name="النتائج المعتمدة", index=False)
         details.map(safe_cell).to_excel(writer, sheet_name="تفاصيل التصحيح", index=False)
+        keys = ["معرف التسليم", "رمز الطالب", "الاختبار", "رقم السؤال", "معرف السؤال", "نص السؤال"]
+        question_scores = details.groupby(keys, sort=False, dropna=False, as_index=False)[
+            ["الدرجة", "الدرجة الكاملة"]
+        ].sum()
+        question_scores.map(safe_cell).to_excel(writer, sheet_name="درجات الأسئلة", index=False)
         for sheet in writer.book:
             sheet.sheet_view.rightToLeft = True
             sheet.freeze_panes = "A2"

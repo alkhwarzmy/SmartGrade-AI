@@ -19,7 +19,7 @@ from database.models import (
     now,
 )
 from modules.resources import bounded_processing
-from modules.schemas import ExamSpec, GradeProposal, validate_grade
+from modules.schemas import ExamSpec, validate_answers, parse_essay_grade
 from modules.preprocessing import decode_image, png_bytes
 from modules.mcq_grader import read_answers, score_answers
 
@@ -287,8 +287,24 @@ class Store:
                     "ocr_runs": [*row.original.get("ocr_runs", []), {"text": text, "at": now()}],
                 }
             row.text, row.proposal = text, None
+            row.current = {k: v for k, v in row.current.items() if k != "essay_answers"}
             self._invalidate(row)
             self._history(db, row, before, "ocr_saved" if source == "ocr" else "text_corrected", reviewer)
+            self._event(db, audit, sid)
+            return True
+
+    def save_answers(self, sid, answers, reviewer, revision, *, audit=None):
+        with self.sessions.begin() as db:
+            row = self._get(db, sid, revision)
+            spec = ExamSpec.model_validate(db.get(Exam, row.exam_id).spec)
+            answers = validate_answers(spec, answers)
+            if row.current.get("essay_answers") == answers:
+                return False
+            before = self._snapshot(row)
+            row.current = {**row.current, "essay_answers": answers}
+            row.proposal = None
+            self._invalidate(row)
+            self._history(db, row, before, "essay_answers_changed", reviewer)
             self._event(db, audit, sid)
             return True
 
@@ -296,8 +312,7 @@ class Store:
         with self.sessions.begin() as db:
             row = self._get(db, sid, revision)
             spec = ExamSpec.model_validate(db.get(Exam, row.exam_id).spec)
-            parsed = GradeProposal.model_validate(proposal)
-            validate_grade(parsed, spec, row.text)
+            parsed, _ = parse_essay_grade(proposal, spec, row.text, row.current)
             before = self._snapshot(row)
             row.proposal = parsed.model_dump()
             self._invalidate(row)
@@ -325,10 +340,7 @@ class Store:
         with self.sessions.begin() as db:
             row = self._get(db, sid, revision)
             spec = ExamSpec.model_validate(db.get(Exam, row.exam_id).spec)
-            if not row.text.strip():
-                raise ValueError("نص الإجابة مطلوب قبل الاعتماد")
-            parsed = GradeProposal.model_validate(proposal)
-            total = validate_grade(parsed, spec, row.text)
+            parsed, total = parse_essay_grade(proposal, spec, row.text, row.current)
             before = self._snapshot(row)
             row.approved, row.total, row.status = parsed.model_dump(), total, "approved"
             self._history(db, row, before, "essay_approved", reviewer, reason)

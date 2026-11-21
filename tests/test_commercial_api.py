@@ -189,3 +189,33 @@ def test_ocr_api_requires_current_revision_and_records_failure(client, essay_spe
     assert response.status_code == 400
     row = client.get(f"/submissions/{sid}", headers=headers).json()
     assert row["total"] is None and row["original"]["ocr_failed"]
+
+
+def test_mobile_and_multi_essay_endpoints(client):
+    headers = login(client)
+    spec = {"title": "متعدد", "kind": "essay", "questions": [
+        {"id": f"q{i}", "question": f"سؤال {i}", "maximum": 4,
+         "criteria": [{"id": "c1", "description": "الفكرة", "maximum": 4}]} for i in range(1, 3)
+    ]}
+    response = client.post("/exams", json=spec, headers=headers)
+    assert response.status_code == 201, response.text
+    eid = response.json()["id"]
+    summary = client.get("/exams?include_spec=false", headers=headers).json()[0]
+    assert "spec" not in summary and summary["question_count"] == 2 and summary["maximum"] == 8
+    assert len(client.get(f"/exams/{eid}", headers=headers).json()["spec"]["questions"]) == 2
+    sid = client.post(f"/exams/{eid}/submissions", headers=headers, data={"student_code": "SYNTHETIC"},
+                     files={"file": ("paper.png", png_bytes(template()), "image/png")}).json()["id"]
+    answers = {"q1": "الماء", "q2": "الشمس"}
+    saved = client.put(f"/submissions/{sid}/essay-answers", headers=headers,
+                       json={"revision": 1, "answers": answers})
+    assert saved.status_code == 200
+    grade = {"questions": [{"question_id": q, "criteria": [{"criterion_id": "c1", "score": 3,
+              "evidence": a, "rationale": "شرح جزئي", "missing": ""}]} for q, a in answers.items()]}
+    result = client.post(f"/submissions/{sid}/approve-essay", headers=headers,
+                         json={"revision": saved.json()["revision"], "reviewed": True, "proposal": grade})
+    assert result.status_code == 200 and result.json()["total"] == 6
+    assert client.put(f"/submissions/{sid}/essay-answers", headers=headers,
+                      json={"revision": 1, "answers": answers}).status_code == 409
+    assert client.get(f"/submissions/{sid}/image?preview_width=200", headers=headers).status_code == 200
+    for kind in ["xlsx", "csv", "pdf"]:
+        assert client.get(f"/exams/{eid}/report.{kind}", headers=headers).status_code == 200

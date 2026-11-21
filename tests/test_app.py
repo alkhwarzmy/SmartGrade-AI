@@ -81,3 +81,37 @@ def test_unsaved_essay_draft_survives_navigation_without_overwriting_concurrent_
     assert app.text_area[0].value == "مسودة المعلم"
     next(b for b in app.button if b.label == "تحميل النص المحفوظ الأحدث").click().run()
     assert not app.exception and app.text_area[0].value == "تعديل من جلسة أخرى"
+
+
+def test_multiple_questions_add_remove_and_review(tmp_path, monkeypatch):
+    monkeypatch.setattr(config, "DATA_DIR", tmp_path)
+    app = AppTest.from_file(str(Path(__file__).parents[1] / "app.py"), default_timeout=30).run()
+    next(r for r in app.radio if r.label == "نوع الاختبار").set_value("إجابة مقالية").run()
+    next(t for t in app.text_input if t.label == "عنوان الاختبار").set_value("متعدد")
+    next(t for t in app.text_area if t.label == "نص السؤال").set_value("أول")
+    next(b for b in app.button if b.label == "إضافة سؤال آخر").click().run()
+    [t for t in app.text_area if t.label == "نص السؤال"][1].set_value("ثان")
+    next(b for b in app.button if b.label == "إضافة سؤال آخر").click().run()
+    [t for t in app.text_area if t.label == "نص السؤال"][2].set_value("ثالث")
+    next(b for b in app.button if b.label == "حذف السؤال 2").click().run()
+    assert [t.value for t in app.text_area if t.label == "نص السؤال"] == ["أول", "ثالث"]
+    next(b for b in app.button if b.label == "إنشاء الاختبار").click().run()
+    store = Store(tmp_path)
+    spec = ExamSpec.model_validate(store.exams()[0].spec)
+    assert len(spec.questions) == 2 and spec.maximum == 20
+    sid = store.upload(store.exams()[0].id, "SYNTHETIC-MULTI", png_bytes(template()))
+    app.radio(key="navigation").set_value("التصحيح والمراجعة").run()
+    next(t for t in app.text_area if t.label == "إجابة السؤال 1").set_value("الماء مهم")
+    next(t for t in app.text_area if t.label == "إجابة السؤال 2").set_value("الشمس مفيدة")
+    next(b for b in app.button if b.label == "حفظ إجابات الأسئلة").click().run()
+    assert not app.exception and not app.error
+    row = store.submission(sid)
+    for q in spec.questions:
+        for c in q.criteria:
+            prefix = f"{sid}_{row.revision}_{q.id}_{c.id}"
+            app.number_input(key="score_" + prefix).set_value(1.0)
+            app.text_input(key="rationale_" + prefix).set_value("تقييم جزئي")
+    next(c for c in app.checkbox if c.label == "راجعت نص الإجابة وجميع المعايير وأوافق على الدرجات").check()
+    next(b for b in app.button if b.label == "اعتماد الدرجة المقالية").click().run()
+    assert not app.exception and not app.error
+    assert store.submission(sid).total == 6

@@ -3,12 +3,13 @@
 import os
 import re
 from pathlib import Path
+from uuid import uuid4
 import pandas as pd
 import streamlit as st
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from config import DATA_DIR
-from modules.schemas import ExamSpec, Criterion, GradeProposal
+from modules.schemas import ExamSpec, Criterion, EssayQuestion, GradeProposal, EssayGradeProposal, answer_texts
 from modules.review import Store
 from modules.mcq_grader import template, template_pdf, annotate, score_answers
 from modules.preprocessing import png_bytes, decode_image, prepare_image
@@ -148,6 +149,53 @@ def downloads():
     st.caption("مفتاح العينة الاصطناعية: A B C D A B C D A B C D A B C D A B C D. ليست بيانات طلاب حقيقية.")
 
 
+def new_essay_question():
+    return {
+        "id": uuid4().hex, "question": "", "model_answer": "", "instructions": "", "maximum": 10.0,
+        "rubric": [
+            {"المعيار": "صحة المحتوى", "الدرجة القصوى": 4.0},
+            {"المعيار": "التفسير والأدلة", "الدرجة القصوى": 4.0},
+            {"المعيار": "الوضوح والترابط", "الدرجة القصوى": 2.0},
+        ],
+    }
+
+
+def essay_exam_fields():
+    drafts = st.session_state.setdefault("new_essay_questions", [new_essay_question()])
+    generation = st.session_state.get("essay_editor_generation", 0)
+    st.caption(f"عدد الأسئلة: {len(drafts)} · أضف أو احذف الأسئلة حسب حاجتك.")
+    remove = None
+    values = []
+    for number, draft in enumerate(drafts, 1):
+        prefix = f"newq_{draft['id']}_{generation}"
+        with st.expander(f"السؤال {number}", expanded=True):
+            question = st.text_area("نص السؤال", value=draft["question"], max_chars=10000, key=prefix + "_text")
+            model = st.text_area("الإجابة النموذجية", value=draft["model_answer"], max_chars=20000, key=prefix + "_model")
+            instructions = st.text_area("تعليمات المعلم", value=draft["instructions"], max_chars=5000, key=prefix + "_instructions")
+            maximum = st.number_input("درجة السؤال الكاملة", min_value=0.5, max_value=20000.0,
+                                      value=float(draft["maximum"]), step=0.5, key=prefix + "_maximum")
+            seed = st.session_state.setdefault(prefix + "_seed", draft["rubric"])
+            rubric = st.data_editor(pd.DataFrame(seed), num_rows="dynamic", hide_index=True, width="stretch",
+                key=prefix + "_rubric", column_config={"الدرجة القصوى": st.column_config.NumberColumn(
+                    min_value=0.25, max_value=1000.0, step=0.25)})
+            if st.form_submit_button(f"حذف السؤال {number}", disabled=len(drafts) == 1):
+                remove = draft["id"]
+            values.append({"id": draft["id"], "question": question, "model_answer": model,
+                           "instructions": instructions, "maximum": maximum, "rubric": rubric.to_dict("records")})
+    add = st.form_submit_button("إضافة سؤال آخر")
+    st.session_state["new_essay_questions"] = values
+    if add or remove:
+        st.session_state["new_essay_questions"] = (
+            [q for q in values if q["id"] != remove] if remove else values + [new_essay_question()]
+        )
+        st.session_state["essay_editor_generation"] = generation + 1
+        for key in list(st.session_state):
+            if key.startswith("newq_") and key.endswith("_seed"):
+                del st.session_state[key]
+        st.rerun()
+    return values
+
+
 def exams_page():
     st.markdown(
         '<div class="hero"><div class="eyebrow">SMARTGRADE / TEACHER WORKSPACE</div>'
@@ -186,30 +234,7 @@ def exams_page():
                     "درجة السؤال الواحد", min_value=0.25, max_value=1000.0, value=1.0, step=0.25
                 )
             else:
-                question = st.text_area("نص السؤال", max_chars=10000)
-                model_answer = st.text_area("الإجابة النموذجية", max_chars=20000)
-                instructions = st.text_area("تعليمات المعلم", max_chars=5000)
-                maximum = st.number_input(
-                    "الدرجة الكاملة", min_value=0.5, max_value=20000.0, value=10.0, step=0.5
-                )
-                rubric = st.data_editor(
-                    pd.DataFrame(
-                        [
-                            {"المعيار": "صحة المحتوى", "الدرجة القصوى": 4.0},
-                            {"المعيار": "التفسير والأدلة", "الدرجة القصوى": 4.0},
-                            {"المعيار": "الوضوح والترابط", "الدرجة القصوى": 2.0},
-                        ]
-                    ),
-                    num_rows="dynamic",
-                    hide_index=True,
-                    width="stretch",
-                    key="new_rubric",
-                    column_config={
-                        "الدرجة القصوى": st.column_config.NumberColumn(
-                            min_value=0.25, max_value=1000.0, step=0.25
-                        )
-                    },
-                )
+                questions = essay_exam_fields()
             submitted = st.form_submit_button("إنشاء الاختبار", type="primary", width="stretch")
         if submitted:
             if mode == "اختيار من متعدد":
@@ -220,20 +245,16 @@ def exams_page():
                     points_per_question=points,
                 )
             else:
-                criteria = [
-                    Criterion(id=f"c{i + 1}", description=str(r["المعيار"]), maximum=r["الدرجة القصوى"])
-                    for i, r in enumerate(rubric.to_dict("records"))
-                    if pd.notna(r["المعيار"]) and str(r["المعيار"]).strip()
-                ]
-                spec = ExamSpec(
-                    title=title,
-                    kind="essay",
-                    question=question,
-                    model_answer=model_answer,
-                    instructions=instructions,
-                    maximum=maximum,
-                    criteria=criteria,
-                )
+                parsed_questions = []
+                for q in questions:
+                    criteria = [
+                        Criterion(id=f"c{i + 1}", description=str(r["المعيار"]), maximum=r["الدرجة القصوى"])
+                        for i, r in enumerate(q["rubric"])
+                        if pd.notna(r["المعيار"]) and str(r["المعيار"]).strip()
+                    ]
+                    parsed_questions.append(EssayQuestion(
+                        **{k: v for k, v in q.items() if k != "rubric"}, criteria=criteria))
+                spec = ExamSpec(title=title, kind="essay", questions=parsed_questions)
             store.create_exam(spec)
             st.session_state["_flash"] = "تم إنشاء الاختبار. انتقل إلى رفع الأوراق لبدء التصحيح."
             st.rerun()
@@ -250,14 +271,14 @@ def exams_page():
                         pd.DataFrame({"السؤال": range(1, 21), "الإجابة": spec.answer_key}), hide_index=True
                     )
                 else:
-                    st.write(spec.question)
-                    st.write("الإجابة النموذجية: " + spec.model_answer)
-                    st.dataframe(
-                        pd.DataFrame(
-                            [{"المعيار": c.description, "الحد الأعلى": c.maximum} for c in spec.criteria]
-                        ),
-                        hide_index=True,
-                    )
+                    st.caption(f"عدد الأسئلة: {len(spec.essay_questions())}")
+                    for number, q in enumerate(spec.essay_questions(), 1):
+                        st.markdown(f"**السؤال {number} · {q.maximum:g} درجة**")
+                        st.write(q.question)
+                        st.write("الإجابة النموذجية: " + q.model_answer)
+                        st.dataframe(pd.DataFrame([
+                            {"المعيار": c.description, "الحد الأعلى": c.maximum} for c in q.criteria
+                        ]), hide_index=True)
                 st.caption(
                     "للحفاظ على اتساق النتائج، أنشئ اختبارًا جديدًا عند تغيير مفتاح الإجابة أو المعايير."
                 )
@@ -383,9 +404,66 @@ def mcq_review(row, spec, reviewer):
         st.rerun()
 
 
+def essay_answer_fields(row, spec, reviewer):
+    saved = answer_texts(spec, row.text, row.current)
+    key = "question_answers_draft_" + row.id
+    draft = st.session_state.get(key)
+    if draft is None or (draft["revision"] != row.revision and draft["answers"] == draft["base"]):
+        draft = {"revision": row.revision, "answers": dict(saved), "base": dict(saved)}
+        st.session_state[key] = draft
+    st.markdown("#### 2. إجابة كل سؤال")
+    st.caption("وزّع النص المدقق على الأسئلة أو أدخل الإجابات يدويًا. السؤال دون إجابة يُراجع بصفر. تغيير النص المصدر يلغي التوزيع السابق.")
+    for number, q in enumerate(spec.questions, 1):
+        widget = f"answer_{row.id}_{row.revision}_{q.id}"
+        def keep_answer(question_id=q.id, widget_key=widget):
+            st.session_state[key]["answers"][question_id] = st.session_state[widget_key]
+        st.write(f"السؤال {number}: {q.question}")
+        draft["answers"][q.id] = st.text_area(f"إجابة السؤال {number}", value=draft["answers"][q.id],
+                                            max_chars=30000, key=widget, on_change=keep_answer)
+    if draft["revision"] != row.revision:
+        st.warning("تغيرت الورقة في جلسة أخرى. مسودة إجاباتك محفوظة؛ حمّل الإجابات الأحدث قبل الحفظ.")
+        if st.button("تحميل إجابات الأسئلة المحفوظة الأحدث"):
+            del st.session_state[key]
+            for widget_key in list(st.session_state):
+                if widget_key.startswith(f"answer_{row.id}_"):
+                    del st.session_state[widget_key]
+            st.rerun()
+    if st.button("حفظ إجابات الأسئلة"):
+        changed = store.save_answers(row.id, draft["answers"], reviewer, draft["revision"])
+        fresh = store.submission(row.id)
+        st.session_state[key] = {"revision": fresh.revision, "answers": dict(draft["answers"]), "base": dict(draft["answers"])}
+        st.session_state["_flash"] = "حُفظت إجابات الأسئلة. راجع الدرجات ثم اعتمد مجموع الاختبار." if changed else "الإجابات لم تتغير؛ بقيت الدرجات كما هي."
+        st.rerun()
+    ready = draft["answers"] == saved and draft["revision"] == row.revision
+    if not ready:
+        st.info("احفظ إجابات الأسئلة قبل اقتراح الدرجات أو اعتمادها.")
+    return ready
+
+
+def criterion_grade_fields(row, question, prior, *, multiple):
+    by_id = {g["criterion_id"]: g for g in prior.get("criteria", [])}
+    grades = []
+    for c in question.criteria:
+        g = by_id.get(c.id, {})
+        suffix = f"{question.id}_{c.id}" if multiple else c.id
+        prefix = f"{row.id}_{row.revision}_{suffix}"
+        with st.expander(f"{c.description} · {c.maximum:g} درجات", expanded=True):
+            score = st.number_input("درجة المعيار", min_value=0.0, max_value=float(c.maximum),
+                                    value=float(g.get("score", 0)), step=0.25, key="score_" + prefix)
+            evidence = st.text_input("دليل حرفي من الإجابة (اختياري)", value=g.get("evidence", ""),
+                                     max_chars=10000, key="evidence_" + prefix)
+            rationale = st.text_input("تبرير الدرجة", value=g.get("rationale", ""), max_chars=5000, key="rationale_" + prefix)
+            missing = st.text_input("العناصر الناقصة (إن وجدت)", value=g.get("missing", ""), max_chars=5000, key="missing_" + prefix)
+            grades.append({"criterion_id": c.id, "score": score, "evidence": evidence, "rationale": rationale, "missing": missing})
+    return grades
+
+
 def essay_review(row, spec, reviewer):
     st.markdown("#### 1. تدقيق نص الإجابة")
-    st.write(spec.question)
+    if spec.questions:
+        st.caption(f"اختبار مقالي من {len(spec.questions)} سؤال · الدرجة الكاملة {spec.maximum:g}")
+    else:
+        st.write(spec.question)
     draft = "essay_draft_" + row.id
     base_revision = draft + "_revision"
     base_text = draft + "_base_text"
@@ -478,7 +556,9 @@ def essay_review(row, spec, reviewer):
             )
             st.rerun()
     st.caption(ocr_status()[1])
-    st.markdown("#### 2. اقتراح الدرجة ومراجعتها")
+    answers_ready = essay_answer_fields(row, spec, reviewer) if spec.questions else True
+    saved_answers = answer_texts(spec, row.text, row.current)
+    st.markdown("#### اقتراح الدرجة ومراجعتها")
     consent = st.checkbox(
         "أوافق على إرسال النص والسؤال والمعايير للمزود الخارجي، وأعتمد تكلفة هذا الطلب",
         key=f"consent_{row.id}",
@@ -486,7 +566,8 @@ def essay_review(row, spec, reviewer):
     if st.button(
         "اقتراح درجات بالذكاء الاصطناعي",
         disabled=not (
-            row.text.strip()
+            any(t.strip() for t in saved_answers.values())
+            and answers_ready
             and consent
             and all(provider_status().values())
             and (not COMMERCIAL or identity.organization(store.token)["external_ai_allowed"])
@@ -498,7 +579,7 @@ def essay_review(row, spec, reviewer):
                     identity.actor(store.token, permission="write")
                     if not identity.organization(store.token)["external_ai_allowed"]:
                         raise ValueError("المؤسسة لم تسمح بإرسال الإجابات إلى مزود خارجي")
-                proposal = propose_grade(spec, row.text, consent=consent)
+                proposal = propose_grade(spec, row.text, current=row.current, consent=consent)
             store.save_proposal(row.id, proposal.model_dump(), row.revision)
             st.rerun()
         except ProviderError:
@@ -508,51 +589,31 @@ def essay_review(row, spec, reviewer):
         st.caption("الاقتراح الآلي غير مفعّل. يمكنك إدخال الدرجات يدويًا وفق المعايير أدناه.")
     if row.proposal:
         st.info("الاقتراح الآلي متاح للمراجعة. الاقتباس الموجود في النص لا يثبت وحده صحة التقييم.")
-    prior = row.approved or row.proposal or {"criteria": []}
-    by_id = {g["criterion_id"]: g for g in prior["criteria"]}
-    grades = []
+    prior = row.approved or row.proposal or {}
+    by_question = {g["question_id"]: g for g in prior.get("questions", [])}
+    question_grades = []
     with st.form(f"essay_{row.id}_{row.revision}"):
-        for c in spec.criteria:
-            g = by_id.get(c.id, {})
-            prefix = f"{row.id}_{row.revision}_{c.id}"
-            with st.expander(f"{c.description} · {c.maximum:g} درجات", expanded=True):
-                score = st.number_input(
-                    "درجة المعيار",
-                    min_value=0.0,
-                    max_value=float(c.maximum),
-                    value=float(g.get("score", 0)),
-                    step=0.25,
-                    key="score_" + prefix,
-                )
-                evidence = st.text_input(
-                    "دليل حرفي من الإجابة (اختياري)",
-                    value=g.get("evidence", ""),
-                    max_chars=10000,
-                    key="evidence_" + prefix,
-                )
-                rationale = st.text_input(
-                    "تبرير الدرجة", value=g.get("rationale", ""), max_chars=5000, key="rationale_" + prefix
-                )
-                missing = st.text_input(
-                    "العناصر الناقصة (إن وجدت)",
-                    value=g.get("missing", ""),
-                    max_chars=5000,
-                    key="missing_" + prefix,
-                )
-                grades.append(
-                    {
-                        "criterion_id": c.id,
-                        "score": score,
-                        "evidence": evidence,
-                        "rationale": rationale,
-                        "missing": missing,
-                    }
-                )
+        for number, question in enumerate(spec.essay_questions(), 1):
+            if spec.questions:
+                st.markdown(f"**السؤال {number} · {question.maximum:g} درجة**")
+                st.write(question.question)
+                st.write("الإجابة النموذجية: " + question.model_answer)
+                if question.instructions:
+                    st.caption(question.instructions)
+            grades = criterion_grade_fields(row, question,
+                by_question.get(question.id, {}) if spec.questions else prior,
+                multiple=bool(spec.questions))
+            question_grades.append({"question_id": question.id, "criteria": grades})
         reason = st.text_input("ملاحظة المراجع / سبب التعديل", max_chars=1000)
         checked = st.checkbox("راجعت نص الإجابة وجميع المعايير وأوافق على الدرجات")
-        approve = st.form_submit_button("اعتماد الدرجة المقالية", type="primary", width="stretch")
+        approve = st.form_submit_button("اعتماد الدرجة المقالية", type="primary", width="stretch", disabled=not answers_ready)
     if approve:
-        proposal = GradeProposal(criteria=grades).model_dump()
+        for q in question_grades:
+            for grade in q["criteria"]:
+                if not grade["rationale"].strip():
+                    raise ValueError("تبرير الدرجة مطلوب لكل معيار")
+        proposal = (EssayGradeProposal(questions=question_grades).model_dump() if spec.questions
+                    else GradeProposal(criteria=question_grades[0]["criteria"]).model_dump())
         store.approve_essay(row.id, proposal, reviewer, reason, row.revision, checked)
         st.rerun()
 
