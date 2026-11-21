@@ -11,6 +11,7 @@ def test_android_source_allowlist(tmp_path):
         "flutter_app/android/app/release.jks", "flutter_app/android/app/release.key",
         "flutter_app/android/app/.env.production", "flutter_app/android/.gradle/cache.txt",
         "flutter_app/android/.kotlin/cache.txt", "flutter_app/build/app.apk",
+        "flutter_app/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java",
     ]
     for name in names:
         path = tmp_path / name
