@@ -1,0 +1,67 @@
+{
+  "synthetic": true,
+  "questions": 5,
+  "maximum": 30.0,
+  "reference_totals": {
+    "student-a": 30,
+    "student-b": 30,
+    "student-c": 17,
+    "student-d": 0,
+    "student-e": 0,
+    "student-f": 0
+  },
+  "reference_contract_validation": "passed",
+  "images": [
+    {
+      "file": "blank-exam.png",
+      "width": 1654,
+      "height": 2339,
+      "bytes": 91582
+    },
+    {
+      "file": "student-a.png",
+      "width": 1654,
+      "height": 2339,
+      "bytes": 202045
+    },
+    {
+      "file": "student-b.png",
+      "width": 1654,
+      "height": 2339,
+      "bytes": 183136
+    },
+    {
+      "file": "student-c.png",
+      "width": 1654,
+      "height": 2339,
+      "bytes": 142628
+    },
+    {
+      "file": "student-d.png",
+      "width": 1654,
+      "height": 2339,
+      "bytes": 163730
+    },
+    {
+      "file": "student-e.png",
+      "width": 1654,
+      "height": 2339,
+      "bytes": 147697
+    },
+    {
+      "file": "student-f.png",
+      "width": 1654,
+      "height": 2339,
+      "bytes": 96480
+    },
+    {
+      "file": "teacher-key.png",
+      "width": 1654,
+      "height": 2339,
+      "bytes": 315254
+    }
+  ],
+  "paid_api_calls": 0,
+  "llm_executed": false,
+  "handwriting_evaluated": false
+}
