@@ -86,3 +86,25 @@ def test_launch_health_and_stop(tmp_path):
     finally:
         runtime.stop()
     assert runtime.process.poll() is not None
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux TCP TIME_WAIT regression")
+def test_launch_reuses_closed_port_without_treating_time_wait_as_a_live_server(tmp_path):
+    # A real accepted TCP connection forces the server endpoint into TIME_WAIT.
+    with socket.socket() as listener:
+        listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        listener.bind(("127.0.0.1", 0))
+        port = listener.getsockname()[1]
+        listener.listen(1)
+        with socket.create_connection(("127.0.0.1", port)) as client:
+            connection, _ = listener.accept()
+            connection.close()
+            assert client.recv(1) == b""
+    root = Path(__file__).resolve().parents[1]
+    runtime = launch_app(root, sys.executable, tmp_path / "reused-port", port=port, timeout=30)
+    try:
+        assert runtime.process.poll() is None
+        with pytest.raises(ValueError, match="المنفذ"):
+            launch_app(root, sys.executable, tmp_path / "occupied", port=port)
+    finally:
+        runtime.stop()

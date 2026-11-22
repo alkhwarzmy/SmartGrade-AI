@@ -99,6 +99,9 @@ def snapshot(page, name):
 
 
 def main():
+    stale_failure = OUT / "failure.png"
+    if stale_failure.exists():
+        stale_failure.unlink()
     page = None
     runtime = None
     api_process = None
