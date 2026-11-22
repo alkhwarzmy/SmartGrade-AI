@@ -36,6 +36,7 @@ class Session extends ChangeNotifier {
   SmartGradeApi? api;
   Json? actor;
   bool restoring = true;
+  bool canRetryRestore = false;
   int generation = 0;
   String server = const String.fromEnvironment('API_BASE_URL');
   String notice = '';
@@ -52,6 +53,7 @@ class Session extends ChangeNotifier {
     api?.close();
     api = client;
     actor = user;
+    canRetryRestore = false;
     generation++;
     client.onUnauthorized = () {
       if (identical(api, client)) {
@@ -72,6 +74,10 @@ class Session extends ChangeNotifier {
   }
 
   Future<void> restore() async {
+    restoring = true;
+    canRetryRestore = false;
+    notice = '';
+    notifyListeners();
     SmartGradeApi? client;
     try {
       final saved = await vault.read();
@@ -82,6 +88,14 @@ class Session extends ChangeNotifier {
         final user = await client.me();
         accept(client, user);
         client = null;
+      }
+    } on ApiError catch (error) {
+      if (client != null && error.status != 401 && error.status != 403) {
+        canRetryRestore = true;
+        notice = 'تعذّر استعادة الجلسة الآن. تحقق من الاتصال وأعد المحاولة.';
+      } else {
+        notice = 'سجّل الدخول مجددًا لاستعادة جلسة صالحة.';
+        await clearVault();
       }
     } catch (_) {
       notice = 'سجّل الدخول مجددًا لاستعادة جلسة صالحة.';

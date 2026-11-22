@@ -181,6 +181,36 @@ void main() {
       session.dispose();
     },
   );
+  test('A temporary server failure keeps the saved session for retry', () async {
+    final vault = MemoryVault()
+      ..value = jsonEncode({
+        'server': 'https://example.org',
+        'token': 'synthetic',
+      });
+    var available = false;
+    final session = Session(
+      vault: vault,
+      factory: (url) => SmartGradeApi(
+        url,
+        client: MockClient(
+          (_) async => available
+              ? reply({'role': 'teacher'})
+              : reply({}, 503),
+        ),
+      ),
+    );
+    await session.restore();
+    expect(session.actor, isNull);
+    expect(session.canRetryRestore, isTrue);
+    expect(vault.value, contains('synthetic'));
+
+    available = true;
+    await session.restore();
+    expect(session.canWrite, isTrue);
+    expect(session.canRetryRestore, isFalse);
+    session.dispose();
+  });
+
   test('Remembering stores token and server, never password', () async {
     final vault = MemoryVault();
     final session = Session(

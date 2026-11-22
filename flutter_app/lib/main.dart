@@ -96,6 +96,11 @@ class _LoginState extends State<LoginScreen> with TaskState<LoginScreen> {
             ),
             const Text('استخدم حساب مؤسستك وعنوان الخادم الذي يقدمه المسؤول.'),
             if (widget.session.notice.isNotEmpty) Text(widget.session.notice),
+            if (widget.session.canRetryRestore)
+              TextButton(
+                onPressed: busy ? null : widget.session.restore,
+                child: const Text('إعادة محاولة استعادة الجلسة'),
+              ),
             input(address, 'عنوان الخادم HTTPS', keyboard: TextInputType.url),
             input(org, 'رمز المؤسسة', maxLength: 48),
             input(
