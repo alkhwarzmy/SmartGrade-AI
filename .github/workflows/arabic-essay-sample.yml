@@ -1,0 +1,74 @@
+name: Build Arabic essay test
+on:
+  push:
+    branches: [examples/arabic-essay-test-20261122]
+    paths:
+      - examples/arabic_essay/**
+      - .github/workflows/arabic-essay-sample.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sample:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install --require-hashes -r requirements.lock
+      - run: python -m ruff check examples/arabic_essay/build_samples.py
+      - name: Render and validate six synthetic answer sheets
+        run: python examples/arabic_essay/build_samples.py
+        env:
+          ALLOW_EXTERNAL_AI: 'false'
+          ALLOW_PAID_API: 'false'
+      - name: Verify notebook extraction and the isolated download bundle
+        run: |
+          python - <<'PY'
+          import base64, hashlib, io, json, zipfile
+          from pathlib import Path
+          folder = Path("examples/arabic_essay")
+          nb = json.loads((folder / "notebook.ipynb").read_text())
+          bundle = (folder / "generated/SmartGrade-Arabic-Essay-Test.zip").read_bytes()
+          assert hashlib.sha256(bundle).hexdigest() == nb["metadata"]["bundle_sha256"]
+          assert len(nb["cells"]) == 4
+          for cell in nb["cells"]:
+              if cell["cell_type"] == "code":
+                  assert cell["outputs"] == [] and cell["execution_count"] is None
+                  compile(cell["source"], cell["id"], "exec")
+          with zipfile.ZipFile(io.BytesIO(bundle)) as archive:
+              names = archive.namelist()
+              assert len([n for n in names if n.startswith("student-") and n.endswith(".png")]) == 6
+              assert {"exam-spec.json", "teacher-key.md", "student-c.png", "cases.json"} <= set(names)
+              assert all("/" not in n and "\\" not in n for n in names)
+              cases = json.loads(archive.read("cases.json"))
+              assert [c["expected_total"] for c in cases] == [30, 30, 17, 0, 0, 0]
+          print("All six reference proposals, source notebook and download files validated; no LLM called.")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: Arabic-essay-test-and-solutions
+          path: |
+            examples/arabic_essay/generated/
+            examples/arabic_essay/notebook.ipynb
+            examples/arabic_essay/teacher-key.md
+            examples/arabic_essay/exam-spec.json
+            examples/arabic_essay/cases.json
+            examples/arabic_essay/expected-grades.json
+            examples/arabic_essay/README.md
+      - name: Publish test files on the example branch
+        env:
+          SOURCE_HEAD: ${{ github.sha }}
+        run: |
+          git fetch origin examples/arabic-essay-test-20261122
+          test "$(git rev-parse origin/examples/arabic-essay-test-20261122)" = "$SOURCE_HEAD"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add examples/arabic_essay
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish solved Arabic essay test sheets and self-contained Colab download [skip ci]"
+            git push origin HEAD:examples/arabic-essay-test-20261122
+          fi
