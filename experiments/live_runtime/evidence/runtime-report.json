@@ -1,0 +1,39 @@
+{
+  "source_commit": "2c3a83916ba034c51827850249acc650eb19160c",
+  "execution": "real_streamlit_browser_api_and_worker",
+  "synthetic_data_only": true,
+  "mocked_provider": false,
+  "checks": {
+    "real_web_and_worker_started": true,
+    "anonymous_api_denied": true,
+    "five_question_exam_created_via_real_api": true,
+    "image_uploaded_from_real_browser": true,
+    "actual_tesseract_worker_completed": true,
+    "ocr_text_saved": true
+  },
+  "provider": {
+    "requests_triggered": 0,
+    "model_evaluated": false,
+    "configuration_blockers": [
+      "external_disabled",
+      "paid_api_disabled",
+      "provider_key_missing",
+      "provider_model_missing"
+    ],
+    "key_present": false,
+    "model_configured": false
+  },
+  "persistent_hosting_created": false,
+  "google_colab_account_tested": false,
+  "ocr": {
+    "saved_characters": 953,
+    "engine": "real_tesseract"
+  },
+  "passed": false,
+  "failure": {
+    "step": "real_ocr_job",
+    "exception_type": "AssertionError"
+  },
+  "last_step": "real_ocr_job",
+  "temporary_servers_stopped": true
+}
