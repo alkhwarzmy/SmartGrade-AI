@@ -1,0 +1,69 @@
+name: Run actual SmartGrade application
+on:
+  push:
+    branches: [run/live-check-20261122]
+    paths:
+      - experiments/live_runtime/run.py
+      - .github/workflows/live-runtime-check.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  run-application:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install --require-hashes -r requirements.lock
+      - run: python -m pip install 'playwright>=1.50,<2'
+      - run: python -m playwright install --with-deps chromium
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr
+      - name: Start actual application and exercise it through Chromium
+        id: runtime
+        continue-on-error: true
+        env:
+          TESTED_SOURCE: ${{ github.sha }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY || secrets.SMARTGRADE_LLM_API_KEY }}
+          LLM_MODEL: ${{ vars.LLM_MODEL }}
+          LLM_BASE_URL: ${{ vars.LLM_BASE_URL || 'https://api.openai.com/v1' }}
+          ALLOW_EXTERNAL_AI: ${{ vars.ALLOW_EXTERNAL_AI || 'false' }}
+          ALLOW_PAID_API: ${{ vars.ALLOW_PAID_API || 'false' }}
+          OCR_PROVIDER: tesseract
+        run: python experiments/live_runtime/run.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: actual-application-run
+          path: experiments/live_runtime/evidence/
+      - name: Save synthetic screenshots and sanitized runtime report
+        if: always()
+        env:
+          EXPECTED_SOURCE: ${{ github.sha }}
+        run: |
+          git fetch origin run/live-check-20261122
+          test "$(git rev-parse origin/run/live-check-20261122)" = "$EXPECTED_SOURCE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add experiments/live_runtime/evidence
+          if ! git diff --cached --quiet; then
+            git commit -m "Record actual application run with synthetic data [skip ci]"
+            git push origin HEAD:run/live-check-20261122
+          fi
+      - name: Require the runtime scenario to pass
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("experiments/live_runtime/evidence/runtime-report.json").read_text())
+          assert report["passed"], report.get("failure")
+          assert report["temporary_servers_stopped"]
+          PY
