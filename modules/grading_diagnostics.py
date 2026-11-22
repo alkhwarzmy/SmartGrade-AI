@@ -5,14 +5,14 @@ from modules.processing import message_for, safe_code
 
 
 def essay_diagnostics(spec, row, *, organization_allowed=True, visible_text=None,
-                      unsaved_answers=False, ocr=None):
+                      unsaved_answers=False, unsaved_source=False, ocr=None):
     if spec.kind != "essay":
         raise ValueError("الفحص مخصص للاختبارات المقالية")
     questions = spec.essay_questions()
     answers = answer_texts(spec, row.text, row.current)
     mapped = len(questions) == 1 or isinstance(row.current.get("essay_answers"), dict)
     reasons = []
-    if visible_text is not None and visible_text != row.text:
+    if unsaved_source or (visible_text is not None and visible_text != row.text):
         reasons.append("source_unsaved")
     if not mapped or unsaved_answers:
         reasons.append("answers_unsaved")
@@ -47,7 +47,8 @@ def essay_diagnostics(spec, row, *, organization_allowed=True, visible_text=None
             "state": "unassigned" if not mapped else "answered" if answers[question.id].strip() else "blank",
         } for number, question in enumerate(questions, 1)],
         "ready_for_external_proposal": not reasons,
-        "ready_for_manual_review": not any(c in input_reasons for c in ["source_unsaved", "answers_unsaved"]),
+        "ready_for_manual_review": not any(c in input_reasons for c in ["source_unsaved", "answers_unsaved"])
+            and (bool(spec.questions) or bool(row.text.strip())),
         "blockers": [{"code": code, "message": message_for(code)} for code in dict.fromkeys(reasons)],
         "ocr": {"state": "unchecked" if ocr is None else "available" if ocr[0] else "unavailable",
                 "message": "الفحص اختياري؛ يمكن إدخال الإجابات يدويًا" if ocr is None else ocr[1]},

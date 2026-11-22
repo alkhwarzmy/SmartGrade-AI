@@ -51,7 +51,8 @@ def provider_base():
     base = os.getenv("LLM_BASE_URL", "https://api.openai.com/v1").strip().rstrip("/")
     parsed = urlparse(base)
     if (parsed.scheme != "https" or not parsed.hostname or parsed.username is not None
-            or parsed.password is not None or parsed.query or parsed.fragment):
+            or parsed.password is not None or parsed.query or parsed.fragment
+            or parsed.path.endswith(("/chat/completions", "/responses"))):
         raise ValueError("provider URL")
     _ = parsed.port
     return base
@@ -111,6 +112,10 @@ def _http_code(status, raw):
         return "provider_context_limit"
     if code in {"unsupported_parameter", "unsupported_value", "invalid_parameter"}:
         return "provider_parameters"
+    if code in {"model_not_found", "unsupported_model"}:
+        return "provider_model_unavailable"
+    if status == 404:
+        return "provider_endpoint"
     if status in {401, 403}:
         return "provider_auth"
     if status == 429:

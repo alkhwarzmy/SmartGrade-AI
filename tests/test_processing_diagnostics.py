@@ -27,6 +27,7 @@ def enable(monkeypatch):
     (429, "insufficient_quota", "provider_quota"), (429, "", "provider_rate_limit"),
     (500, "", "provider_unavailable"), (400, "context_length_exceeded", "provider_context_limit"),
     (400, "unsupported_parameter", "provider_parameters"),
+    (404, "model_not_found", "provider_model_unavailable"), (404, "", "provider_endpoint"),
 ])
 def test_provider_failure_codes_are_redacted_and_never_retried(monkeypatch, essay_spec, status, error_code, expected):
     enable(monkeypatch)

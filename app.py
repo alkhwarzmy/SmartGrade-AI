@@ -567,7 +567,7 @@ def essay_review(row, spec, reviewer):
             st.rerun()
     st.caption(ocr_status()[1])
     source_ready = text == row.text and st.session_state[base_revision] == row.revision
-    question_answers_ready = essay_answer_fields(row, spec, reviewer) if spec.questions else True
+    question_answers_ready = essay_answer_fields(row, spec, reviewer) if spec.questions else bool(row.text.strip())
     answers_ready = question_answers_ready and source_ready
     if not source_ready:
         st.warning("النص الظاهر غير محفوظ؛ احفظه قبل طلب التصحيح أو اعتماد الدرجة.")
@@ -576,10 +576,16 @@ def essay_review(row, spec, reviewer):
         from modules.grading_diagnostics import essay_diagnostics
         report = essay_diagnostics(spec, row,
             organization_allowed=not COMMERCIAL or bool(identity.organization(store.token)["external_ai_allowed"]),
-            visible_text=text, unsaved_answers=not question_answers_ready, ocr=ocr_status())
+            visible_text=text, unsaved_answers=bool(spec.questions) and not question_answers_ready,
+            unsaved_source=not source_ready, ocr=ocr_status())
         st.session_state["diagnostic_" + row.id] = report
     if st.session_state.get("diagnostic_" + row.id):
-        report = st.session_state["diagnostic_" + row.id]
+        from modules.grading_diagnostics import essay_diagnostics
+        previous = st.session_state["diagnostic_" + row.id]
+        report = essay_diagnostics(spec, row,
+            organization_allowed=not COMMERCIAL or bool(identity.organization(store.token)["external_ai_allowed"]),
+            visible_text=text, unsaved_answers=bool(spec.questions) and not question_answers_ready,
+            unsaved_source=not source_ready, ocr=(previous["ocr"]["state"] == "available", previous["ocr"]["message"]))
         with st.expander("نتيجة فحص التصحيح", expanded=True):
             if report["revision"] != row.revision:
                 st.info("هذا الفحص لمراجعة سابقة؛ اضغط فحص سبب تعثر التصحيح لتحديثه.")
