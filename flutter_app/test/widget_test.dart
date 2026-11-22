@@ -163,6 +163,8 @@ void main() {
     expect(find.text('اختبار جديد'), findsOneWidget);
     session.api!.onUnauthorized!();
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('دخول'), 200,
+      scrollable: find.byType(Scrollable).first);
     expect(find.text('دخول'), findsOneWidget);
     expect(find.text('اختبار جديد'), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());

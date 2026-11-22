@@ -299,8 +299,8 @@ def main():
                           page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"))
                     snapshot(page, "06-results-mobile")
                     mobile_navigation = page.get_by_role("combobox", name="انتقل إلى", exact=True)
-                    mobile_navigation.press("Home")
-                    mobile_navigation.press("Enter")
+                    mobile_navigation.click()
+                    page.get_by_role("option", name="الاختبارات", exact=True).click()
                     expect(page.get_by_role("heading", name="كل اختباراتك، من الورقة إلى النتيجة.", exact=True)).to_be_visible()
                     check("mobile_navigation_opens_workspace", True)
                     check("mobile_workspace_without_horizontal_overflow",
