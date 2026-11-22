@@ -182,7 +182,10 @@ def main():
                     check("ocr_text_saved", len(paper["text"]) > 100)
                     report["ocr"] = {"saved_characters": len(paper["text"]), "engine": "real_tesseract"}
                     page.get_by_role("button", name="تحديث حالة استخراج النص", exact=True).click()
-                    source_field = page.get_by_label("النص المستخدم للتصحيح", exact=True)
+                    source_matches = page.get_by_label("النص المستخدم للتصحيح", exact=True)
+                    report["ocr"]["label_matches"] = source_matches.evaluate_all(
+                        "(items) => items.map(e => ({tag: e.tagName, role: e.getAttribute('role')}))")
+                    source_field = source_matches.and_(page.locator("textarea")).last
                     try:
                         wait_for(lambda: " ".join(source_field.input_value().split()) ==
                                  " ".join(paper["text"].split()), timeout=35)
@@ -194,7 +197,7 @@ def main():
                     snapshot(page, "02-ocr")
                     step("map_five_answers_in_browser")
                     for number, question in enumerate(spec.questions, 1):
-                        field = page.get_by_label(f"إجابة السؤال {number}", exact=True)
+                        field = page.get_by_label(f"إجابة السؤال {number}", exact=True).and_(page.locator("textarea")).last
                         field.fill(case["answers"][question.id])
                         field.press("Tab")
                         page.wait_for_timeout(500)
@@ -212,7 +215,7 @@ def main():
                     check("diagnostic_check_makes_no_provider_call",
                           diagnosis["external_call_performed_by_this_check"] is False)
                     original = paper["text"]
-                    source = page.get_by_label("النص المستخدم للتصحيح", exact=True)
+                    source = page.get_by_label("النص المستخدم للتصحيح", exact=True).and_(page.locator("textarea")).last
                     source.fill(original + "\nمسودة غير محفوظة")
                     source.press("Tab")
                     expect(page.get_by_role("button", name="اعتماد الدرجة المقالية", exact=True)).to_be_disabled()
@@ -224,11 +227,11 @@ def main():
                     expect(page.get_by_role("button", name="اعتماد الدرجة المقالية", exact=True)).to_be_enabled()
                     snapshot(page, "03-diagnostics")
                     step("teacher_reference_grading_in_browser")
-                    grades = page.get_by_label("درجة المعيار", exact=True)
+                    grades = page.get_by_label("درجة المعيار", exact=True).and_(page.locator("input"))
                     expect(grades).to_have_count(15)
-                    evidence = page.get_by_label("دليل حرفي من الإجابة (اختياري)", exact=True)
-                    rationales = page.get_by_label("تبرير الدرجة", exact=True)
-                    missing = page.get_by_label("العناصر الناقصة (إن وجدت)", exact=True)
+                    evidence = page.get_by_label("دليل حرفي من الإجابة (اختياري)", exact=True).and_(page.locator("input"))
+                    rationales = page.get_by_label("تبرير الدرجة", exact=True).and_(page.locator("input"))
+                    missing = page.get_by_label("العناصر الناقصة (إن وجدت)", exact=True).and_(page.locator("input"))
                     index = 0
                     for qindex, question in enumerate(spec.questions):
                         for cindex, criterion in enumerate(question.criteria):
@@ -238,7 +241,7 @@ def main():
                             rationales.nth(index).fill("تحقق عنصران" if mark == 2 else "تحقق عنصر واحد" if mark else "لم يتحقق المعيار")
                             missing.nth(index).fill("" if mark == 2 else criterion.description)
                             index += 1
-                    page.get_by_label("راجعت نص الإجابة وجميع المعايير وأوافق على الدرجات", exact=True).check(force=True)
+                    page.get_by_label("راجعت نص الإجابة وجميع المعايير وأوافق على الدرجات", exact=True).and_(page.locator('input[type="checkbox"]')).check(force=True)
                     page.get_by_role("button", name="اعتماد الدرجة المقالية", exact=True).click()
                     def approved():
                         current = api.get(f"/submissions/{sid}").json()
@@ -316,7 +319,12 @@ def main():
                     step("complete")
             except Exception as exc:
                 report["passed"] = False
-                report["failure"] = {"step": last_step, "exception_type": type(exc).__name__}
+                error_text = str(exc)
+                for sensitive in [password, token, os.getenv("LLM_API_KEY", "")]:
+                    if sensitive:
+                        error_text = error_text.replace(sensitive, "[REDACTED]")
+                report["failure"] = {"step": last_step, "exception_type": type(exc).__name__,
+                                     "detail": error_text[:1600]}
                 if page is not None:
                     try:
                         snapshot(page, "failure")
