@@ -1,5 +1,5 @@
 {
-  "source_commit": "b09619700d60bf5bac721a0095cad8910e5f5fa9",
+  "source_commit": "2b113c93a20da6cc4a07673b4d6028b77b008384",
   "execution": "real_streamlit_browser_api_and_worker",
   "synthetic_data_only": true,
   "mocked_provider": false,
@@ -9,7 +9,19 @@
     "five_question_exam_created_via_real_api": true,
     "image_uploaded_from_real_browser": true,
     "actual_tesseract_worker_completed": true,
-    "ocr_text_saved": true
+    "ocr_text_saved": true,
+    "browser_displays_saved_ocr_text": true,
+    "five_answers_saved_from_browser": true,
+    "diagnostic_check_makes_no_provider_call": true,
+    "unsaved_source_blocks_grading_in_real_browser": true,
+    "teacher_reference_grade_persisted": true,
+    "browser_download_xlsx": true,
+    "browser_download_csv": true,
+    "browser_download_pdf": true,
+    "question_totals_in_actual_excel": true,
+    "excel_question_scores_match_reference": true,
+    "actual_pdf_is_pdf": true,
+    "model_attempt_did_not_change_teacher_paper": true
   },
   "provider": {
     "requests_triggered": 0,
@@ -21,19 +33,48 @@
       "provider_model_missing"
     ],
     "key_present": false,
-    "model_configured": false
+    "model_configured": false,
+    "readiness_codes": [
+      "organization_ai_disabled",
+      "external_disabled",
+      "paid_api_disabled",
+      "provider_key_missing",
+      "provider_model_missing"
+    ],
+    "status": "blocked_missing_operator_configuration"
   },
   "persistent_hosting_created": false,
   "google_colab_account_tested": false,
   "ocr": {
     "saved_characters": 953,
-    "engine": "real_tesseract"
+    "engine": "real_tesseract",
+    "label_matches": [
+      {
+        "tag": "TEXTAREA",
+        "role": null
+      }
+    ],
+    "browser_characters": 953
+  },
+  "teacher_grade": {
+    "source": "reference_entered_by_test_teacher",
+    "total": 17.0,
+    "maximum": 30,
+    "question_totals": [
+      2,
+      5,
+      4,
+      3,
+      3
+    ],
+    "this_is_not_a_model_prediction": true
   },
   "passed": false,
   "failure": {
-    "step": "real_ocr_job",
-    "exception_type": "Error"
+    "step": "restart_and_verify_saved_grade",
+    "exception_type": "ValueError",
+    "detail": "المنفذ مستخدم؛ أوقف التشغيل السابق أو اختر منفذًا آخر"
   },
-  "last_step": "real_ocr_job",
+  "last_step": "restart_and_verify_saved_grade",
   "temporary_servers_stopped": true
 }
