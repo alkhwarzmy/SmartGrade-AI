@@ -1,5 +1,5 @@
 {
-  "source_commit": "de51dd58f3271910007144b3026a2903b05a5748",
+  "source_commit": "00827b20fe7b37509c8d597ea6df63d5ffcbb71f",
   "execution": "real_streamlit_browser_api_and_worker",
   "synthetic_data_only": true,
   "mocked_provider": false,
@@ -7,22 +7,7 @@
     "real_web_and_worker_started": true,
     "anonymous_api_denied": true,
     "five_question_exam_created_via_real_api": true,
-    "image_uploaded_from_real_browser": true,
-    "actual_tesseract_worker_completed": true,
-    "ocr_text_saved": true,
-    "browser_displays_saved_ocr_text": true,
-    "five_answers_saved_from_browser": true,
-    "diagnostic_check_makes_no_provider_call": true,
-    "unsaved_source_blocks_grading_in_real_browser": true,
-    "teacher_reference_grade_persisted": true,
-    "browser_download_xlsx": true,
-    "browser_download_csv": true,
-    "browser_download_pdf": true,
-    "question_totals_in_actual_excel": true,
-    "excel_question_scores_match_reference": true,
-    "actual_pdf_is_pdf": true,
-    "model_attempt_did_not_change_teacher_paper": true,
-    "approved_grade_survived_process_restart": true
+    "validated_preview_before_upload": false
   },
   "provider": {
     "requests_triggered": 0,
@@ -34,43 +19,16 @@
       "provider_model_missing"
     ],
     "key_present": false,
-    "model_configured": false,
-    "readiness_codes": [
-      "organization_ai_disabled",
-      "external_disabled",
-      "paid_api_disabled",
-      "provider_key_missing",
-      "provider_model_missing"
-    ],
-    "status": "blocked_missing_operator_configuration"
+    "model_configured": false
   },
   "persistent_hosting_created": false,
   "google_colab_account_tested": false,
-  "ocr": {
-    "saved_characters": 953,
-    "engine": "real_tesseract",
-    "label_matches": [
-      {
-        "tag": "TEXTAREA",
-        "role": null
-      }
-    ],
-    "browser_characters": 953
+  "passed": false,
+  "failure": {
+    "step": "login_and_upload_in_browser",
+    "exception_type": "AssertionError",
+    "detail": "validated_preview_before_upload"
   },
-  "teacher_grade": {
-    "source": "reference_entered_by_test_teacher",
-    "total": 17.0,
-    "maximum": 30,
-    "question_totals": [
-      2,
-      5,
-      4,
-      3,
-      3
-    ],
-    "this_is_not_a_model_prediction": true
-  },
-  "passed": true,
-  "last_step": "complete",
+  "last_step": "login_and_upload_in_browser",
   "temporary_servers_stopped": true
 }
