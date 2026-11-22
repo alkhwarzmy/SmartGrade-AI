@@ -589,11 +589,17 @@ class _ReviewState extends State<ReviewScreen> with TaskState<ReviewScreen> {
                     icon: const Icon(Icons.troubleshoot),
                     label: const Text('فحص سبب تعثر التصحيح'),
                   ),
-                Wrap(spacing: 12, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center,
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     PaperStatusBadge(status: row!['status'] as String),
-                    Text('الدرجة المعتمدة: ${row!['total'] ?? '—'} · المراجعة ${row!['revision']}'),
-                  ]),
+                    Text(
+                      'الدرجة المعتمدة: ${row!['total'] ?? '—'} · المراجعة ${row!['revision']}',
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 12),
                 if (preview != null)
                   SizedBox(
@@ -626,9 +632,13 @@ class _ReviewState extends State<ReviewScreen> with TaskState<ReviewScreen> {
                       : approve,
                   child: const Text('اعتماد الدرجة'),
                 ),
-                if (dirty) const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Text('توجد تعديلات لم تُحفظ. احفظ النص والإجابات ثم اعتمد الدرجات.')),
+                if (dirty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Text(
+                      'توجد تعديلات لم تُحفظ. احفظ النص والإجابات ثم اعتمد الدرجات.',
+                    ),
+                  ),
                 const SizedBox(height: 24),
               ],
             ),

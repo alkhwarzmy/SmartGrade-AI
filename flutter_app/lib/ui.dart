@@ -66,8 +66,12 @@ mixin TaskState<T extends StatefulWidget> on State<T> {
           ),
           child: Semantics(
             liveRegion: true,
-            child: SelectableText(error,
-              style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer)),
+            child: SelectableText(
+              error,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onErrorContainer,
+              ),
+            ),
           ),
         ),
     ],
@@ -90,8 +94,10 @@ Widget editor(
     obscureText: secret,
     enableSuggestions: !secret,
     autocorrect: !secret,
-    textDirection: keyboard == TextInputType.url || keyboard == TextInputType.emailAddress
-        ? TextDirection.ltr : null,
+    textDirection:
+        keyboard == TextInputType.url || keyboard == TextInputType.emailAddress
+        ? TextDirection.ltr
+        : null,
     maxLines: lines,
     maxLength: maxLength,
     keyboardType: keyboard,
@@ -128,36 +134,56 @@ ThemeData smartGradeTheme() {
     colorScheme: scheme,
     scaffoldBackgroundColor: const Color(0xfff4f7f8),
     appBarTheme: const AppBarTheme(
-      backgroundColor: Color(0xfff4f7f8), foregroundColor: Color(0xff153b42),
-      centerTitle: false, scrolledUnderElevation: 0,
+      backgroundColor: Color(0xfff4f7f8),
+      foregroundColor: Color(0xff153b42),
+      centerTitle: false,
+      scrolledUnderElevation: 0,
     ),
     cardTheme: CardThemeData(
-      elevation: 0, color: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: Color(0xffdce6e9))),
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xffdce6e9)),
+      ),
     ),
     inputDecorationTheme: InputDecorationTheme(
-      filled: true, fillColor: Colors.white,
+      filled: true,
+      fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xffc8d9db))),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xffc8d9db)),
+      ),
     ),
-    filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(
-      minimumSize: const Size(0, 48),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)))),
-    outlinedButtonTheme: OutlinedButtonThemeData(style: OutlinedButton.styleFrom(
-      minimumSize: const Size(0, 44),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)))),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        minimumSize: const Size(0, 48),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(0, 44),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    ),
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
-      backgroundColor: Color(0xff145e55), foregroundColor: Colors.white),
+      backgroundColor: Color(0xff145e55),
+      foregroundColor: Colors.white,
+    ),
     dividerTheme: const DividerThemeData(color: Color(0xffdce6e9)),
   );
 }
 
 class WorkspaceBanner extends StatelessWidget {
-  const WorkspaceBanner({super.key, required this.title, required this.subtitle,
-    this.icon = Icons.fact_check_outlined});
+  const WorkspaceBanner({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    this.icon = Icons.fact_check_outlined,
+  });
   final String title, subtitle;
   final IconData icon;
   @override
@@ -165,19 +191,37 @@ class WorkspaceBanner extends StatelessWidget {
     width: double.infinity,
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(
-      gradient: const LinearGradient(colors: [Color(0xff123b43), Color(0xff145950)]),
+      gradient: const LinearGradient(
+        colors: [Color(0xff123b43), Color(0xff145950)],
+      ),
       borderRadius: BorderRadius.circular(18),
     ),
-    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Icon(icon, color: const Color(0xff9de0c8), size: 28),
-      const SizedBox(width: 12),
-      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(
-          color: Colors.white, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        Text(subtitle, style: const TextStyle(color: Color(0xffd5e9e5), height: 1.6)),
-      ])),
-    ]),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: const Color(0xff9de0c8), size: 28),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                subtitle,
+                style: const TextStyle(color: Color(0xffd5e9e5), height: 1.6),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
   );
 }
 
@@ -197,9 +241,14 @@ class PaperStatusBadge extends StatelessWidget {
     final color = approved ? const Color(0xff1c6657) : const Color(0xff80551a);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(color: approved ? const Color(0xffe7f4ed) : const Color(0xfffff2dd),
-        borderRadius: BorderRadius.circular(20)),
-      child: Text(paperStatusLabel(status), style: TextStyle(color: color, fontSize: 12)),
+      decoration: BoxDecoration(
+        color: approved ? const Color(0xffe7f4ed) : const Color(0xfffff2dd),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        paperStatusLabel(status),
+        style: TextStyle(color: color, fontSize: 12),
+      ),
     );
   }
 }
@@ -210,12 +259,19 @@ class EmptyPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.all(24),
-    child: Column(mainAxisSize: MainAxisSize.min, children: [
-      const Icon(Icons.inbox_outlined, size: 44, color: Color(0xff14766b)),
-      const SizedBox(height: 14),
-      Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium),
-      const SizedBox(height: 8),
-      Text(message, textAlign: TextAlign.center),
-    ]),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.inbox_outlined, size: 44, color: Color(0xff14766b)),
+        const SizedBox(height: 14),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        Text(message, textAlign: TextAlign.center),
+      ],
+    ),
   );
 }

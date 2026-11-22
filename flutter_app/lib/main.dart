@@ -91,7 +91,9 @@ class _LoginState extends State<LoginScreen> with TaskState<LoginScreen> {
               subtitle: 'اختبارات منظمة، مراجعة واضحة، ونتائج يعتمدها المعلم.',
             ),
             const SizedBox(height: 20),
-            const Text('سجّل الدخول بحساب مؤسستك. احصل على عنوان الخدمة من المسؤول.'),
+            const Text(
+              'سجّل الدخول بحساب مؤسستك. احصل على عنوان الخدمة من المسؤول.',
+            ),
             if (widget.session.notice.isNotEmpty) Text(widget.session.notice),
             input(address, 'عنوان الخادم HTTPS', keyboard: TextInputType.url),
             input(org, 'رمز المؤسسة', maxLength: 48),

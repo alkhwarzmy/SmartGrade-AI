@@ -34,17 +34,31 @@ Session identity(String role) {
   return session;
 }
 
-
 class SearchWidgetApi extends WidgetApi {
   SearchWidgetApi() : super('teacher');
   @override
   Future<List<Json>> exams(int offset) async => [
-    {'id': 'science', 'title': 'اختبار العلوم', 'kind': 'essay', 'question_count': 5, 'maximum': 30},
-    {'id': 'math', 'title': 'اختبار الرياضيات', 'kind': 'mcq', 'question_count': 20, 'maximum': 20},
+    {
+      'id': 'science',
+      'title': 'اختبار العلوم',
+      'kind': 'essay',
+      'question_count': 5,
+      'maximum': 30,
+    },
+    {
+      'id': 'math',
+      'title': 'اختبار الرياضيات',
+      'kind': 'mcq',
+      'question_count': 20,
+      'maximum': 20,
+    },
   ];
   @override
   Future<Json> exam(String id) async => {
-    'id': id, 'title': 'اختبار العلوم', 'kind': 'essay', 'maximum': 30,
+    'id': id,
+    'title': 'اختبار العلوم',
+    'kind': 'essay',
+    'maximum': 30,
     'counts': {'submissions': 2, 'approved': 1},
   };
   @override
@@ -55,34 +69,54 @@ class SearchWidgetApi extends WidgetApi {
 }
 
 void main() {
-  testWidgets('Narrow Android workspace searches exams without layout overflow', (tester) async {
-    tester.view.physicalSize = const Size(390, 844);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final session = identity('teacher');
-    session.accept(SearchWidgetApi(), session.actor!);
-    await tester.pumpWidget(MaterialApp(theme: smartGradeTheme(), home: ExamsScreen(session: session)));
-    await tester.pumpAndSettle();
-    expect(find.text('اختبار العلوم'), findsOneWidget);
-    await tester.enterText(find.byKey(const ValueKey('exam-search')), 'الرياضيات');
-    await tester.pumpAndSettle();
-    expect(find.text('اختبار العلوم'), findsNothing);
-    expect(find.text('اختبار الرياضيات'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox.shrink());
-    session.dispose();
-  });
+  testWidgets(
+    'Narrow Android workspace searches exams without layout overflow',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final session = identity('teacher');
+      session.accept(SearchWidgetApi(), session.actor!);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: smartGradeTheme(),
+          home: ExamsScreen(session: session),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('اختبار العلوم'), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const ValueKey('exam-search')),
+        'الرياضيات',
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('اختبار العلوم'), findsNothing);
+      expect(find.text('اختبار الرياضيات'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      session.dispose();
+    },
+  );
 
-  testWidgets('Paper search and Arabic status do not change saved grades', (tester) async {
+  testWidgets('Paper search and Arabic status do not change saved grades', (
+    tester,
+  ) async {
     final session = identity('teacher');
     session.accept(SearchWidgetApi(), session.actor!);
-    await tester.pumpWidget(MaterialApp(theme: smartGradeTheme(),
-      home: ExamScreen(session: session, id: 'science')));
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: smartGradeTheme(),
+        home: ExamScreen(session: session, id: 'science'),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.text('ST-001'), findsOneWidget);
     expect(find.text('معتمد'), findsOneWidget);
-    await tester.enterText(find.byKey(const ValueKey('paper-search')), 'ST-002');
+    await tester.enterText(
+      find.byKey(const ValueKey('paper-search')),
+      'ST-002',
+    );
     await tester.pumpAndSettle();
     expect(find.text('ST-001'), findsNothing);
     expect(find.widgetWithText(ListTile, 'ST-002'), findsOneWidget);
@@ -96,8 +130,11 @@ void main() {
     final session = Session(vault: MemoryVault());
     await tester.pumpWidget(SmartGradeApp(session: session));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('دخول'), 200,
-      scrollable: find.byType(Scrollable).first);
+    await tester.scrollUntilVisible(
+      find.text('دخول'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('دخول'), findsOneWidget);
     expect(
       Directionality.of(tester.element(find.text('دخول'))),
@@ -163,8 +200,11 @@ void main() {
     expect(find.text('اختبار جديد'), findsOneWidget);
     session.api!.onUnauthorized!();
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('دخول'), 200,
-      scrollable: find.byType(Scrollable).first);
+    await tester.scrollUntilVisible(
+      find.text('دخول'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('دخول'), findsOneWidget);
     expect(find.text('اختبار جديد'), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
