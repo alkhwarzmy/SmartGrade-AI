@@ -88,6 +88,10 @@ Widget editor(
     controller: controller,
     enabled: enabled,
     obscureText: secret,
+    enableSuggestions: !secret,
+    autocorrect: !secret,
+    textDirection: keyboard == TextInputType.url || keyboard == TextInputType.emailAddress
+        ? TextDirection.ltr : null,
     maxLines: lines,
     maxLength: maxLength,
     keyboardType: keyboard,

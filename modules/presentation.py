@@ -22,6 +22,8 @@ h2 {font-size:1.45rem!important;}
 [data-testid="stSidebar"] [role="radiogroup"] label:hover {background:#244b51;}
 [data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked) {background:#246159;color:white;}
 [data-testid="stSidebar"] hr {border-color:#ffffff24;}
+[data-testid="stSidebar"] [data-testid="stCaptionContainer"] p {color:#bfd8d7!important;}
+[data-testid="stSidebar"] .stButton button [data-testid="stMarkdownContainer"] {color:#153b42;}
 .brand {font-size:26px;font-weight:750;color:white;margin:8px 0 4px;direction:ltr;text-align:right;}
 .subbrand {font-size:12px;color:#bfd8d7;margin-bottom:28px;}
 [data-testid="stMetric"] {background:white;border:1px solid var(--sg-line);border-radius:14px;padding:18px 20px;box-shadow:0 3px 10px #153b4205;}
@@ -38,6 +40,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible {outline:3px sol
 [data-testid="stFileUploader"] {background:white;border:1px dashed #85b3ad;border-radius:14px;padding:12px;}
 [data-testid="stFileUploaderDropzone"] {background:#edf6f3;}
 [data-testid="stAlert"] {border-radius:12px;}
+[data-testid="stExpander"] img[alt="صورة الإجابة للمراجعة"] {max-height:480px;object-fit:contain;background:#f7f9fa;}
 .sg-topbar {display:flex;justify-content:space-between;align-items:center;gap:16px;padding:0 0 18px;margin-bottom:16px;border-bottom:1px solid var(--sg-line);color:var(--sg-muted);font-size:13px;}
 .sg-product {font-weight:800;color:var(--sg-ink);direction:ltr;}
 .sg-tag {display:inline-block;padding:5px 11px;border:1px solid #d5e6e1;border-radius:99px;background:#eaf5f0;color:#1b6056;font-size:12px;line-height:1.6;}

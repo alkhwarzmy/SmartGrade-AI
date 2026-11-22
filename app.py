@@ -17,10 +17,11 @@ from modules.handwriting_ocr import recognize, ocr_status
 from modules.essay_grader import propose_grade, provider_status, ProviderError
 from modules.reports import frames, excel_bytes, csv_bytes
 
-st.set_page_config(page_title="SmartGrade | مساحة التصحيح", page_icon="✦", layout="wide")
 from modules.presentation import (
     apply_theme, workspace_header, workflow, exam_summary, empty_state, filter_papers,
 )
+
+st.set_page_config(page_title="SmartGrade | مساحة التصحيح", page_icon="✦", layout="wide")
 
 apply_theme()
 
@@ -213,7 +214,10 @@ def exams_page():
     actions[0].button("رفع أوراق اختبار", on_click=go_to, args=("رفع الأوراق",), width="stretch", disabled=counts["exams"] == 0)
     actions[1].button("متابعة المراجعة", on_click=go_to, args=("التصحيح والمراجعة",), width="stretch", disabled=counts["submissions"] == 0)
     actions[2].button("فتح النتائج المعتمدة", on_click=go_to, args=("النتائج والتصدير",), width="stretch", disabled=counts["approved"] == 0)
-    new, existing, templates = st.tabs(["إنشاء اختبار", "اختباراتي", "قالب الإجابة"])
+    if exams:
+        existing, new, templates = st.tabs(["اختباراتي", "إنشاء اختبار", "قالب الإجابة"])
+    else:
+        new, existing, templates = st.tabs(["إنشاء اختبار", "اختباراتي", "قالب الإجابة"])
     with new:
         mode = st.radio("نوع الاختبار", ["اختيار من متعدد", "إجابة مقالية"], horizontal=True)
         with st.form("new_exam", clear_on_submit=False):
@@ -267,16 +271,15 @@ def exams_page():
                         "غيّر البحث أو نوع الاختبار." if exams else "أكمل نموذج إنشاء الاختبار أعلاه للبدء.")
         for exam in filtered:
             spec = ExamSpec.model_validate(exam.spec)
-            with st.expander(
-                f"{exam.title} · {'اختيارات' if exam.kind == 'mcq' else 'مقالي'} · {spec.maximum:g} درجة"
-            ):
-                a, b, c = st.columns(3)
-                a.button("رفع الأوراق", key="open_upload_" + exam.id, on_click=go_to,
-                         args=("رفع الأوراق", exam.id), width="stretch")
-                b.button("فتح المراجعة", key="open_review_" + exam.id, on_click=go_to,
-                         args=("التصحيح والمراجعة", exam.id), width="stretch")
-                c.button("عرض النتائج", key="open_results_" + exam.id, on_click=go_to,
-                         args=("النتائج والتصدير", exam.id), width="stretch")
+            exam_summary(exam, spec)
+            a, b, c = st.columns(3)
+            a.button("رفع الأوراق", key="open_upload_" + exam.id, on_click=go_to,
+                     args=("رفع الأوراق", exam.id), width="stretch")
+            b.button("فتح المراجعة", key="open_review_" + exam.id, on_click=go_to,
+                     args=("التصحيح والمراجعة", exam.id), width="stretch")
+            c.button("عرض النتائج", key="open_results_" + exam.id, on_click=go_to,
+                     args=("النتائج والتصدير", exam.id), width="stretch")
+            with st.expander("الأسئلة ومعايير التصحيح · " + exam.title):
                 if exam.kind == "mcq":
                     st.dataframe(
                         pd.DataFrame({"السؤال": range(1, 21), "الإجابة": spec.answer_key}), hide_index=True

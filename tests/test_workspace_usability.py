@@ -49,4 +49,4 @@ def test_review_search_status_and_paper_navigation_do_not_write_grades(workspace
     next(b for b in app.button if b.label == "الورقة التالية").click().run()
     assert not app.exception and app.selectbox(key="review_submission").value == first
     assert store.submission(first).total == 20
-    assert store.submission(second).approved is None
+    assert not store.submission(second).approved

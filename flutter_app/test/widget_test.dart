@@ -85,7 +85,7 @@ void main() {
     await tester.enterText(find.byKey(const ValueKey('paper-search')), 'ST-002');
     await tester.pumpAndSettle();
     expect(find.text('ST-001'), findsNothing);
-    expect(find.text('ST-002'), findsOneWidget);
+    expect(find.widgetWithText(ListTile, 'ST-002'), findsOneWidget);
     expect(find.text('بانتظار المراجعة'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
@@ -96,6 +96,8 @@ void main() {
     final session = Session(vault: MemoryVault());
     await tester.pumpWidget(SmartGradeApp(session: session));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('دخول'), 200,
+      scrollable: find.byType(Scrollable).first);
     expect(find.text('دخول'), findsOneWidget);
     expect(
       Directionality.of(tester.element(find.text('دخول'))),
