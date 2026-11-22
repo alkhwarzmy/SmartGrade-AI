@@ -86,7 +86,9 @@ class SmartGradeApi {
           if (error is Map && error['detail'] is String) {
             message = error['detail'] as String;
             code = error['code'] is String ? error['code'] as String : '';
-            revision = error['revision'] is int ? error['revision'] as int : null;
+            revision = error['revision'] is int
+                ? error['revision'] as int
+                : null;
           }
         } catch (_) {
           /* Do not show gateway HTML or credentials. */
@@ -179,7 +181,8 @@ class SmartGradeApi {
           .cast<Json>();
   Future<Json> paper(String id) async =>
       await json('GET', 'submissions/$id') as Json;
-  Future<Json> diagnostics(String id) async => await json('GET', 'submissions/$id/diagnostics') as Json;
+  Future<Json> diagnostics(String id) async =>
+      await json('GET', 'submissions/$id/diagnostics') as Json;
   Future<Uint8List> image(String id) => send(
     http.Request(
       'GET',

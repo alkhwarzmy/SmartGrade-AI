@@ -213,15 +213,33 @@ void main() {
 }
 
 void diagnosticApiTests() {
-  test('Provider error carries stage code and updated revision without expiring login', () async {
-    var expired = 0;
-    final api = SmartGradeApi('https://example.org', client: MockClient((_) async => reply({
-      'detail': 'راجع إعداد مزود التصحيح', 'code': 'provider_auth', 'revision': 8,
-    }, 502)))..token = 'synthetic'..onUnauthorized = () => expired++;
-    try { await api.me(); fail('expected failure'); }
-    on ApiError catch (e) {
-      expect(e.status, 502); expect(e.code, 'provider_auth'); expect(e.revision, 8);
-    }
-    expect(expired, 0); api.close();
-  });
+  test(
+    'Provider error carries stage code and updated revision without expiring login',
+    () async {
+      var expired = 0;
+      final api =
+          SmartGradeApi(
+              'https://example.org',
+              client: MockClient(
+                (_) async => reply({
+                  'detail': 'راجع إعداد مزود التصحيح',
+                  'code': 'provider_auth',
+                  'revision': 8,
+                }, 502),
+              ),
+            )
+            ..token = 'synthetic'
+            ..onUnauthorized = () => expired++;
+      try {
+        await api.me();
+        fail('expected failure');
+      } on ApiError catch (e) {
+        expect(e.status, 502);
+        expect(e.code, 'provider_auth');
+        expect(e.revision, 8);
+      }
+      expect(expired, 0);
+      api.close();
+    },
+  );
 }

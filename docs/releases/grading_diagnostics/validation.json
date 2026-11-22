@@ -1,0 +1,94 @@
+{
+  "fixture": "synthetic_arabic_science_5q",
+  "maximum": 30.0,
+  "reference_labels_independently_validated": false,
+  "reference_contracts": [
+    {
+      "case": "student-a",
+      "valid": true,
+      "reference_total": 30.0
+    },
+    {
+      "case": "student-b",
+      "valid": true,
+      "reference_total": 30.0
+    },
+    {
+      "case": "student-c",
+      "valid": true,
+      "reference_total": 17.0
+    },
+    {
+      "case": "student-d",
+      "valid": true,
+      "reference_total": 0.0
+    },
+    {
+      "case": "student-e",
+      "valid": true,
+      "reference_total": 0.0
+    },
+    {
+      "case": "student-f",
+      "valid": true,
+      "reference_total": 0.0
+    }
+  ],
+  "evaluation_mode": "offline",
+  "model_evaluated": false,
+  "external_calls": 0,
+  "provider_blockers": [
+    "external_disabled",
+    "paid_api_disabled",
+    "provider_key_missing",
+    "provider_model_missing"
+  ],
+  "cases": [
+    {
+      "case": "student-a",
+      "status": "not_run"
+    },
+    {
+      "case": "student-b",
+      "status": "not_run"
+    },
+    {
+      "case": "student-c",
+      "status": "not_run"
+    },
+    {
+      "case": "student-d",
+      "status": "not_run"
+    },
+    {
+      "case": "student-e",
+      "status": "not_run"
+    },
+    {
+      "case": "student-f",
+      "status": "skipped_empty_answers"
+    }
+  ],
+  "summary": {
+    "evaluated_cases": 0,
+    "mean_absolute_total_error": null,
+    "mean_question_error": null
+  },
+  "ocr": {
+    "tested": true,
+    "sample": "synthetic_printed_student_c",
+    "raw": {
+      "n": 1,
+      "CER": 0.05485232067510549,
+      "WER": 0.15384615384615385
+    },
+    "normalized": {
+      "n": 1,
+      "CER": 0.01668520578420467,
+      "WER": 0.03870967741935484
+    },
+    "reference_characters": 948,
+    "recognized_characters": 953,
+    "handwriting_evaluated": false
+  }
+}
