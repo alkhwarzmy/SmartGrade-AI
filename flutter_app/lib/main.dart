@@ -30,11 +30,7 @@ class _AppState extends State<SmartGradeApp> {
     locale: const Locale('ar'),
     supportedLocales: const [Locale('ar'), Locale('en')],
     localizationsDelegates: GlobalMaterialLocalizations.delegates,
-    theme: ThemeData(
-      useMaterial3: true,
-      colorSchemeSeed: const Color(0xff14665f),
-      scaffoldBackgroundColor: const Color(0xfff5f8f7),
-    ),
+    theme: smartGradeTheme(),
     home: AnimatedBuilder(
       animation: widget.session,
       builder: (context, _) {
@@ -90,11 +86,12 @@ class _LoginState extends State<LoginScreen> with TaskState<LoginScreen> {
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: [
-            const Text(
-              'مساحة التصحيح',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            const WorkspaceBanner(
+              title: 'مساحة التصحيح',
+              subtitle: 'اختبارات منظمة، مراجعة واضحة، ونتائج يعتمدها المعلم.',
             ),
-            const Text('استخدم حساب مؤسستك وعنوان الخادم الذي يقدمه المسؤول.'),
+            const SizedBox(height: 20),
+            const Text('سجّل الدخول بحساب مؤسستك. احصل على عنوان الخدمة من المسؤول.'),
             if (widget.session.notice.isNotEmpty) Text(widget.session.notice),
             input(address, 'عنوان الخادم HTTPS', keyboard: TextInputType.url),
             input(org, 'رمز المؤسسة', maxLength: 48),

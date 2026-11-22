@@ -5,6 +5,7 @@ import 'package:smartgrade/api.dart';
 import 'package:smartgrade/main.dart';
 import 'package:smartgrade/screens/exams.dart';
 import 'package:smartgrade/session.dart';
+import 'package:smartgrade/ui.dart';
 import 'api_test.dart' show MemoryVault;
 
 class WidgetApi extends SmartGradeApi {
@@ -33,7 +34,64 @@ Session identity(String role) {
   return session;
 }
 
+
+class SearchWidgetApi extends WidgetApi {
+  SearchWidgetApi() : super('teacher');
+  @override
+  Future<List<Json>> exams(int offset) async => [
+    {'id': 'science', 'title': 'اختبار العلوم', 'kind': 'essay', 'question_count': 5, 'maximum': 30},
+    {'id': 'math', 'title': 'اختبار الرياضيات', 'kind': 'mcq', 'question_count': 20, 'maximum': 20},
+  ];
+  @override
+  Future<Json> exam(String id) async => {
+    'id': id, 'title': 'اختبار العلوم', 'kind': 'essay', 'maximum': 30,
+    'counts': {'submissions': 2, 'approved': 1},
+  };
+  @override
+  Future<List<Json>> papers(String id, int offset) async => [
+    {'id': 'p1', 'student_code': 'ST-001', 'status': 'approved', 'total': 17},
+    {'id': 'p2', 'student_code': 'ST-002', 'status': 'review', 'total': null},
+  ];
+}
+
 void main() {
+  testWidgets('Narrow Android workspace searches exams without layout overflow', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final session = identity('teacher');
+    session.accept(SearchWidgetApi(), session.actor!);
+    await tester.pumpWidget(MaterialApp(theme: smartGradeTheme(), home: ExamsScreen(session: session)));
+    await tester.pumpAndSettle();
+    expect(find.text('اختبار العلوم'), findsOneWidget);
+    await tester.enterText(find.byKey(const ValueKey('exam-search')), 'الرياضيات');
+    await tester.pumpAndSettle();
+    expect(find.text('اختبار العلوم'), findsNothing);
+    expect(find.text('اختبار الرياضيات'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    session.dispose();
+  });
+
+  testWidgets('Paper search and Arabic status do not change saved grades', (tester) async {
+    final session = identity('teacher');
+    session.accept(SearchWidgetApi(), session.actor!);
+    await tester.pumpWidget(MaterialApp(theme: smartGradeTheme(),
+      home: ExamScreen(session: session, id: 'science')));
+    await tester.pumpAndSettle();
+    expect(find.text('ST-001'), findsOneWidget);
+    expect(find.text('معتمد'), findsOneWidget);
+    await tester.enterText(find.byKey(const ValueKey('paper-search')), 'ST-002');
+    await tester.pumpAndSettle();
+    expect(find.text('ST-001'), findsNothing);
+    expect(find.text('ST-002'), findsOneWidget);
+    expect(find.text('بانتظار المراجعة'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    session.dispose();
+  });
+
   testWidgets('Login uses RTL and masks password', (tester) async {
     final session = Session(vault: MemoryVault());
     await tester.pumpWidget(SmartGradeApp(session: session));

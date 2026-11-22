@@ -1,9 +1,12 @@
 name: Run actual SmartGrade application
 on:
   push:
-    branches: [run/live-check-20261122]
+    branches: [improve/commercial-workspace-20261122]
     paths:
       - experiments/live_runtime/run.py
+      - app.py
+      - modules/presentation.py
+      - tests/test_workspace_usability.py
       - .github/workflows/live-runtime-check.yml
   workflow_dispatch:
 permissions:
@@ -28,7 +31,7 @@ jobs:
           sudo apt-get install -y -qq tesseract-ocr
       - name: Verify restart regression and single-model notebook source
         run: |
-          python -m pytest -q tests/test_colab_runtime.py
+          python -m pytest -q tests/test_colab_runtime.py tests/test_workspace_usability.py
           python - <<'PY'
           import base64, hashlib, json
           from pathlib import Path
@@ -55,11 +58,11 @@ jobs:
         continue-on-error: true
         env:
           TESTED_SOURCE: ${{ github.sha }}
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY || secrets.SMARTGRADE_LLM_API_KEY }}
-          LLM_MODEL: ${{ vars.LLM_MODEL }}
+          LLM_API_KEY: ''
+          LLM_MODEL: ''
           LLM_BASE_URL: ${{ vars.LLM_BASE_URL || 'https://api.openai.com/v1' }}
-          ALLOW_EXTERNAL_AI: ${{ vars.ALLOW_EXTERNAL_AI || 'false' }}
-          ALLOW_PAID_API: ${{ vars.ALLOW_PAID_API || 'false' }}
+          ALLOW_EXTERNAL_AI: 'false'
+          ALLOW_PAID_API: 'false'
           OCR_PROVIDER: tesseract
         run: python -m experiments.live_runtime.run
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -72,14 +75,14 @@ jobs:
         env:
           EXPECTED_SOURCE: ${{ github.sha }}
         run: |
-          git fetch origin run/live-check-20261122
-          test "$(git rev-parse origin/run/live-check-20261122)" = "$EXPECTED_SOURCE"
+          git fetch origin "$GITHUB_REF_NAME"
+          test "$(git rev-parse "origin/$GITHUB_REF_NAME")" = "$EXPECTED_SOURCE"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add experiments/live_runtime/evidence
           if ! git diff --cached --quiet; then
             git commit -m "Record actual application run with synthetic data [skip ci]"
-            git push origin HEAD:run/live-check-20261122
+            git push origin "HEAD:$GITHUB_REF_NAME"
           fi
       - name: Require the runtime scenario to pass
         if: always()

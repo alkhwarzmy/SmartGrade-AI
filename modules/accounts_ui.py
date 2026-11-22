@@ -38,8 +38,8 @@ def sign_in(auth):
         return actor
     st.markdown(
         '<div class="hero"><div class="eyebrow">SMARTGRADE / INSTITUTIONS</div>'
-        "<h2>مساحة مؤسستك لتصحيح الاختبارات</h2>"
-        "<p>دخول آمن، مراجعة موثقة، ونتائج يعتمدها المعلم.</p></div>",
+        "<h2>تصحيح منظم. نتائج يمكنك مراجعتها.</h2>"
+        "<p>من ورقة الإجابة إلى التقرير: أسئلة متعددة، معايير واضحة، واعتماد موثق للمعلم.</p></div>",
         unsafe_allow_html=True,
     )
     if "login_notice" in st.session_state:
@@ -51,7 +51,7 @@ def sign_in(auth):
         )
         st.caption("لن يُنشأ أي حساب أو كلمة مرور افتراضية من الواجهة.")
         st.stop()
-    left, center, right = st.columns([1, 2, 1])
+    left, center, right = st.columns([1, 2.4, 1])
     with center:
         with st.form("commercial_login", clear_on_submit=True):
             st.subheader("تسجيل الدخول")

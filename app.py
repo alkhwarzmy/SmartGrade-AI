@@ -18,41 +18,11 @@ from modules.essay_grader import propose_grade, provider_status, ProviderError
 from modules.reports import frames, excel_bytes, csv_bytes
 
 st.set_page_config(page_title="SmartGrade | مساحة التصحيح", page_icon="✦", layout="wide")
-st.markdown(
-    """
-<style>
-html,body,[class*="css"],.stApp {font-family:'Noto Sans Arabic',sans-serif;}
-[data-testid="stMain"] {direction:rtl;}
-[data-testid="stSidebar"] {direction:rtl;border-left:1px solid #dce5e8;background:#fff;}
-.block-container {padding-top:2.2rem;padding-bottom:3rem;max-width:1440px;}
-h1,h2,h3,p,label {text-align:right;}
-h1 {font-size:2rem!important;font-weight:700!important;letter-spacing:-.6px;}
-[data-testid="stMetric"] {background:#fff;border:1px solid #e1e8eb;border-radius:14px;padding:20px;}
-[data-testid="stMetricLabel"] {color:#657781;}
-[data-testid="stMetricValue"] {color:#123b40;}
-[data-testid="stForm"] {background:white;border:1px solid #e0e8eb;border-radius:16px;padding:24px;}
-[data-baseweb="tab-list"] {gap:22px;border-bottom:1px solid #dde6e9;}
-.stButton>button,.stDownloadButton>button {border-radius:9px;min-height:42px;}
-.hero {padding:27px 30px;background:#103e43;border-radius:18px;margin:14px 0 27px;color:#fff;}
-.hero h2 {font-size:1.65rem;color:white;margin:0 0 10px;}
-.hero p {color:#c8e2df;margin:0;line-height:1.9;}
-.eyebrow {font-size:12px;color:#68d3bc;letter-spacing:2px;direction:ltr;text-align:right;}
-.brand {font-size:25px;font-weight:700;color:#124a4c;margin:8px 0 2px;direction:ltr;text-align:right;}
-.subbrand {font-size:12px;color:#74858d;margin-bottom:28px;}
-.step {font-size:13px;color:#768a92;margin:16px 0 2px;}
-footer {visibility:hidden;}
-.st-key-mobile_nav {display:none;}
-@media (max-width:768px) {
-  [data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"] {display:none!important;}
-  .st-key-mobile_nav {display:block!important;}
-  .block-container {padding:1.2rem 1rem 3rem;}
-  h1 {font-size:1.6rem!important;}
-  .hero {padding:22px 18px;}
-}
-</style>
-""",
-    unsafe_allow_html=True,
+from modules.presentation import (
+    apply_theme, workspace_header, workflow, exam_summary, empty_state, filter_papers,
 )
+
+apply_theme()
 
 
 @st.cache_resource
@@ -92,6 +62,23 @@ if COMMERCIAL:
     PAGES.append("حسابي")
 
 
+def go_to(target, exam_id=None, submission_id=None, reset_filters=False):
+    """Run as a widget callback, before navigation widgets are recreated."""
+    if target not in PAGES:
+        return
+    st.session_state["navigation"] = target
+    st.session_state["mobile_navigation"] = target
+    selector = {"رفع الأوراق": "upload_exam", "التصحيح والمراجعة": "review_exam",
+                "النتائج والتصدير": "result_exam"}.get(target)
+    if selector and exam_id:
+        st.session_state[selector] = exam_id
+    if submission_id:
+        st.session_state["review_submission"] = submission_id
+    if reset_filters:
+        st.session_state["paper_query"] = ""
+        st.session_state["paper_status"] = "all"
+
+
 def notify_error(exc):
     if isinstance(exc, ValidationError):
         st.error(" • ".join(error["msg"] for error in exc.errors(include_input=False)))
@@ -115,7 +102,9 @@ def choose_exam(label="اختر الاختبار", key="exam"):
         )
     exams = store.exams(limit=50, offset=(page - 1) * 50) if COMMERCIAL else store.exams()
     if not exams:
-        st.info("أنشئ اختبارك الأول من صفحة الاختبارات للبدء.")
+        empty_state("ابدأ باختبارك الأول", "أنشئ الاختبار وحدد الأسئلة ومعايير التصحيح، ثم ارفع أوراق الإجابة.")
+        if "الاختبارات" in PAGES:
+            st.button("الانتقال إلى إنشاء اختبار", on_click=go_to, args=("الاختبارات",))
         return None
     mapping = {e.id: e for e in exams}
     eid = st.selectbox(
@@ -178,6 +167,10 @@ def essay_exam_fields():
             rubric = st.data_editor(pd.DataFrame(seed), num_rows="dynamic", hide_index=True, width="stretch",
                 key=prefix + "_rubric", column_config={"الدرجة القصوى": st.column_config.NumberColumn(
                     min_value=0.25, max_value=1000.0, step=0.25)})
+            rubric_total = pd.to_numeric(rubric["الدرجة القصوى"], errors="coerce").fillna(0).sum()
+            st.caption(f"مجموع المعايير: {rubric_total:g} / درجة السؤال: {maximum:g}")
+            if abs(rubric_total - maximum) > 1e-6:
+                st.warning("عدّل درجات المعايير لتساوي درجة السؤال قبل إنشاء الاختبار.")
             if st.form_submit_button(f"حذف السؤال {number}", disabled=len(drafts) == 1):
                 remove = draft["id"]
             values.append({"id": draft["id"], "question": question, "model_answer": model,
@@ -199,10 +192,11 @@ def essay_exam_fields():
 def exams_page():
     st.markdown(
         '<div class="hero"><div class="eyebrow">SMARTGRADE / TEACHER WORKSPACE</div>'
-        "<h2>وقت أقل للتصحيح. مساحة أكبر للتعليم.</h2>"
-        "<p>اجمع أوراق الاختبار، راجع الإجابات، واعتمد النتائج من مكان واحد.</p></div>",
+        "<h2>كل اختباراتك، من الورقة إلى النتيجة.</h2>"
+        "<p>أنشئ اختبارًا بمعايير واضحة، استقبل الأوراق، ثم راجع الدرجات واعتمدها قبل مشاركة النتائج.</p></div>",
         unsafe_allow_html=True,
     )
+    workflow(0)
     counts = store.counts()
     page = 1
     if counts["exams"] > 50:
@@ -215,7 +209,10 @@ def exams_page():
     b.metric("الأوراق المستلمة", counts["submissions"])
     c.metric("بانتظار المراجعة", counts["review"])
     d.metric("النتائج المعتمدة", counts["approved"])
-    st.write("")
+    actions = st.columns(3)
+    actions[0].button("رفع أوراق اختبار", on_click=go_to, args=("رفع الأوراق",), width="stretch", disabled=counts["exams"] == 0)
+    actions[1].button("متابعة المراجعة", on_click=go_to, args=("التصحيح والمراجعة",), width="stretch", disabled=counts["submissions"] == 0)
+    actions[2].button("فتح النتائج المعتمدة", on_click=go_to, args=("النتائج والتصدير",), width="stretch", disabled=counts["approved"] == 0)
     new, existing, templates = st.tabs(["إنشاء اختبار", "اختباراتي", "قالب الإجابة"])
     with new:
         mode = st.radio("نوع الاختبار", ["اختيار من متعدد", "إجابة مقالية"], horizontal=True)
@@ -259,13 +256,27 @@ def exams_page():
             st.session_state["_flash"] = "تم إنشاء الاختبار. انتقل إلى رفع الأوراق لبدء التصحيح."
             st.rerun()
     with existing:
-        if not exams:
-            st.info("ستظهر اختباراتك هنا بعد إنشاء أول اختبار.")
-        for exam in exams:
+        query = st.text_input("البحث في اختباراتي", placeholder="اكتب عنوان الاختبار", key="exam_query")
+        kind = st.selectbox("تصفية نوع الاختبار", ["all", "essay", "mcq"],
+                            format_func={"all": "كل الأنواع", "essay": "مقالي", "mcq": "اختيار من متعدد"}.get)
+        filtered = [exam for exam in exams if query.strip().casefold() in exam.title.casefold()
+                    and (kind == "all" or exam.kind == kind)]
+        st.caption(f"النتائج في الصفحة الحالية: {len(filtered)} من {len(exams)} · الصفحة {page}")
+        if not filtered:
+            empty_state("لا توجد اختبارات مطابقة" if exams else "اختباراتك تبدأ هنا",
+                        "غيّر البحث أو نوع الاختبار." if exams else "أكمل نموذج إنشاء الاختبار أعلاه للبدء.")
+        for exam in filtered:
             spec = ExamSpec.model_validate(exam.spec)
             with st.expander(
                 f"{exam.title} · {'اختيارات' if exam.kind == 'mcq' else 'مقالي'} · {spec.maximum:g} درجة"
             ):
+                a, b, c = st.columns(3)
+                a.button("رفع الأوراق", key="open_upload_" + exam.id, on_click=go_to,
+                         args=("رفع الأوراق", exam.id), width="stretch")
+                b.button("فتح المراجعة", key="open_review_" + exam.id, on_click=go_to,
+                         args=("التصحيح والمراجعة", exam.id), width="stretch")
+                c.button("عرض النتائج", key="open_results_" + exam.id, on_click=go_to,
+                         args=("النتائج والتصدير", exam.id), width="stretch")
                 if exam.kind == "mcq":
                     st.dataframe(
                         pd.DataFrame({"السؤال": range(1, 21), "الإجابة": spec.answer_key}), hide_index=True
@@ -288,10 +299,12 @@ def exams_page():
 
 def upload_page():
     st.title("رفع أوراق الاختبار")
-    st.caption("صورة واضحة هي بداية تصحيح موثوق.")
+    st.caption("اختر الاختبار، تأكد من وضوح الورقة، ثم أضف رمز الطالب.")
+    workflow(1)
     exam = choose_exam(key="upload_exam")
     if not exam:
         return
+    exam_summary(exam, ExamSpec.model_validate(exam.spec))
     st.info(
         "اختيارات: ارفع قالب OMR v1 كاملًا وباتجاه رأسي."
         if exam.kind == "mcq"
@@ -302,37 +315,46 @@ def upload_page():
     )
     prepared = None
     if file:
-        prepared = file.getvalue()
-        if st.checkbox("تحسين الصورة قبل الرفع"):
-            rotation = st.selectbox(
-                "تدوير الصورة عكس عقارب الساعة", [0, 90, 180, 270], format_func=lambda x: f"{x}°"
-            )
-            horizontal = st.slider("القص الأفقي %", 0, 100, (0, 100))
-            vertical = st.slider("القص الرأسي %", 0, 100, (0, 100))
-            correction = st.slider("تصحيح الميل الدقيق بالدرجات", -15, 15, 0)
-            prepared = prepare_image(prepared, rotation + correction, horizontal, vertical)
-            if COMMERCIAL:
-                from modules.private_artifacts import image_html
-
-                st.markdown(image_html(decode_image(prepared)), unsafe_allow_html=True)
-            else:
-                st.image(decode_image(prepared), width="stretch")
-            st.caption("أبقِ علامات OMR الأربع ظاهرة؛ المعاينة لا تعتمد نتيجة تلقائيًا.")
+        try:
+            prepared = file.getvalue()
+            image = decode_image(prepared)
+            with st.expander("ضبط اتجاه الصورة والقص"):
+                improve = st.checkbox("تحسين الصورة قبل الرفع")
+                if improve:
+                    rotation = st.selectbox("تدوير الصورة عكس عقارب الساعة", [0, 90, 180, 270],
+                                            format_func=lambda x: f"{x}°")
+                    horizontal = st.slider("القص الأفقي %", 0, 100, (0, 100))
+                    vertical = st.slider("القص الرأسي %", 0, 100, (0, 100))
+                    correction = st.slider("تصحيح الميل الدقيق بالدرجات", -15, 15, 0)
+                    prepared = prepare_image(prepared, rotation + correction, horizontal, vertical)
+                    image = decode_image(prepared)
+            with st.expander("معاينة الصورة قبل الرفع", expanded=True):
+                if COMMERCIAL:
+                    from modules.private_artifacts import image_html
+                    st.markdown(image_html(image), unsafe_allow_html=True)
+                else:
+                    st.image(image, width="stretch")
+                st.caption(f"تم فحص الملف · {image.shape[1]} × {image.shape[0]} بكسل · {len(prepared) / 1024:.0f} KB")
+                st.caption("تحقق من وضوح الكتابة، وعدم وجود انعكاس ضوئي أو أطراف مقصوصة.")
+        except ValueError as exc:
+            prepared = None
+            st.error(str(exc))
+            st.info("اختر صورة PNG أو JPEG سليمة. قلّل دقتها إذا تجاوزت 16 مليون بكسل أو 10 MB.")
         if COMMERCIAL:
-            from uuid import uuid4
-
             st.session_state.setdefault("upload_attempt", uuid4().hex)
-            if st.button("بدء محاولة جديدة للورقة نفسها"):
-                st.session_state["upload_attempt"] = uuid4().hex
-                st.info("سيُحفظ الرفع التالي كمحاولة جديدة مقصودة.")
+            with st.expander("خيارات إعادة الرفع"):
+                st.caption("إعادة المحاولة بعد انقطاع الاتصال تحفظ الورقة مرة واحدة. استخدم محاولة جديدة فقط لتسليم إضافي مقصود.")
+                if st.button("بدء محاولة جديدة للورقة نفسها"):
+                    st.session_state["upload_attempt"] = uuid4().hex
+                    st.info("سيُحفظ الرفع التالي كمحاولة جديدة مقصودة.")
     with st.form("upload", clear_on_submit=False):
         code = st.text_input("رمز الطالب", placeholder="مثال: ST-024 — استخدم رمزًا بدل الاسم", max_chars=100)
         submit = st.form_submit_button(
-            "رفع وبدء المعالجة", type="primary", width="stretch", disabled=file is None
+            "رفع وبدء المعالجة", type="primary", width="stretch", disabled=prepared is None
         )
     if submit:
-        if not file:
-            st.warning("اختر صورة الإجابة أولًا.")
+        if prepared is None:
+            st.warning("اختر صورة إجابة سليمة أولًا.")
         else:
             with st.spinner("جارٍ فحص الصورة ومعالجة الإجابات…"):
                 options = {}
@@ -356,7 +378,13 @@ def upload_page():
                     st.session_state.get("marked_threshold", 0.55),
                     **options,
                 )
-            st.success(f"تم حفظ الورقة ({sid[:8]}) وهي بانتظار المراجعة. انتقل إلى التصحيح والمراجعة.")
+            st.session_state["last_upload"] = {"exam_id": exam.id, "sid": sid, "code": code}
+            st.success(f"تم حفظ الورقة ({sid[:8]}) وهي بانتظار المراجعة.")
+    uploaded = st.session_state.get("last_upload")
+    if uploaded and uploaded["exam_id"] == exam.id:
+        st.info("آخر ورقة محفوظة: " + uploaded["code"] + " · الخطوة التالية: استخراج النص ومراجعة الإجابات.")
+        st.button("مراجعة الورقة المرفوعة", type="primary", on_click=go_to,
+                  args=("التصحيح والمراجعة", exam.id, uploaded["sid"], True), width="stretch")
     if exam.kind == "mcq":
         with st.expander("تحميل القالب وعينة للتجربة"):
             downloads()
@@ -641,6 +669,12 @@ def essay_review(row, spec, reviewer):
     if row.proposal:
         st.info("الاقتراح الآلي متاح للمراجعة. الاقتباس الموجود في النص لا يثبت وحده صحة التقييم.")
     prior = row.approved or row.proposal or {}
+    if row.approved:
+        st.success("الدرجات أدناه من آخر اعتماد للمعلم. أي تعديل يحتاج اعتمادًا جديدًا.")
+    elif row.proposal:
+        st.warning("الدرجات أدناه اقتراح آلي للمراجعة؛ لا تدخل النتائج المنشورة حتى يعتمدها المعلم.")
+    else:
+        st.info("أدخل درجة كل معيار وسببها، ثم أكد المراجعة لاعتماد النتيجة.")
     by_question = {g["question_id"]: g for g in prior.get("questions", [])}
     question_grades = []
     with st.form(f"essay_{row.id}_{row.revision}"):
@@ -671,20 +705,39 @@ def essay_review(row, spec, reviewer):
 
 def review_page():
     st.title("التصحيح والمراجعة")
-    st.caption("راجع القراءة والدرجات قبل اعتماد النتائج. كل تعديل محفوظ في سجل المراجعة.")
+    st.caption("الصورة هي المرجع. احفظ النص والإجابات، ثم راجع الدرجات واعتمدها.")
+    workflow(2)
     exam = choose_exam(key="review_exam")
     if not exam:
         return
+    spec = ExamSpec.model_validate(exam.spec)
+    exam_summary(exam, spec)
+    counts = store.counts(exam.id)
+    a, b, c = st.columns(3)
+    a.metric("الأوراق", counts["submissions"])
+    b.metric("بانتظار المراجعة", counts["review"])
+    c.metric("معتمد", counts["approved"])
     page = 1
-    count = store.counts(exam.id)["submissions"]
+    count = counts["submissions"]
     if count > 50:
         page = st.number_input(
             "صفحة الأوراق", min_value=1, max_value=(count + 49) // 50, step=1, key="review_page"
         )
     rows = store.submissions(exam.id, limit=50, offset=(page - 1) * 50)
     if not rows:
-        st.info("لا توجد أوراق لهذا الاختبار. ابدأ برفع صورة من صفحة رفع الأوراق.")
+        empty_state("الاختبار جاهز لاستقبال الأوراق", "ارفع أول صورة إجابة لتبدأ المراجعة.")
+        st.button("رفع أول ورقة", on_click=go_to, args=("رفع الأوراق", exam.id), type="primary")
         return
+    a, b = st.columns([2, 1])
+    query = a.text_input("البحث برمز الطالب", key="paper_query", placeholder="مثال: ST-024")
+    state = b.selectbox("حالة الورقة", ["all", "review", "approved", "failed"], key="paper_status",
+                        format_func={"all": "كل الحالات", **STATUS}.get)
+    visible = filter_papers(rows, query, state)
+    st.caption(f"عرض {len(visible)} من {len(rows)} ورقة في الصفحة {page}. البحث والتصفية ضمن الصفحة الحالية.")
+    if not visible:
+        empty_state("لا توجد أوراق مطابقة", "غيّر رمز الطالب أو حالة الورقة، أو انتقل إلى صفحة أخرى.")
+        return
+    rows = visible
     mapping = {r.id: r for r in rows}
     sid = st.selectbox(
         "ورقة الطالب",
@@ -693,7 +746,16 @@ def review_page():
         format_func=lambda x: f"{mapping[x].student_code} · {STATUS[mapping[x].status]} · {x[:8]}",
     )
     row = mapping[sid]
-    spec = ExamSpec.model_validate(exam.spec)
+    ids = list(mapping)
+    position = ids.index(sid)
+    previous, current, following = st.columns([1, 2, 1])
+    previous.button("الورقة السابقة", on_click=go_to,
+                    args=("التصحيح والمراجعة", exam.id, ids[max(0, position - 1)]),
+                    disabled=position == 0, width="stretch")
+    current.caption(f"الورقة {position + 1} من {len(ids)} في النتائج الظاهرة · {STATUS[row.status]}")
+    following.button("الورقة التالية", on_click=go_to,
+                     args=("التصحيح والمراجعة", exam.id, ids[min(len(ids) - 1, position + 1)]),
+                     disabled=position == len(ids) - 1, width="stretch")
     reviewer = st.text_input(
         "اسم المراجع", value=PRINCIPAL.name if COMMERCIAL else "المعلم", max_chars=100, disabled=COMMERCIAL
     )
@@ -789,9 +851,11 @@ def report_jobs(exam_id):
 def results_page():
     st.title("النتائج والتصدير")
     st.caption("تتضمن ملفات التصدير النتائج التي اعتمدها المعلم فقط.")
+    workflow(3)
     exam = choose_exam(key="result_exam")
     if not exam:
         return
+    exam_summary(exam, ExamSpec.model_validate(exam.spec))
     count = store.counts(exam.id)["approved"]
     if COMMERCIAL and count > 200:
         page = st.number_input("صفحة النتائج المعتمدة", min_value=1, max_value=(count + 49) // 50, step=1)
@@ -801,17 +865,18 @@ def results_page():
         st.dataframe(summary, hide_index=True, width="stretch")
         report_jobs(exam.id)
         return
-    rows = store.submissions(exam.id, limit=200)
     summary, details = frames(store, exam.id)
     metrics = st.columns(3)
     metrics[0].metric("نتائج معتمدة", len(summary))
     if COMMERCIAL and PRINCIPAL.role == "viewer":
         metrics[1].metric("حالة العرض", "المعتمد فقط")
     else:
-        metrics[1].metric("تحتاج مراجعة", sum(r.status != "approved" for r in rows))
+        metrics[1].metric("تحتاج مراجعة", store.counts(exam.id)["review"])
     metrics[2].metric("متوسط النسبة", f"{summary['النسبة %'].mean():.1f}%" if not summary.empty else "—")
     if summary.empty:
-        st.info("لا توجد نتائج معتمدة بعد. أكمل المراجعة واعتمد أول ورقة.")
+        empty_state("النتائج تظهر بعد الاعتماد", "أكمل مراجعة إجابات الطلاب واعتمد أول ورقة لإتاحة التقارير.")
+        if "التصحيح والمراجعة" in PAGES:
+            st.button("متابعة تصحيح الاختبار", on_click=go_to, args=("التصحيح والمراجعة", exam.id), type="primary")
         return
     st.dataframe(summary, hide_index=True, width="stretch")
     a, b, c = st.columns(3)
@@ -951,6 +1016,7 @@ try:
     if COMMERCIAL:
         routes["حسابي"] = lambda: account_page(identity, PRINCIPAL)
         routes["إدارة المؤسسة"] = lambda: organization_page(identity, store)
+    workspace_header(page, PRINCIPAL.organization_name if COMMERCIAL else "مساحة التجربة")
     routes[page]()
     if "_flash" in st.session_state:
         st.success(st.session_state.pop("_flash"))

@@ -80,6 +80,7 @@ def stop_api(process):
 
 def login_web(page, web_url, password):
     page.goto(web_url, wait_until="domcontentloaded")
+    snapshot(page, "00-login")
     page.get_by_label("رمز المؤسسة", exact=True).fill("runtime-school")
     page.get_by_label("البريد الإلكتروني", exact=True).fill("runner@smartgrade.test")
     page.get_by_label("كلمة المرور", exact=True).fill(password)
@@ -159,10 +160,14 @@ def main():
                     eid = response.json()["id"]
                     step("login_and_upload_in_browser")
                     login_web(page, web_url, password)
+                    snapshot(page, "00-workspace-desktop")
                     navigate(page, "رفع الأوراق")
                     page.locator('input[type="file"]').set_input_files(str(image))
                     expect(page.get_by_text("student-c.png", exact=True)).to_be_visible()
+                    expect(page.get_by_text("معاينة الصورة قبل الرفع", exact=True)).to_be_visible()
+                    check("validated_preview_before_upload", page.get_by_text("تم فحص الملف", exact=False).count() > 0)
                     page.get_by_label("رمز الطالب", exact=True).fill("SYNTHETIC-LIVE-C")
+                    snapshot(page, "01-upload-ready")
                     page.get_by_role("button", name="رفع وبدء المعالجة", exact=True).click()
                     expect(page.get_by_text(re.compile("تم حفظ الورقة"))).to_be_visible(timeout=45000)
                     papers = api.get(f"/exams/{eid}/submissions").json()
@@ -170,7 +175,17 @@ def main():
                     sid = papers[0]["id"]
                     snapshot(page, "01-upload")
                     step("real_ocr_job")
-                    navigate(page, "التصحيح والمراجعة")
+                    page.get_by_role("button", name="مراجعة الورقة المرفوعة", exact=True).click()
+                    expect(page.get_by_role("heading", name="التصحيح والمراجعة", exact=True)).to_be_visible()
+                    check("upload_shortcut_opens_review", True)
+                    query_field = page.get_by_label("البحث برمز الطالب", exact=True).and_(page.locator("input")).last
+                    query_field.fill("NO-SUCH-SYNTHETIC-STUDENT")
+                    query_field.press("Tab")
+                    expect(page.get_by_role("heading", name="لا توجد أوراق مطابقة", exact=True)).to_be_visible()
+                    query_field.fill("")
+                    query_field.press("Tab")
+                    expect(page.get_by_role("button", name="استخراج النص بمحرك OCR المحلي", exact=True)).to_be_visible()
+                    check("review_queue_search_roundtrip", True)
                     page.get_by_role("button", name="استخراج النص بمحرك OCR المحلي", exact=True).click()
                     def get_job():
                         with workspace._core.sessions() as db:
@@ -276,6 +291,21 @@ def main():
                     check("excel_question_scores_match_reference", [r[score_index] for r in rows[1:]] == [2, 5, 4, 3, 3])
                     check("actual_pdf_is_pdf", (OUT / "synthetic-results.pdf").read_bytes().startswith(b"%PDF-"))
                     snapshot(page, "05-results")
+                    step("responsive_mobile_workspace")
+                    page.set_viewport_size({"width": 390, "height": 844})
+                    expect(page.get_by_role("combobox", name="انتقل إلى", exact=True)).to_be_visible()
+                    check("mobile_results_without_horizontal_overflow",
+                          page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"))
+                    snapshot(page, "06-results-mobile")
+                    mobile_navigation = page.get_by_role("combobox", name="انتقل إلى", exact=True)
+                    mobile_navigation.press("Home")
+                    mobile_navigation.press("Enter")
+                    expect(page.get_by_role("heading", name="كل اختباراتك، من الورقة إلى النتيجة.", exact=True)).to_be_visible()
+                    check("mobile_navigation_opens_workspace", True)
+                    check("mobile_workspace_without_horizontal_overflow",
+                          page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"))
+                    snapshot(page, "07-workspace-mobile")
+                    page.set_viewport_size({"width": 1600, "height": 1100})
                     step("optional_one_real_model_request")
                     if live_ready:
                         upload = api.post(f"/exams/{eid}/submissions", data={"student_code": "SYNTHETIC-MODEL-C"},

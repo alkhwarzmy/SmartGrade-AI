@@ -18,6 +18,9 @@ class ExamsScreen extends StatefulWidget {
 class _ExamsState extends State<ExamsScreen> with TaskState<ExamsScreen> {
   List<Json> rows = [];
   int offset = 0;
+  String query = '';
+  List<Json> get visibleRows => rows.where((row) =>
+    (row['title'] as String).toLowerCase().contains(query.trim().toLowerCase())).toList();
   @override
   void initState() {
     super.initState();
@@ -77,23 +80,49 @@ class _ExamsState extends State<ExamsScreen> with TaskState<ExamsScreen> {
         status(),
         Padding(
           padding: const EdgeInsets.all(16),
-          child: Text(
-            '${widget.session.actor?['organization_name']} · ${widget.session.actor?['name']}',
+          child: WorkspaceBanner(
+            title: widget.session.actor?['organization_name'] as String? ?? 'مساحة العمل',
+            subtitle: 'مرحبًا ${widget.session.actor?['name'] ?? ''} · افتح اختبارًا لرفع الأوراق ومتابعة النتائج.',
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: TextField(
+            key: const ValueKey('exam-search'),
+            onChanged: (v) => setState(() => query = v),
+            decoration: const InputDecoration(
+              labelText: 'البحث في هذه الصفحة', prefixIcon: Icon(Icons.search)),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8),
+          child: Text('الصفحة ${offset ~/ 20 + 1} · ${visibleRows.length} اختبار ظاهر'),
+        ),
         Expanded(
-          child: rows.isEmpty && !busy
-              ? const Center(child: Text('لا توجد اختبارات في هذه الصفحة.'))
-              : ListView.builder(
-                  itemCount: rows.length,
+          child: visibleRows.isEmpty && !busy
+              ? SingleChildScrollView(child: EmptyPanel(
+                  title: rows.isEmpty ? 'اختباراتك تبدأ هنا' : 'لا توجد نتائج مطابقة',
+                  message: rows.isEmpty
+                    ? (widget.session.canWrite ? 'اضغط اختبار جديد وحدد الأسئلة ومعايير التصحيح.' : 'ستظهر الاختبارات المتاحة من مؤسستك هنا.')
+                    : 'غيّر كلمات البحث أو انتقل إلى صفحة أخرى.',
+                ))
+              : RefreshIndicator(
+                onRefresh: load,
+                child: ListView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  itemCount: visibleRows.length,
                   itemBuilder: (context, i) {
-                    final row = rows[i];
+                    final row = visibleRows[i];
                     return Card(
                       margin: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 5,
                       ),
                       child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: const Color(0xffe6f2ed),
+                          child: Icon(row['kind'] == 'essay' ? Icons.notes : Icons.grid_view,
+                            color: const Color(0xff17685e))),
                         title: Text(row['title'] as String),
                         subtitle: Text(
                           row['kind'] == 'essay'
@@ -119,6 +148,7 @@ class _ExamsState extends State<ExamsScreen> with TaskState<ExamsScreen> {
                     );
                   },
                 ),
+              ),
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -453,6 +483,10 @@ class _ExamState extends State<ExamScreen> with TaskState<ExamScreen> {
   Json? exam;
   List<Json> rows = [];
   int offset = 0;
+  String paperQuery = '', selectedStatus = 'all';
+  List<Json> get visibleRows => rows.where((row) =>
+    (selectedStatus == 'all' || row['status'] == selectedStatus) &&
+    (row['student_code'] as String).toLowerCase().contains(paperQuery.trim().toLowerCase())).toList();
   @override
   void initState() {
     super.initState();
@@ -562,7 +596,8 @@ class _ExamState extends State<ExamScreen> with TaskState<ExamScreen> {
           children: ['xlsx', 'csv', 'pdf']
               .map(
                 (v) => OutlinedButton(
-                  onPressed: busy || exam == null ? null : () => report(v),
+                  onPressed: busy || exam == null || number((exam?['counts'] as Json?)?['approved']) == 0
+                    ? null : () => report(v),
                   child: Text('تصدير ${v.toUpperCase()}'),
                 ),
               )
@@ -570,22 +605,54 @@ class _ExamState extends State<ExamScreen> with TaskState<ExamScreen> {
         ),
         if (exam != null)
           Padding(
-            padding: const EdgeInsets.all(8),
-            child: Text(
-              'الدرجة الكاملة: ${exam!['maximum']} · الأوراق: ${exam!['counts']['submissions']} · المعتمد: ${exam!['counts']['approved']}',
+            padding: const EdgeInsets.all(16),
+            child: WorkspaceBanner(
+              title: '${exam!['counts']['approved']} نتيجة معتمدة من ${exam!['counts']['submissions']} ورقة',
+              subtitle: 'الدرجة الكاملة: ${exam!['maximum']} · التصدير يشمل النتائج المعتمدة فقط.',
+              icon: Icons.analytics_outlined,
             ),
           ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(children: [
+            Expanded(flex: 2, child: TextField(
+              key: const ValueKey('paper-search'),
+              onChanged: (v) => setState(() => paperQuery = v),
+              decoration: const InputDecoration(labelText: 'رمز الطالب', prefixIcon: Icon(Icons.search)),
+            )),
+            const SizedBox(width: 8),
+            Expanded(child: DropdownButtonFormField<String>(
+              initialValue: selectedStatus,
+              isExpanded: true,
+              decoration: const InputDecoration(labelText: 'الحالة'),
+              items: ['all', 'review', 'approved', 'failed'].map((v) =>
+                DropdownMenuItem(value: v, child: Text(v == 'all' ? 'كل الحالات' : paperStatusLabel(v),
+                  maxLines: 1, overflow: TextOverflow.ellipsis))).toList(),
+              onChanged: (v) => setState(() => selectedStatus = v ?? 'all'),
+            )),
+          ]),
+        ),
+        const Padding(padding: EdgeInsets.all(8),
+          child: Text('البحث والتصفية ضمن الصفحة الحالية')),
         Expanded(
-          child: ListView.builder(
-            itemCount: rows.length,
+          child: visibleRows.isEmpty && !busy
+            ? SingleChildScrollView(child: EmptyPanel(
+                title: rows.isEmpty ? 'لا توجد أوراق في هذه الصفحة' : 'لا توجد أوراق مطابقة',
+                message: rows.isEmpty ? 'ستظهر أوراق الاختبار هنا بعد رفعها.' : 'غيّر رمز الطالب أو حالة الورقة.'))
+            : RefreshIndicator(
+              onRefresh: load,
+              child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            itemCount: visibleRows.length,
             itemBuilder: (context, i) {
-              final row = rows[i];
+              final row = visibleRows[i];
               return Card(
                 child: ListTile(
                   title: Text(row['student_code'] as String),
-                  subtitle: Text(
-                    '${row['status']} · ${row['total'] ?? 'بانتظار الاعتماد'}',
-                  ),
+                  subtitle: Text(row['status'] == 'approved'
+                    ? 'الدرجة المعتمدة: ${row['total']} / ${exam?['maximum']}'
+                    : 'تحتاج مراجعة الإجابات قبل نشر النتيجة'),
+                  trailing: PaperStatusBadge(status: row['status'] as String),
                   onTap: !widget.session.canWrite
                       ? null
                       : () async {
@@ -606,6 +673,7 @@ class _ExamState extends State<ExamScreen> with TaskState<ExamScreen> {
                 ),
               );
             },
+          ),
           ),
         ),
         Row(

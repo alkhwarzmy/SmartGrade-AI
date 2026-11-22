@@ -106,11 +106,14 @@ class _UploadState extends State<UploadScreen> with TaskState<UploadScreen> {
     body: ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text(
-          widget.exam['kind'] == 'mcq'
+        WorkspaceBanner(
+          title: 'ورقة جديدة · ${widget.exam['title'] ?? 'الاختبار'}',
+          subtitle: widget.exam['kind'] == 'mcq'
               ? 'صوّر قالب OMR v1 كاملًا وباتجاه رأسي.'
               : 'ارفع الورقة كاملة، ثم راجع النص وحدد إجابة كل سؤال.',
+          icon: Icons.document_scanner_outlined,
         ),
+        const SizedBox(height: 16),
         input(
           student,
           'رمز الطالب',
@@ -586,9 +589,12 @@ class _ReviewState extends State<ReviewScreen> with TaskState<ReviewScreen> {
                     icon: const Icon(Icons.troubleshoot),
                     label: const Text('فحص سبب تعثر التصحيح'),
                   ),
-                Text(
-                  '${row!['status']} · الدرجة المعتمدة: ${row!['total'] ?? '—'} · المراجعة ${row!['revision']}',
-                ),
+                Wrap(spacing: 12, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    PaperStatusBadge(status: row!['status'] as String),
+                    Text('الدرجة المعتمدة: ${row!['total'] ?? '—'} · المراجعة ${row!['revision']}'),
+                  ]),
+                const SizedBox(height: 12),
                 if (preview != null)
                   SizedBox(
                     height: 320,
@@ -620,7 +626,10 @@ class _ReviewState extends State<ReviewScreen> with TaskState<ReviewScreen> {
                       : approve,
                   child: const Text('اعتماد الدرجة'),
                 ),
-                if (dirty) const Text('توجد تعديلات لم تُحفظ.'),
+                if (dirty) const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Text('توجد تعديلات لم تُحفظ. احفظ النص والإجابات ثم اعتمد الدرجات.')),
+                const SizedBox(height: 24),
               ],
             ),
     ),
