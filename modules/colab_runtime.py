@@ -59,6 +59,8 @@ def launch_app(
     if browser_address and not re.fullmatch(r"[a-zA-Z0-9.-]+", browser_address):
         raise ValueError("عنوان عرض المتصفح غير صالح")
     with socket.socket() as probe:
+        # Match Tornado: a recently closed connection in TIME_WAIT is reusable; a live listener is not.
+        probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             probe.bind(("127.0.0.1", port))
         except OSError as exc:
