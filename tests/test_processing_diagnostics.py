@@ -7,7 +7,6 @@ import pytest
 from fastapi.testclient import TestClient
 from api import create_app
 from modules.schemas import ExamSpec, EssayQuestion, Criterion, parse_essay_grade
-from modules.review import Store
 from modules.workspace import Workspace
 from modules.grading_diagnostics import essay_diagnostics
 from modules.essay_grader import propose_grade, ProviderError, provider_status

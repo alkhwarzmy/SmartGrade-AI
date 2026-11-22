@@ -28,6 +28,25 @@ def build_complete_notebook(root=ROOT):
             cell["source"] = cell["source"].replace("داخل وكيل Colab", "في نافذة مستقلة عبر وكيل Colab")
     notebook["cells"].extend([
         markdown("""
+        ## فحص التصحيح دون طلب مدفوع — اختياري
+        يتحقق هذا الفحص من العينات المرجعية ويقيس OCR على صورة مطبوعة معروفة.
+        يعرض الإعداد الناقص ورمز الخطأ، ويكتب تقريرًا دون نصوص الطلاب أو مفاتيح المزود.
+        لا يستدعي نموذج التصحيح ولا ينتج نسبة دقة وهمية. زر «فحص سبب تعثر التصحيح» داخل الواجهة يفحص ورقتك الحالية.
+        """),
+        code("""
+        # @title تشخيص مسار التصحيح محليًا دون تكلفة API
+        RUN_GRADING_DIAGNOSTIC = False # @param {type:"boolean"}
+        MEASURE_PRINTED_OCR = True # @param {type:"boolean"}
+        if RUN_GRADING_DIAGNOSTIC:
+            import subprocess
+            diagnostic_path = CONTENT_ROOT / "smartgrade-grading-diagnostic.json"
+            arguments = [str(PYTHON), "-m", "scripts.diagnose_grading", "--output", str(diagnostic_path)]
+            if MEASURE_PRINTED_OCR:
+                arguments.append("--ocr-sample")
+            subprocess.run(arguments, cwd=PROJECT_DIR, env={**os.environ, **AI_ENV}, check=True)
+            print("تقرير الفحص:", diagnostic_path)
+        """),
+        markdown("""
         ## تنزيل الكود الكامل — اختياري
         فعّل الخيار في الخلية التالية لتنزيل ZIP يضم الخادم والواجهة والاختبارات والتوثيق ومصدر Android.
         لا يضم حساباتك أو أوراق الطلاب أو بيانات الجلسة أو مفاتيحها؛ لحفظ عملك استخدم النسخ المشفر في الخطوة9.
@@ -49,7 +68,7 @@ def build_complete_notebook(root=ROOT):
     notebook["metadata"]["colab"]["name"] = "SmartGrade_Complete_Colab.ipynb"
     notebook["metadata"]["smartgrade_features"] = [
         "commercial-auth", "multi-question-essay", "scoped-evidence", "teacher-approval",
-        "arabic-ocr", "omr20", "encrypted-backup", "flutter-android-source", "separate-window",
+        "grading-diagnostics", "arabic-ocr", "omr20", "encrypted-backup", "flutter-android-source", "separate-window",
     ]
     return notebook
 
