@@ -230,7 +230,7 @@ def main():
                *[data["partial_explanation"][q.id] for q in spec.questions],
                "\nهذه درجات مرجعية معدة للتجربة، وليست مخرجات نموذج أو نتائج اتفاق مصححين مستقلين.",
                "حالة student-f فارغة: يرفض البرنامج طلب مزود التصحيح قبل الاتصال، ويمكن اعتماد الصفر يدويًا."])
-    (HERE / "teacher-key.md").write_text("\n\n".join(md) + "\n")
+    (HERE / "teacher-key.md").write_text("\n".join(md) + "\n")
     (HERE / "expected-grades.json").write_text(json.dumps(expected, ensure_ascii=False, indent=2) + "\n")
     key = Paper("teacher-key")
     key.text("مفتاح تصحيح المعلم — 30 درجة", size=42, color=TEAL)
@@ -269,6 +269,7 @@ def main():
     with zipfile.ZipFile(stream, "w", zipfile.ZIP_DEFLATED) as archive:
         for path in artifacts:
             archive.writestr(path.name, path.read_bytes())
+        archive.writestr("FONT-LICENSE.txt", (ROOT / "assets/fonts/LICENSE.txt").read_bytes())
     bundle = stream.getvalue()
     (OUT / "SmartGrade-Arabic-Essay-Test.zip").write_bytes(bundle)
     nb = notebook(bundle)
