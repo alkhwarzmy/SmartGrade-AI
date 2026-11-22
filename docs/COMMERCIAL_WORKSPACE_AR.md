@@ -31,3 +31,17 @@
 تُحفظ صور ونتائج التشغيل تحت experiments/live_runtime/evidence. راجع source_commit في التقرير لمعرفة المصدر المختبر. لا تستنتج دقة التصحيح المقالي من هذه الاختبارات: الدرجة المرجعية 17/30 مدخلة آليًا باسم معلم الاختبار، ولا تُجرى طلبات نموذج مدفوعة في تحقق الواجهات.
 
 هذه التحسينات تجعل العمل اليومي أوضح، لكنها ليست اعتمادًا تجاريًا لدقة النموذج أو قراءة خط اليد. الإتاحة الدائمة تحتاج استضافة الخدمة وإعدادها وفق دليل التشغيل؛ Colab جلسة مؤقتة.
+
+## معاينة فعلية ونتائج التشغيل
+
+هذه صور من التطبيق العامل ببيانات اصطناعية، وليست تصميمًا منفصلًا:
+
+![واجهة الويب](../experiments/live_runtime/evidence/00-workspace-desktop.png)
+
+[واجهة الهاتف](../experiments/live_runtime/evidence/07-workspace-mobile.png) · [معاينة رفع الصورة](../experiments/live_runtime/evidence/01-upload-ready.png) · [نتائج معتمدة](../experiments/live_runtime/evidence/05-results.png)
+
+اجتاز سيناريو المتصفح **25 فحصًا** تشمل الرفع وOCR وخمسة أسئلة واعتماد الدرجة المرجعية وتصدير الملفات والتنقل على الهاتف وإعادة التشغيل. لم يُستدعَ مزود LLM. [التقرير الآلي](../experiments/live_runtime/evidence/runtime-report.json) يسجل المصدر المختبر والنتائج الفعلية.
+
+[تشغيل المتصفح](https://github.com/alkhwarzmy/SmartGrade-AI/actions/runs/45062246125) · [تحقق Python وAndroid والحاوية](https://github.com/alkhwarzmy/SmartGrade-AI/actions/runs/45062246154)
+
+تجد APK للاختبار الداخلي ضمن مرفقات تحقق الإصدار باسم Android-test-apk. هذه حزمة debug للاختبار؛ النشر في متجر Google Play يتطلب بناء إصدار موقّع بمفتاح مالك التطبيق.
