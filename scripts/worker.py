@@ -14,6 +14,7 @@ from modules.review import RevisionConflict
 from modules.workspace import tenant_write_lock, _store
 from modules.outbox import flush_outbox
 from config import DATA_DIR
+from modules.processing import ProcessingError, OCR_CODES, MESSAGES, safe_code
 
 
 def require_job_actor(auth, organization_id, user_id, kind):
@@ -154,6 +155,29 @@ def sweep(store):
                 db.delete(asset)
 
 
+def fail_job(root, organization_id, job_id, code):
+    auth = AuthService(root)
+    store = _store(str(auth.root / "organizations" / organization_id))
+    code = safe_code(code)
+    with tenant_write_lock(store.root):
+        with store.sessions() as db:
+            job = db.get(Job, job_id)
+            if not job or job.state != "running":
+                return
+        if job.kind == "ocr" and code in OCR_CODES:
+            try:
+                require_job_actor(auth, organization_id, job.user_id, job.kind)
+                store.record_processing_failure(job.payload["sid"], "ocr", job.payload["revision"], code=code)
+            except RevisionConflict:
+                code = "stale_revision"
+            except ValueError:
+                code = "job_permission_revoked"
+        with store.sessions.begin() as db:
+            current = db.get(Job, job_id)
+            if current and current.state == "running":
+                current.state, current.error, current.updated_at = "failed", code, now()
+
+
 def cycle(root, *, run_children=True):
     auth = AuthService(root)
     with auth.connection() as db:
@@ -211,8 +235,15 @@ def cycle(root, *, run_children=True):
                 execute_job(root, oid, job_id)
         except subprocess.TimeoutExpired:
             error = "time_limit_120s"
+        except ProcessingError as exc:
+            error = exc.code
+        except RevisionConflict:
+            error = "stale_revision"
+        except ValueError as exc:
+            error = str(exc) if str(exc) in MESSAGES else "processing_failed_review_inputs"
         except Exception:
             error = "processing_failed_review_inputs"
+        fail_job(root, oid, job_id, error or "processing_interrupted")
         with tenant_write_lock(folder), store.sessions.begin() as db:
             current = db.get(Job, job_id)
             if current and current.state == "running":
@@ -237,7 +268,18 @@ def main():
 
         if not all(re.fullmatch("[a-f0-9]{32}", v) for v in args.execute):
             raise ValueError("invalid_job_id")
-        execute_job(args.data_dir, *args.execute)
+        try:
+            execute_job(args.data_dir, *args.execute)
+        except ProcessingError as exc:
+            fail_job(args.data_dir, *args.execute, exc.code)
+            raise SystemExit(1) from None
+        except RevisionConflict:
+            fail_job(args.data_dir, *args.execute, "stale_revision")
+            raise SystemExit(1) from None
+        except Exception as exc:
+            code = str(exc) if isinstance(exc, ValueError) and str(exc) in MESSAGES else "processing_failed_review_inputs"
+            fail_job(args.data_dir, *args.execute, code)
+            raise SystemExit(1) from None
         return
     import fcntl
 

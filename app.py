@@ -434,7 +434,8 @@ def essay_answer_fields(row, spec, reviewer):
         st.session_state[key] = {"revision": fresh.revision, "answers": dict(draft["answers"]), "base": dict(draft["answers"])}
         st.session_state["_flash"] = "حُفظت إجابات الأسئلة. راجع الدرجات ثم اعتمد مجموع الاختبار." if changed else "الإجابات لم تتغير؛ بقيت الدرجات كما هي."
         st.rerun()
-    ready = draft["answers"] == saved and draft["revision"] == row.revision
+    mapping_saved = len(spec.questions) == 1 or "essay_answers" in row.current
+    ready = mapping_saved and draft["answers"] == saved and draft["revision"] == row.revision
     if not ready:
         st.info("احفظ إجابات الأسئلة قبل اقتراح الدرجات أو اعتمادها.")
     return ready
@@ -459,6 +460,9 @@ def criterion_grade_fields(row, question, prior, *, multiple):
 
 
 def essay_review(row, spec, reviewer):
+    notice = st.session_state.pop("_processing_notice_" + row.id, None)
+    if notice:
+        st.warning(notice)
     st.markdown("#### 1. تدقيق نص الإجابة")
     if spec.questions:
         st.caption(f"اختبار مقالي من {len(spec.questions)} سؤال · الدرجة الكاملة {spec.maximum:g}")
@@ -527,9 +531,12 @@ def essay_review(row, spec, reviewer):
             store.save_text(row.id, extracted, reviewer, row.revision, source="ocr")
             st.session_state["_flash"] = "تم استخراج النص محليًا. راجعه وصحح الأخطاء قبل التصحيح."
             st.rerun()
-        except ValueError:
-            store.record_processing_failure(row.id, "ocr", row.revision)
-            st.warning("تعذر استخراج نص صالح. أدخل النص يدويًا واحفظه؛ لم تُمنح درجة.")
+        except ValueError as exc:
+            from modules.processing import ProcessingError
+            code = exc.code if isinstance(exc, ProcessingError) else "ocr_failed"
+            store.record_processing_failure(row.id, "ocr", row.revision, code=code)
+            st.session_state["_processing_notice_" + row.id] = str(exc) if isinstance(exc, ProcessingError) else "فشل OCR؛ احتُفظ بالنص والدرجات المحفوظة."
+            st.rerun()
     if COMMERCIAL and st.session_state.get("ocr_job_" + row.id):
         from modules.jobs import Jobs
 
@@ -544,6 +551,9 @@ def essay_review(row, spec, reviewer):
             "cancelled": "أُلغيت مهمة استخراج النص",
         }
         st.info(labels[task.state])
+        if task.state == "failed" and task.error:
+            from modules.processing import message_for
+            st.warning(message_for(task.error) + " [" + task.error + "]")
         if st.button("تحديث حالة استخراج النص"):
             st.rerun()
         if task.state in {"queued", "running"} and st.button("إلغاء استخراج النص"):
@@ -556,8 +566,41 @@ def essay_review(row, spec, reviewer):
             )
             st.rerun()
     st.caption(ocr_status()[1])
-    answers_ready = essay_answer_fields(row, spec, reviewer) if spec.questions else True
+    source_ready = text == row.text and st.session_state[base_revision] == row.revision
+    question_answers_ready = essay_answer_fields(row, spec, reviewer) if spec.questions else True
+    answers_ready = question_answers_ready and source_ready
+    if not source_ready:
+        st.warning("النص الظاهر غير محفوظ؛ احفظه قبل طلب التصحيح أو اعتماد الدرجة.")
     saved_answers = answer_texts(spec, row.text, row.current)
+    if st.button("فحص سبب تعثر التصحيح"):
+        from modules.grading_diagnostics import essay_diagnostics
+        report = essay_diagnostics(spec, row,
+            organization_allowed=not COMMERCIAL or bool(identity.organization(store.token)["external_ai_allowed"]),
+            visible_text=text, unsaved_answers=not question_answers_ready, ocr=ocr_status())
+        st.session_state["diagnostic_" + row.id] = report
+    if st.session_state.get("diagnostic_" + row.id):
+        report = st.session_state["diagnostic_" + row.id]
+        with st.expander("نتيجة فحص التصحيح", expanded=True):
+            if report["revision"] != row.revision:
+                st.info("هذا الفحص لمراجعة سابقة؛ اضغط فحص سبب تعثر التصحيح لتحديثه.")
+            if report["blockers"]:
+                for blocker in report["blockers"]:
+                    st.warning(blocker["message"] + " [" + blocker["code"] + "]")
+            else:
+                st.success("الإجابات وإعدادات التصحيح جاهزة. يلزم تأكيد الموافقة لإرسال الطلب.")
+            st.caption(report["ocr"]["message"])
+            labels = {"answered": "إجابة محفوظة", "blank": "فارغ بعد المراجعة", "unassigned": "لم يُحفظ التوزيع"}
+            st.dataframe(pd.DataFrame([{"السؤال": q["number"], "حالة الإجابة": labels[q["state"]],
+                "عدد الأحرف": q["answer_characters"], "الدرجة الكاملة": q["maximum"]}
+                for q in report["questions"]]), hide_index=True, width="stretch")
+            sources = {"teacher_approved": "درجة اعتمدها المعلم", "model_proposal": "اقتراح من النموذج",
+                       "none": "لا توجد درجة محفوظة"}
+            st.write("مصدر الدرجة الظاهرة: " + sources[report["grade"]["source"]])
+            for stage, attempt in report["last_attempts"].items():
+                st.caption(("آخر طلب OCR: " if stage == "ocr" else "آخر طلب نموذج: ") + attempt["message"])
+            import json
+            st.download_button("تنزيل تقرير الفحص دون نصوص الطلاب", json.dumps(report, ensure_ascii=False, indent=2),
+                               file_name="smartgrade-diagnostic.json", mime="application/json")
     st.markdown("#### اقتراح الدرجة ومراجعتها")
     consent = st.checkbox(
         "أوافق على إرسال النص والسؤال والمعايير للمزود الخارجي، وأعتمد تكلفة هذا الطلب",
@@ -582,9 +625,11 @@ def essay_review(row, spec, reviewer):
                 proposal = propose_grade(spec, row.text, current=row.current, consent=consent)
             store.save_proposal(row.id, proposal.model_dump(), row.revision)
             st.rerun()
-        except ProviderError:
-            store.record_processing_failure(row.id, "llm", row.revision)
-            st.warning("فشل المزود أو أعاد مخرجات غير صالحة. راجع الإجابة يدويًا؛ لم تُمنح درجة.")
+        except ProviderError as exc:
+            if exc.attempted:
+                store.record_processing_failure(row.id, "llm", row.revision, code=exc.code)
+            st.session_state["_processing_notice_" + row.id] = f"{exc} (رمز: {exc.code})"
+            st.rerun()
     if not all(provider_status().values()):
         st.caption("الاقتراح الآلي غير مفعّل. يمكنك إدخال الدرجات يدويًا وفق المعايير أدناه.")
     if row.proposal:

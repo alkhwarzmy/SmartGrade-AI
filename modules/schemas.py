@@ -140,6 +140,8 @@ def parse_essay_grade(value, spec, text, current):
         if not text.strip():
             raise ValueError("نص الإجابة مطلوب قبل الاعتماد")
         return parsed, validate_grade(parsed, spec, text)
+    if len(spec.questions) > 1 and not isinstance(current.get("essay_answers"), dict):
+        raise ValueError("احفظ توزيع إجابات الأسئلة قبل التصحيح أو الاعتماد")
     parsed = EssayGradeProposal.model_validate(value)
     questions = {q.id: q for q in spec.questions}
     ids = [g.question_id for g in parsed.questions]

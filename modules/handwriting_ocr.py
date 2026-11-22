@@ -7,10 +7,12 @@ import tempfile
 from pathlib import Path
 from config import ROOT
 from modules.preprocessing import decode_image, png_bytes
+from modules.processing import ProcessingError, MESSAGES
 
 
-class OCRUnavailable(ValueError):
-    pass
+class OCRUnavailable(ProcessingError):
+    def __init__(self, code="ocr_failed"):
+        super().__init__(code if code in MESSAGES else "ocr_failed")
 
 
 def tessdata_args():
@@ -38,10 +40,10 @@ def ocr_status():
 
 def recognize(raw: bytes) -> str:
     if os.getenv("OCR_PROVIDER", "tesseract") != "tesseract":
-        raise OCRUnavailable("OCR غير مفعّل؛ اضبط OCR_PROVIDER=tesseract أو أدخل النص يدويًا")
-    available, message = ocr_status()
+        raise OCRUnavailable("ocr_disabled")
+    available, _ = ocr_status()
     if not available:
-        raise OCRUnavailable(message)
+        raise OCRUnavailable("ocr_unavailable")
     image = decode_image(raw)
     with tempfile.TemporaryDirectory(prefix="smartgrade-ocr-") as directory:
         path = Path(directory) / "answer.png"
@@ -54,9 +56,13 @@ def recognize(raw: bytes) -> str:
                 timeout=45,
                 check=True,
             )
+        except subprocess.TimeoutExpired as exc:
+            raise OCRUnavailable("ocr_timeout") from exc
         except (subprocess.SubprocessError, OSError) as exc:
-            raise OCRUnavailable("فشل OCR المحلي؛ أدخل النص يدويًا أو أعد المحاولة") from exc
+            raise OCRUnavailable("ocr_failed") from exc
     text = result.stdout.strip()
-    if not text or len(text) > 30000:
-        raise OCRUnavailable("لم يُستخرج نص صالح؛ يلزم الإدخال أو المراجعة اليدوية")
+    if not text:
+        raise OCRUnavailable("ocr_empty")
+    if len(text) > 30000:
+        raise OCRUnavailable("ocr_text_too_large")
     return text

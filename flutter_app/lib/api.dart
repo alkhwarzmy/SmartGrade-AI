@@ -17,9 +17,11 @@ double? parseNumber(String value) {
 double number(dynamic value) => (value as num?)?.toDouble() ?? 0;
 
 class ApiError implements Exception {
-  ApiError(this.message, [this.status = 0]);
+  ApiError(this.message, [this.status = 0, this.code = '', this.revision]);
   final String message;
   final int status;
+  final String code;
+  final int? revision;
   @override
   String toString() => message;
 }
@@ -77,10 +79,14 @@ class SmartGradeApi {
       final bytes = chunks.takeBytes();
       if (response.statusCode >= 300) {
         var message = 'تعذر إتمام الطلب.';
+        var code = '';
+        int? revision;
         try {
           final error = jsonDecode(utf8.decode(bytes));
           if (error is Map && error['detail'] is String) {
             message = error['detail'] as String;
+            code = error['code'] is String ? error['code'] as String : '';
+            revision = error['revision'] is int ? error['revision'] as int : null;
           }
         } catch (_) {
           /* Do not show gateway HTML or credentials. */
@@ -95,7 +101,7 @@ class SmartGradeApi {
           message =
               'العنوان يعيد توجيه الطلب؛ استخدم عنوان API النهائي مباشرة.';
         }
-        throw ApiError(message, response.statusCode);
+        throw ApiError(message, response.statusCode, code, revision);
       }
       return bytes;
     } on TimeoutException {
@@ -173,6 +179,7 @@ class SmartGradeApi {
           .cast<Json>();
   Future<Json> paper(String id) async =>
       await json('GET', 'submissions/$id') as Json;
+  Future<Json> diagnostics(String id) async => await json('GET', 'submissions/$id/diagnostics') as Json;
   Future<Uint8List> image(String id) => send(
     http.Request(
       'GET',

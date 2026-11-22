@@ -23,6 +23,7 @@ from modules.http_limits import RequestSizeLimit
 from modules.proxy import client_address
 from modules.resources import bounded_processing
 from modules.essay_grader import propose_grade, ProviderError
+from modules.processing import ProcessingError
 from modules.handwriting_ocr import recognize
 from modules.reports import frames, excel_bytes, csv_bytes
 
@@ -176,6 +177,13 @@ def create_app(root: Path = DATA_DIR):
     async def stale_revision(request, exc):
         return JSONResponse({"detail": str(exc)}, status_code=409)
 
+    @api.exception_handler(ProcessingError)
+    async def processing_error(request, exc):
+        status = exc.http_status if isinstance(exc, ProviderError) else 422
+        headers = {"Retry-After": "30"} if exc.code in {"provider_rate_limit", "provider_unavailable"} else {}
+        return JSONResponse({"detail": str(exc), "code": exc.code, "stage": "llm" if isinstance(exc, ProviderError)
+                             else "ocr", "revision": exc.revision}, status_code=status, headers=headers)
+
     @api.exception_handler(ValueError)
     async def invalid_value(request, exc):
         return JSONResponse({"detail": str(exc)}, status_code=400)
@@ -326,6 +334,17 @@ def create_app(root: Path = DATA_DIR):
             "total": row.total,
         }
 
+    @api.get("/submissions/{sid}/diagnostics")
+    @bounded_processing
+    def diagnose_essay(sid: str, workspace: Workspace = Depends(space)):
+        from modules.grading_diagnostics import essay_diagnostics
+        from modules.handwriting_ocr import ocr_status
+        row = workspace.submission(sid)
+        spec = ExamSpec.model_validate(workspace.exam(row.exam_id).spec)
+        return essay_diagnostics(spec, row,
+            organization_allowed=bool(service.organization(workspace.token)["external_ai_allowed"]),
+            ocr=ocr_status())
+
     @api.get("/submissions/{sid}/image")
     @bounded_processing
     def image(sid: str, preview_width: int | None = Query(None, ge=200, le=1600),
@@ -363,6 +382,9 @@ def create_app(root: Path = DATA_DIR):
             raise ValueError("استخراج النص مخصص للإجابات المقالية")
         try:
             extracted = recognize(workspace.image_path(row.image_name).read_bytes())
+        except ProcessingError as exc:
+            exc.revision = workspace.record_processing_failure(sid, "ocr", body.revision, code=exc.code)
+            raise
         except ValueError:
             workspace.record_processing_failure(sid, "ocr", body.revision)
             raise
@@ -382,8 +404,9 @@ def create_app(root: Path = DATA_DIR):
             raise ValueError("اقتراح الدرجات الآلي مخصص للأسئلة المقالية")
         try:
             grade = propose_grade(spec, row.text, current=row.current, consent=body.consent_to_external_processing_and_cost)
-        except ProviderError:
-            workspace.record_processing_failure(sid, "llm", body.revision)
+        except ProviderError as exc:
+            if exc.attempted:
+                exc.revision = workspace.record_processing_failure(sid, "llm", body.revision, code=exc.code)
             raise
         workspace.save_proposal(sid, grade.model_dump(), body.revision)
         return {"proposal": grade.model_dump(), "revision": workspace.submission(sid).revision}

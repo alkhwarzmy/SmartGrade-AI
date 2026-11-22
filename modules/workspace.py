@@ -302,11 +302,12 @@ class Workspace:
             self._deliver()
             return complete
 
-    def record_processing_failure(self, sid, stage, revision):
+    def record_processing_failure(self, sid, stage, revision, *, code=None):
         actor = self._actor("write")
         with tenant_write_lock(self._root):
             actor = self._actor("write")
-            self._core.record_processing_failure(
-                sid, stage, revision, audit=self._audit(actor, "submission.processing_failed")
+            updated_revision = self._core.record_processing_failure(
+                sid, stage, revision, code=code, audit=self._audit(actor, "submission.processing_failed")
             )
             self._deliver()
+            return updated_revision

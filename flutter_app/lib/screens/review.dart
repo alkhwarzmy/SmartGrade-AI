@@ -228,6 +228,9 @@ class _ReviewState extends State<ReviewScreen> with TaskState<ReviewScreen> {
   bool get dirty => sourceDirty || answersDirty || gradeDirty;
   bool get isEssay => widget.exam['kind'] == 'essay';
   bool get isMulti => isEssay && multiEssay(widget.exam);
+  bool get answersNeedSave => answersDirty || (row != null && isMulti &&
+    essayQuestions(widget.exam).length > 1 && !((row!['current'] as Json).containsKey('essay_answers')));
+
   @override
   void initState() {
     super.initState();
@@ -268,7 +271,7 @@ class _ReviewState extends State<ReviewScreen> with TaskState<ReviewScreen> {
       return;
     }
     final savedAnswers = answerTexts(widget.exam, value);
-    final saved = (value['proposal'] ?? value['approved']) as Json?;
+    final saved = (value['approved'] ?? value['proposal']) as Json?;
     for (final q in essayQuestions(widget.exam)) {
       final id = q['id'] as String;
       answers[id] = TextEditingController(text: savedAnswers[id]);
@@ -409,14 +412,17 @@ class _ReviewState extends State<ReviewScreen> with TaskState<ReviewScreen> {
   Future<void> propose() async {
     await task(() async {
       final api = widget.session.api!;
-      await api.json(
-        'POST',
-        'submissions/${widget.id}/proposal',
-        body: {
-          'revision': row!['revision'],
-          'consent_to_external_processing_and_cost': true,
-        },
-      );
+      final revision = row!['revision'];
+      try {
+        await api.json('POST', 'submissions/${widget.id}/proposal', body: {
+          'revision': revision, 'consent_to_external_processing_and_cost': true,
+        });
+      } on ApiError catch (e) {
+        if (mounted && e.revision != null && row?['revision'] == revision) {
+          setState(() => row = {...row!, 'revision': e.revision});
+        }
+        rethrow;
+      }
       final fresh = await api.paper(widget.id);
       if (mounted) {
         setState(() {
@@ -424,6 +430,31 @@ class _ReviewState extends State<ReviewScreen> with TaskState<ReviewScreen> {
           gradeDirty = true;
         });
       }
+    });
+  }
+
+  Future<void> diagnose() async {
+    await task(() async {
+      final report = await widget.session.api!.diagnostics(widget.id);
+      if (!mounted) { return; }
+      await showDialog<void>(context: context, builder: (context) => AlertDialog(
+        title: const Text('فحص التصحيح'),
+        content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          if (sourceDirty) const Text('النص الظاهر غير محفوظ؛ احفظه قبل التصحيح.'),
+          if (answersNeedSave) const Text('احفظ توزيع إجابات الأسئلة قبل التصحيح.'),
+          for (final item in (report['blockers'] as List).cast<Json>())
+            Padding(padding: const EdgeInsets.only(bottom: 10), child: SelectableText(
+              '${item['message']} [${item['code']}]')),
+          if ((report['blockers'] as List).isEmpty) const Text('الإعدادات والإجابات المحفوظة جاهزة.'),
+          Text('${report['ocr']['message']}'),
+          const Divider(),
+          for (final q in (report['questions'] as List).cast<Json>())
+            Text('السؤال ${q['number']}: ${q['answer_characters']} حرف · ${q['state'] == 'unassigned' ? 'لم يُحفظ التوزيع' : q['state'] == 'blank' ? 'فارغ' : 'إجابة محفوظة'}'),
+          Text('مصدر الدرجة: ${report['grade']['source'] == 'teacher_approved' ? 'اعتماد المعلم' : report['grade']['source'] == 'model_proposal' ? 'اقتراح النموذج' : 'لم تحفظ درجة'}'),
+        ])),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('إغلاق'))],
+      ));
     });
   }
 
@@ -506,6 +537,8 @@ class _ReviewState extends State<ReviewScreen> with TaskState<ReviewScreen> {
               padding: const EdgeInsets.all(16),
               children: [
                 status(),
+                if (isEssay) OutlinedButton.icon(onPressed: busy ? null : diagnose,
+                  icon: const Icon(Icons.troubleshoot), label: const Text('فحص سبب تعثر التصحيح')),
                 Text(
                   '${row!['status']} · الدرجة المعتمدة: ${row!['total'] ?? '—'} · المراجعة ${row!['revision']}',
                 ),
@@ -535,7 +568,7 @@ class _ReviewState extends State<ReviewScreen> with TaskState<ReviewScreen> {
                   ),
                 ),
                 FilledButton(
-                  onPressed: busy || !reviewed || sourceDirty || answersDirty
+                  onPressed: busy || !reviewed || sourceDirty || answersNeedSave
                       ? null
                       : approve,
                   child: const Text('اعتماد الدرجة'),
@@ -680,7 +713,7 @@ class _ReviewState extends State<ReviewScreen> with TaskState<ReviewScreen> {
       ),
     if (isMulti)
       FilledButton.tonal(
-        onPressed: busy || sourceDirty || !answersDirty ? null : saveAnswers,
+        onPressed: busy || sourceDirty || !answersNeedSave ? null : saveAnswers,
         child: const Text('حفظ إجابات الأسئلة'),
       ),
     CheckboxListTile(
@@ -691,7 +724,7 @@ class _ReviewState extends State<ReviewScreen> with TaskState<ReviewScreen> {
       ),
     ),
     OutlinedButton(
-      onPressed: busy || dirty || !aiConsent ? null : propose,
+      onPressed: busy || dirty || answersNeedSave || !aiConsent ? null : propose,
       child: const Text('طلب اقتراح درجات'),
     ),
     const Text(

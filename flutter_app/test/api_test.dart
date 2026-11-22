@@ -28,6 +28,7 @@ http.Response reply(Object value, [int code = 200]) => http.Response(
   headers: {'content-type': 'application/json; charset=utf-8'},
 );
 void main() {
+  diagnosticApiTests();
   test('HTTPS validation prevents credential URLs and production HTTP', () {
     expect(serverUrl('https://example.org/api').path, '/api/');
     for (final url in [
@@ -208,5 +209,19 @@ void main() {
     expect(session.actor, isNull);
     expect(vault.value, isNull);
     session.dispose();
+  });
+}
+
+void diagnosticApiTests() {
+  test('Provider error carries stage code and updated revision without expiring login', () async {
+    var expired = 0;
+    final api = SmartGradeApi('https://example.org', client: MockClient((_) async => reply({
+      'detail': 'راجع إعداد مزود التصحيح', 'code': 'provider_auth', 'revision': 8,
+    }, 502)))..token = 'synthetic'..onUnauthorized = () => expired++;
+    try { await api.me(); fail('expected failure'); }
+    on ApiError catch (e) {
+      expect(e.status, 502); expect(e.code, 'provider_auth'); expect(e.revision, 8);
+    }
+    expect(expired, 0); api.close();
   });
 }

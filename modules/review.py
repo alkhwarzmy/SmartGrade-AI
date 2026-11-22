@@ -244,11 +244,12 @@ class Store:
     def _invalidate(row):
         row.status, row.approved, row.total = "review", None, None
 
-    def _history(self, db, row, before, action, reviewer, reason=""):
+    def _history(self, db, row, before, action, reviewer, reason="", *, expire_reports=True):
         if not reviewer.strip() or len(reviewer) > 100 or len(reason) > 1000:
             raise ValueError("اسم المراجع أو سبب التعديل غير صالح")
         row.updated_at = now()
-        self._expire_reports(db, row.exam_id)
+        if expire_reports:
+            self._expire_reports(db, row.exam_id)
         db.add(
             ReviewHistory(
                 submission_id=row.id,
@@ -285,6 +286,9 @@ class Store:
                     "ocr_text": row.original.get("ocr_text", text),
                     "ocr_provider": "tesseract",
                     "ocr_runs": [*row.original.get("ocr_runs", []), {"text": text, "at": now()}],
+                    "ocr_failed": False,
+                    "processing_status": {**row.original.get("processing_status", {}),
+                        "ocr": {"state": "succeeded", "code": "ok", "input_revision": revision, "at": now()}},
                 }
             row.text, row.proposal = text, None
             row.current = {k: v for k, v in row.current.items() if k != "essay_answers"}
@@ -315,6 +319,10 @@ class Store:
             parsed, _ = parse_essay_grade(proposal, spec, row.text, row.current)
             before = self._snapshot(row)
             row.proposal = parsed.model_dump()
+            row.original = {**row.original, "llm_failed": False, "processing_status": {
+                **row.original.get("processing_status", {}),
+                "llm": {"state": "succeeded", "code": "ok", "input_revision": revision, "at": now()},
+            }}
             self._invalidate(row)
             self._history(db, row, before, "ai_proposal", "ai-provider")
             self._event(db, audit, sid)
@@ -401,13 +409,20 @@ class Store:
             ids = list(db.scalars(select(PendingDeletion.id).limit(limit)))
         return sum(self.finish_deletion(sid) for sid in ids)
 
-    def record_processing_failure(self, sid, stage, revision, *, audit=None):
+    def record_processing_failure(self, sid, stage, revision, *, code=None, audit=None):
+        from modules.processing import safe_code
         if stage not in {"ocr", "llm"}:
             raise ValueError("مرحلة غير صالحة")
         with self.sessions.begin() as db:
             row = self._get(db, sid, revision)
             before = self._snapshot(row)
-            row.original = {**row.original, stage + "_failed": True}
-            self._invalidate(row)
-            self._history(db, row, before, stage + "_failed", "system", "يلزم التصحيح أو الإدخال اليدوي")
+            status = {**row.original.get("processing_status", {})}
+            status[stage] = {"state": "failed", "code": safe_code(code or ("provider_failed" if stage == "llm" else "ocr_failed")),
+                             "input_revision": revision, "at": now()}
+            row.original = {**row.original, stage + "_failed": True, "processing_status": status}
+            # An unsuccessful attempt changed neither the saved answers nor the approved grade.
+            self._history(db, row, before, stage + "_failed", "system",
+                          "لم تكتمل المعالجة؛ احتُفظ بالمدخلات والدرجات المحفوظة", expire_reports=False)
             self._event(db, audit, sid)
+            db.flush()
+            return row.revision
