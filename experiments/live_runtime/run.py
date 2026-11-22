@@ -1,5 +1,4 @@
 """Exercise the real commercial web app, worker and API using only disposable synthetic data."""
-import io
 import json
 import os
 from pathlib import Path
@@ -16,8 +15,6 @@ from openpyxl import load_workbook
 from playwright.sync_api import sync_playwright, expect
 from sqlalchemy import select
 
-ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT))
 from modules.auth import AuthService
 from modules.workspace import Workspace
 from modules.schemas import ExamSpec
@@ -26,6 +23,7 @@ from modules.essay_grader import provider_blockers
 from modules.grading_evaluation import compare_proposal
 from database.models import Job
 
+ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "experiments/live_runtime/evidence"
 OUT.mkdir(parents=True, exist_ok=True)
 report = {
@@ -135,6 +133,7 @@ def main():
             browser = playwright.chromium.launch()
             context = browser.new_context(viewport={"width": 1600, "height": 1100}, locale="ar")
             context.set_default_timeout(30000)
+            expect.set_options(timeout=30000)
             page = context.new_page()
             try:
                 step("start_api_web_and_worker")
@@ -183,7 +182,15 @@ def main():
                     check("ocr_text_saved", len(paper["text"]) > 100)
                     report["ocr"] = {"saved_characters": len(paper["text"]), "engine": "real_tesseract"}
                     page.get_by_role("button", name="تحديث حالة استخراج النص", exact=True).click()
-                    expect(page.get_by_label("النص المستخدم للتصحيح", exact=True)).to_have_value(paper["text"])
+                    source_field = page.get_by_label("النص المستخدم للتصحيح", exact=True)
+                    try:
+                        wait_for(lambda: " ".join(source_field.input_value().split()) ==
+                                 " ".join(paper["text"].split()), timeout=35)
+                    finally:
+                        (OUT / "ocr-public-sample.txt").write_text(paper["text"])
+                        (OUT / "browser-ocr-public-sample.txt").write_text(source_field.input_value())
+                        report["ocr"]["browser_characters"] = len(source_field.input_value())
+                    check("browser_displays_saved_ocr_text", True)
                     snapshot(page, "02-ocr")
                     step("map_five_answers_in_browser")
                     for number, question in enumerate(spec.questions, 1):

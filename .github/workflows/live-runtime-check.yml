@@ -37,7 +37,7 @@ jobs:
           ALLOW_EXTERNAL_AI: ${{ vars.ALLOW_EXTERNAL_AI || 'false' }}
           ALLOW_PAID_API: ${{ vars.ALLOW_PAID_API || 'false' }}
           OCR_PROVIDER: tesseract
-        run: python experiments/live_runtime/run.py
+        run: python -m experiments.live_runtime.run
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
