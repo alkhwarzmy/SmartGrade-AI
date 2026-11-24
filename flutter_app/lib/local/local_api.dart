@@ -211,7 +211,7 @@ class LocalApi extends SmartGradeApi {
           requireLocal(answers is List && answers.length==key.length &&
             answers.every((v)=>v==null || ['A','B','C','D'].contains(v)),'درجات اختيارات غير صالحة.');
           total=0;
-          for(var i=0;i<key.length;i++) { if(answers[i]==key[i]) total+=number(spec['points_per_question']); }
+          for(var i=0;i<key.length;i++) { if(answers[i]==key[i]) { total+=number(spec['points_per_question']); } }
         } else { total=_grade(spec,p,approved); }
         requireLocal((number(p['total'])-total).abs()<0.000001,'مجموع الدرجة المخزنة غير صحيح.');
       }
@@ -270,7 +270,7 @@ class LocalApi extends SmartGradeApi {
         await files.write('images/$sid.source',bytes);
         await files.write('images/$sid.preview',preview);
         final readings=(inspected['readings'] as List).map(objectValue).toList();
-        if(spec['kind']=='mcq') requireLocal(readings.length==(spec['answer_key'] as List).length,'عدد الإجابات المستخرجة غير صحيح.');
+        if(spec['kind']=='mcq') { requireLocal(readings.length==(spec['answer_key'] as List).length,'عدد الإجابات المستخرجة غير صحيح.'); }
         final now=_now();
         _papers[sid]={'id':sid,'exam_id':eid,'student_code':student.trim(),'text':'','status':'review',
           'revision':1,'created_at':now,'updated_at':now,'proposal':null,'approved':null,'total':null,
@@ -342,7 +342,7 @@ class LocalApi extends SmartGradeApi {
           requireLocal(values is List && values.length==key.length &&
             values.every((v)=>v==null || ['A','B','C','D'].contains(v)),'عدد الاختيارات أو قيمها لا تطابق الاختبار.');
           var total=0.0;
-          for(var i=0;i<key.length;i++) { if(values[i]==key[i]) total+=number(spec['points_per_question']); }
+          for(var i=0;i<key.length;i++) { if(values[i]==key[i]) { total+=number(spec['points_per_question']); } }
           row['approved']={'answers':List.from(values as List)};
           row['current']={'answers':List.from(values)};
           row['total']=double.parse(total.toStringAsFixed(6));

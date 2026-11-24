@@ -237,6 +237,25 @@ jobs:
           target.parent.mkdir(parents=True, exist_ok=True)
           target.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
           PY
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: Android-offline-native-evidence
+          path: .release-input/offline
+      - name: Preserve actual Android offline evidence
+        run: |
+          python - <<'PY'
+          import json, shutil
+          from pathlib import Path
+          source = Path(".release-input/offline")
+          report = json.loads((source / "validation.json").read_text())
+          assert report["synthetic_only"] and report["blocked_http_client_attempts"] == 0
+          assert "production_default_launch_without_server_or_login" in report["checks"]
+          assert "native_bundled_arabic_ocr" in report["checks"]
+          target = Path("docs/releases/android_offline")
+          target.mkdir(parents=True, exist_ok=True)
+          (target / "validation.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
+          shutil.copyfile(source / "home.png", target / "home.png")
+          PY
       - name: Write verification record
         env:
           VERIFIED_HEAD: ${{ github.sha }}
@@ -253,7 +272,8 @@ jobs:
               "passed": ["python_tests", "direct_launcher_tests", "extracted_notebook_tests",
                          "notebook_source_validation", "python_dependency_audit", "container_security_gate",
                          "flutter_analysis", "flutter_tests", "dart_real_api_smoke", "android_debug_apk_build",
-                         "reference_grading_diagnosis", "printed_arabic_ocr"],
+                         "reference_grading_diagnosis", "printed_arabic_ocr", "android_offline_native_omr_ocr",
+                         "android_offline_encrypted_storage_backup_and_default_launch"],
               "limits": ["No live Google Colab account execution", "No physical Android camera test",
                          "No measured Arabic handwriting or essay grading accuracy", "APK is internal debug, not store-signed"]
           }, ensure_ascii=False, indent=2) + "\n")
@@ -288,7 +308,7 @@ jobs:
           test "$(git rev-parse origin/main)" = "$VERIFIED_HEAD"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add flutter_app/assets flutter_app/integration_test flutter_app/lib flutter_app/test flutter_app/tool flutter_app/android flutter_app/pubspec.lock docs/releases/complete_colab/verification.json docs/releases/grading_diagnostics/validation.json notebooks/SmartGrade_Colab.ipynb notebooks/SmartGrade_Institution_Colab.ipynb notebooks/SmartGrade_Complete_Colab.ipynb
+          git add flutter_app/assets flutter_app/integration_test flutter_app/lib flutter_app/test flutter_app/tool flutter_app/android flutter_app/pubspec.lock docs/releases/complete_colab/verification.json docs/releases/android_offline docs/releases/grading_diagnostics/validation.json notebooks/SmartGrade_Colab.ipynb notebooks/SmartGrade_Institution_Colab.ipynb notebooks/SmartGrade_Complete_Colab.ipynb
           if ! git diff --cached --quiet; then
             git commit -m "Package verified complete Colab notebooks and Android source"
             git push origin HEAD:main
