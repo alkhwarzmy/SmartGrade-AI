@@ -8,8 +8,8 @@
     },
     {
       "path": "README_AR.md",
-      "bytes": 9003,
-      "sha256": "4e4dcdea320e5ff38ed2a0f9fccdf063f9f901fefda2da3ff1c9361cb991400a"
+      "bytes": 9320,
+      "sha256": "d0a417ed3f4a4311d99446360f366531714ed215f4c03d7ea8fac00831fb388c"
     },
     {
       "path": "essays/arabic/arabic-A.answers.json",
@@ -258,8 +258,8 @@
     },
     {
       "path": "essays/math/math-A.png",
-      "bytes": 99541,
-      "sha256": "911b0c05a4c7d4f0c03b0bab0e8a570826a52f3c7271daf1718181ddf48fc727"
+      "bytes": 127769,
+      "sha256": "6f028e2f1491fd60675048cf1a774df22ad4325854529c4ea0c0e7e02f498844"
     },
     {
       "path": "essays/math/math-A.txt",
@@ -273,8 +273,8 @@
     },
     {
       "path": "essays/math/math-B.png",
-      "bytes": 120424,
-      "sha256": "56add3a3d1f7442d78e23556098de0cb80aefcaec24c3f4814aab5dc20228e63"
+      "bytes": 126078,
+      "sha256": "1f19462624d48491ac20196e9c884fe0c448df11c030b0ffbe12b70a051c0980"
     },
     {
       "path": "essays/math/math-B.txt",
@@ -288,8 +288,8 @@
     },
     {
       "path": "essays/math/math-C.png",
-      "bytes": 66996,
-      "sha256": "ca671d3e93be048d2a5f6b36d809700f91959f8698ffa35def5e602dd9f2a728"
+      "bytes": 69177,
+      "sha256": "2196e5be0a9fee317ceb21238ad28e93d46a64a73746f9bb6e423fca52f10da0"
     },
     {
       "path": "essays/math/math-C.txt",
@@ -303,8 +303,8 @@
     },
     {
       "path": "essays/math/math-D.png",
-      "bytes": 74742,
-      "sha256": "de3a37836a8a5e4d92211a9b497b4e26d7493a73dda6b64a509f2510bee0c34d"
+      "bytes": 78936,
+      "sha256": "b53b733e3307e33a84cdbbdfde70ef4e2de7d20a519032717f8e77d7516c6da2"
     },
     {
       "path": "essays/math/math-D.txt",
@@ -348,8 +348,8 @@
     },
     {
       "path": "essays/math/math-G.png",
-      "bytes": 88536,
-      "sha256": "5a48f98fe56a577e249c9b54d0cbf9bfc0a054b9a9c20053cf2b5c898e892973"
+      "bytes": 113852,
+      "sha256": "7452b63b12abc10fa2b7f5c583dcb6dafda295ef090515a5dacd04faaed7b851"
     },
     {
       "path": "essays/math/math-G.txt",
@@ -363,8 +363,8 @@
     },
     {
       "path": "essays/math/math-H.png",
-      "bytes": 89270,
-      "sha256": "13556c1583c519a54eced2816a34635fcf3bf3fc4a21b2c175d365376f6089bd"
+      "bytes": 103179,
+      "sha256": "1ee209521d3fddbe244ae65b3467f2ca0e507c01b4ac529c026f75a2f7c5b7df"
     },
     {
       "path": "essays/math/math-H.txt",
@@ -618,23 +618,23 @@
     },
     {
       "path": "ocr_references/math-A.txt",
-      "bytes": 864,
-      "sha256": "143cda27f1075e74591e8e0ed009955bc9f7bbd87292f30fd19990315a8339fd"
+      "bytes": 1187,
+      "sha256": "a2b5c57a93ab2578e18020b2c3431b186d2eff683c8f7aaec8d368ed78eec167"
     },
     {
       "path": "ocr_references/math-B.txt",
-      "bytes": 1044,
-      "sha256": "4c5dd02833f4dbf7c59ba5b687245f28534240b2a4102b75f37033683f8e2185"
+      "bytes": 1094,
+      "sha256": "86389bb58237542e00aa74f9af4e0542c6075c45657f501985ae6e9ab92ca47a"
     },
     {
       "path": "ocr_references/math-C.txt",
-      "bytes": 471,
-      "sha256": "aa66fc42900494944267ef8a8247dd7f832acadb65e1c0a32c5fc043b7a41af3"
+      "bytes": 496,
+      "sha256": "5ad5e735c5d7d189f41e0461dc984ffbc338b5563e5394e77097e374aff7c554"
     },
     {
       "path": "ocr_references/math-D.txt",
-      "bytes": 567,
-      "sha256": "7a3fe1d742254df65c56adcb32f0709d0bb3aab5eabc456e64c3ea36f840f1ef"
+      "bytes": 629,
+      "sha256": "78a9854f271f1c517467999cace0cccd7f79d1dd234807d976d22ecacd4c1598"
     },
     {
       "path": "ocr_references/math-E.txt",
@@ -648,13 +648,13 @@
     },
     {
       "path": "ocr_references/math-G.txt",
-      "bytes": 744,
-      "sha256": "47499eb6cd2790b5475694029fa0d0b4d998f05acc783e94e460c22ca1f025ab"
+      "bytes": 1049,
+      "sha256": "774de64f26394cff03ddfa1110e003a68ff3063b42c13b134edc94ea9592f521"
     },
     {
       "path": "ocr_references/math-H.txt",
-      "bytes": 763,
-      "sha256": "7a66552d9221c1bf4fdf3816d9b9ba9d3ad8050b18cc06678bf33fd6ae31ee6d"
+      "bytes": 883,
+      "sha256": "433cb380413cb56c1190cd7bd1c07d3689c3996c47d51d581766e38630104df2"
     },
     {
       "path": "ocr_references/science-A.txt",
@@ -758,8 +758,8 @@
     },
     {
       "path": "print/all_student_papers.pdf",
-      "bytes": 2775816,
-      "sha256": "9eed6fd8b12a922cd81fd514de0cfa390900bf028f30b59cd917bf13c4445f19"
+      "bytes": 2851114,
+      "sha256": "599127e0b4a60cd1b685ab6d8714b897e41206ae8df60753e06e1ad9a9aee450"
     },
     {
       "path": "print/arabic-handwriting.png",
@@ -774,7 +774,7 @@
     {
       "path": "print/handwriting_sheets.pdf",
       "bytes": 248726,
-      "sha256": "c43b5aea62efee5d91a9d4b11cf9614b658237c2197726c392ecac3edcc9f4ef"
+      "sha256": "e57025aac29ee58a57dbf32855bc0ef47fe2e894b9805193cb7f193736637a65"
     },
     {
       "path": "print/math-handwriting.png",
@@ -784,7 +784,7 @@
     {
       "path": "print/omr_papers.pdf",
       "bytes": 1934583,
-      "sha256": "eb65774db468f1dd7d47f854ae235cf50b09aecee8b0d2f540b0b64840a8ca35"
+      "sha256": "a4293ce814f89cb4cb42266f7fad27f80fb64c484a27305548d5b017cc37f3f3"
     },
     {
       "path": "print/science-handwriting.png",
