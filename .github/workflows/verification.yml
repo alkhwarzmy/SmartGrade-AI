@@ -2,6 +2,9 @@ name: Verify release
 on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -162,22 +165,29 @@ jobs:
           echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
           echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
           echo "$ANDROID_HOME/emulator" >> "$GITHUB_PATH"
-      - name: Boot hardware accelerated Android emulator
+      - name: Install Android emulator system image
+        timeout-minutes: 8
+        run: sdkmanager "system-images;android-35;google_apis;x86_64" "platform-tools" "emulator"
+      - name: Start Android emulator
         run: |
           sudo chmod a+rw /dev/kvm
-          sdkmanager "system-images;android-35;google_apis;x86_64" "platform-tools" "emulator"
           echo no | avdmanager create avd --force --name offline --package "system-images;android-35;google_apis;x86_64" --device pixel_6
-          nohup "$ANDROID_HOME/emulator/emulator" -avd offline -no-window -gpu swiftshader_indirect -no-audio -no-boot-anim -no-snapshot -memory 3072 > "$RUNNER_TEMP/emulator.log" 2>&1 &
-          adb wait-for-device
-          for attempt in $(seq 1 90); do
+          nohup "$ANDROID_HOME/emulator/emulator" -avd offline -no-window -gpu swiftshader -no-audio -no-boot-anim -no-snapshot -memory 3072 > "$RUNNER_TEMP/emulator.log" 2>&1 &
+      - name: Wait for Android boot
+        timeout-minutes: 6
+        run: |
+          if ! timeout 120 adb wait-for-device; then cat "$RUNNER_TEMP/emulator.log"; exit 1; fi
+          for attempt in $(seq 1 80); do
             if [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = "1" ]; then break; fi
             sleep 3
           done
-          test "$(adb shell getprop sys.boot_completed | tr -d '\r')" = "1"
+          if [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" != "1" ]; then cat "$RUNNER_TEMP/emulator.log"; exit 1; fi
           adb shell input keyevent 82
           adb shell settings put global window_animation_scale 0
           adb shell settings put global transition_animation_scale 0
           adb shell settings put global animator_duration_scale 0
+      - name: Disable device network
+        run: |
           adb shell svc wifi disable
           adb shell svc data disable
           adb shell cmd connectivity airplane-mode enable
