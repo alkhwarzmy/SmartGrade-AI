@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import '../api.dart';
@@ -18,6 +19,8 @@ class DeviceVision implements LocalVision {
       return value;
     } on PlatformException catch (e) {
       throw ApiError(e.message ?? 'تعذرت معالجة الصورة على الجهاز.');
+    } on TimeoutException {
+      throw ApiError('استغرقت معالجة الصورة وقتًا طويلًا؛ جرّب صورة أوضح وأقل حجمًا.');
     } on MissingPluginException {
       throw ApiError('محرك الصور المحلي متاح في تطبيق Android المبني من هذا المصدر.');
     }

@@ -108,6 +108,7 @@ void main() {
       await tester.pump(const Duration(milliseconds:200));
       await tester.runAsync(()=>Future<void>.delayed(const Duration(milliseconds:100)));
     }
+    await tester.pumpAndSettle();
     expect(find.text('اختباراتي على الجهاز'),findsOneWidget);
     expect(find.text('عنوان الخادم HTTPS'),findsNothing);
     expect(find.text('دخول'),findsNothing);
