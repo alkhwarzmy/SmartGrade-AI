@@ -3,6 +3,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 CHOICES = ("A", "B", "C", "D")
+MAX_MCQ_QUESTIONS = 50
 
 
 class StrictModel(BaseModel):
@@ -37,7 +38,7 @@ class EssayQuestion(StrictModel):
 class ExamSpec(StrictModel):
     title: str = Field(min_length=1, max_length=150)
     kind: Literal["mcq", "essay"]
-    answer_key: list[Literal["A", "B", "C", "D"]] = Field(default_factory=list)
+    answer_key: list[Literal["A", "B", "C", "D"]] = Field(default_factory=list, max_length=MAX_MCQ_QUESTIONS)
     points_per_question: float = Field(default=1, gt=0, le=1000)
     question: str = Field(default="", max_length=10000)
     model_answer: str = Field(default="", max_length=20000)
@@ -51,9 +52,9 @@ class ExamSpec(StrictModel):
         if not self.title.strip():
             raise ValueError("عنوان الاختبار مطلوب")
         if self.kind == "mcq":
-            if self.questions or len(self.answer_key) != 20:
-                raise ValueError("قالب OMR يتطلب 20 إجابة دون أسئلة مقالية")
-            self.maximum = 20 * self.points_per_question
+            if self.questions or not 1 <= len(self.answer_key) <= MAX_MCQ_QUESTIONS:
+                raise ValueError("اختبار الاختيارات يتطلب من 1 إلى 50 إجابة دون أسئلة مقالية")
+            self.maximum = len(self.answer_key) * self.points_per_question
         elif self.questions:
             if self.question or self.model_answer or self.criteria:
                 raise ValueError("استخدم قائمة الأسئلة أو صيغة السؤال القديم دون الجمع بينهما")

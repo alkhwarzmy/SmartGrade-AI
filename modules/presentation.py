@@ -111,7 +111,7 @@ def empty_state(title, message):
 
 
 def exam_summary(exam, spec):
-    count = len(spec.essay_questions()) if spec.kind == "essay" else 20
+    count = len(spec.essay_questions()) if spec.kind == "essay" else len(spec.answer_key)
     kind = "اختبار مقالي" if spec.kind == "essay" else "اختيار من متعدد"
     st.markdown(
         '<div class="sg-summary"><div>'

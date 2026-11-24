@@ -28,6 +28,8 @@ def main():
         service.logout(token)
         image = root / "synthetic.png"
         image.write_bytes(png_bytes(template({i: ["A"] for i in range(20)}, True)))
+        image50 = root / "synthetic50.png"
+        image50.write_bytes(png_bytes(template({i: ["A"] for i in range(50)}, True, question_count=50)))
         with socket.socket() as listener:
             listener.bind(("127.0.0.1", 0))
             port = listener.getsockname()[1]
@@ -51,7 +53,7 @@ def main():
                 else:
                     raise RuntimeError("API startup timed out")
                 subprocess.run(["dart", "run", "tool/api_smoke.dart"], cwd=ROOT / "flutter_app",
-                               input=json.dumps({"server": address, "image": str(image), "password": password,
+                               input=json.dumps({"server": address, "image": str(image), "image50": str(image50), "password": password,
                                                  "viewer_password": viewer_password}), text=True,
                                check=True, timeout=180)
             finally:

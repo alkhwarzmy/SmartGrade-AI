@@ -109,7 +109,7 @@ class _UploadState extends State<UploadScreen> with TaskState<UploadScreen> {
         WorkspaceBanner(
           title: 'ورقة جديدة · ${widget.exam['title'] ?? 'الاختبار'}',
           subtitle: widget.exam['kind'] == 'mcq'
-              ? 'صوّر قالب OMR v1 كاملًا وباتجاه رأسي.'
+              ? 'صوّر القالب المطابق لهذا الاختبار كاملًا وباتجاه رأسي.'
               : 'ارفع الورقة كاملة، ثم راجع النص وحدد إجابة كل سؤال.',
           icon: Icons.document_scanner_outlined,
         ),

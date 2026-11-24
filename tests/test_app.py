@@ -115,3 +115,37 @@ def test_multiple_questions_add_remove_and_review(tmp_path, monkeypatch):
     next(b for b in app.button if b.label == "اعتماد الدرجة المقالية").click().run()
     assert not app.exception and not app.error
     assert store.submission(sid).total == 6
+
+
+def test_teacher_creates_and_reviews_fifty_mcq_questions(tmp_path, monkeypatch):
+    monkeypatch.setattr(config, "DATA_DIR", tmp_path)
+    app = AppTest.from_file(str(Path(__file__).parents[1] / "app.py"), default_timeout=30).run()
+    next(t for t in app.text_input if t.label == "عنوان الاختبار").set_value("خمسون سؤالًا")
+    app.number_input(key="new_mcq_count").set_value(50)
+    app.text_area(key="new_mcq_answer_key").set_value(" ".join(["A"] * 50))
+    next(b for b in app.button if b.label == "إنشاء الاختبار").click().run()
+    assert not app.exception and not app.error
+    store = Store(tmp_path)
+    exam = store.exams()[0]
+    assert len(exam.spec["answer_key"]) == 50
+    sid = store.upload(exam.id, "SYNTHETIC-50", png_bytes(template(
+        {i: ["A"] for i in range(50)}, True, question_count=50)))
+    app.radio(key="navigation").set_value("التصحيح والمراجعة").run()
+    next(c for c in app.checkbox if c.label == "راجعت الصورة والحالات غير الواضحة وأوافق على اعتماد الإجابات").check()
+    next(b for b in app.button if b.label == "اعتماد النتيجة").click().run()
+    assert not app.exception and store.submission(sid).total == 50
+
+
+def test_teacher_count_must_match_answer_key_without_losing_draft(tmp_path, monkeypatch):
+    monkeypatch.setattr(config, "DATA_DIR", tmp_path)
+    app = AppTest.from_file(str(Path(__file__).parents[1] / "app.py"), default_timeout=30).run()
+    next(t for t in app.text_input if t.label == "عنوان الاختبار").set_value("سؤالان")
+    app.number_input(key="new_mcq_count").set_value(2)
+    app.text_area(key="new_mcq_answer_key").set_value("B")
+    next(b for b in app.button if b.label == "إنشاء الاختبار").click().run()
+    assert not app.exception and app.error and not Store(tmp_path).exams()
+    assert app.text_area(key="new_mcq_answer_key").value == "B"
+    app.text_area(key="new_mcq_answer_key").set_value("B D")
+    next(b for b in app.button if b.label == "إنشاء الاختبار").click().run()
+    assert not app.exception
+    assert Store(tmp_path).exams()[0].spec["answer_key"] == ["B", "D"]

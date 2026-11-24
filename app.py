@@ -119,24 +119,28 @@ def choose_exam(label="اختر الاختبار", key="exam"):
     return mapping[eid]
 
 
-def downloads():
+def downloads(question_count=None):
+    if question_count is None:
+        question_count = st.number_input("عدد أسئلة القالب", min_value=1, max_value=50,
+                                         value=20, step=1, key="download_mcq_count")
+    count = int(question_count)
     st.markdown("#### قالب موحد، قراءة أوضح")
-    st.caption("20 سؤالًا × 4 اختيارات. اطبع A4 رأسيًا، ظلل بالكامل، وأبقِ العلامات الأربع ظاهرة.")
+    st.caption(f"{count} سؤالًا × 4 اختيارات. اطبع A4 رأسيًا بالحجم الأصلي، وأبقِ العلامات الأربع ورمز القالب ظاهرين.")
     a, b, c = st.columns(3)
     a.download_button(
-        "تنزيل القالب PDF", template_pdf(), "smartgrade-omr-v1.pdf", "application/pdf", width="stretch"
+        "تنزيل القالب PDF", template_pdf(count), f"smartgrade-omr-{count}.pdf", "application/pdf", width="stretch"
     )
     b.download_button(
-        "تنزيل القالب PNG", png_bytes(template()), "smartgrade-omr-v1.png", "image/png", width="stretch"
+        "تنزيل القالب PNG", png_bytes(template(question_count=count)), f"smartgrade-omr-{count}.png", "image/png", width="stretch"
     )
     c.download_button(
         "عينة اصطناعية للتجربة",
-        png_bytes(template({i: ["ABCD"[i % 4]] for i in range(20)}, True)),
+        png_bytes(template({i: ["ABCD"[i % 4]] for i in range(count)}, True, question_count=count)),
         "synthetic-omr-demo.png",
         "image/png",
         width="stretch",
     )
-    st.caption("مفتاح العينة الاصطناعية: A B C D A B C D A B C D A B C D A B C D. ليست بيانات طلاب حقيقية.")
+    st.caption("مفتاح العينة الاصطناعية: " + " ".join("ABCD"[i % 4] for i in range(count)) + " · بيانات اصطناعية.")
 
 
 def new_essay_question():
@@ -225,11 +229,14 @@ def exams_page():
                 "عنوان الاختبار", placeholder="مثال: اختبار العلوم — الفصل الأول", max_chars=150
             )
             if mode == "اختيار من متعدد":
-                st.caption("قالب OMR v1 · 20 سؤالًا · تُحتسب الإجابة الصحيحة فقط، دون خصم للخطأ.")
+                count = st.number_input("عدد أسئلة الاختيارات", min_value=1, max_value=50,
+                                         value=20, step=1, key="new_mcq_count")
+                st.caption("اختر من 1 إلى 50 سؤالًا وأدخل العدد نفسه من الإجابات بالترتيب. تُحتسب الصحيحة فقط، دون خصم للخطأ.")
                 answer_key = st.text_area(
                     "مفتاح الإجابة بالترتيب",
                     value=" ".join("ABCD" * 5),
-                    help="20 حرفًا من A أو B أو C أو D، تفصل بينها مسافات",
+                    help="أدخل إجابة واحدة لكل سؤال من A أو B أو C أو D، تفصل بينها مسافات؛ يجب أن يطابق العدد المختار.",
+                    key="new_mcq_answer_key",
                 )
                 points = st.number_input(
                     "درجة السؤال الواحد", min_value=0.25, max_value=1000.0, value=1.0, step=0.25
@@ -239,10 +246,13 @@ def exams_page():
             submitted = st.form_submit_button("إنشاء الاختبار", type="primary", width="stretch")
         if submitted:
             if mode == "اختيار من متعدد":
+                parsed_key = re.split(r"[\s,،;]+", answer_key.strip().upper())
+                if len(parsed_key) != count:
+                    raise ValueError(f"أدخل {count} إجابة بالضبط؛ العدد المختار لا يطابق مفتاح الإجابة.")
                 spec = ExamSpec(
                     title=title,
                     kind="mcq",
-                    answer_key=re.split(r"[\s,،;]+", answer_key.strip().upper()),
+                    answer_key=parsed_key,
                     points_per_question=points,
                 )
             else:
@@ -282,7 +292,7 @@ def exams_page():
             with st.expander("الأسئلة ومعايير التصحيح · " + exam.title):
                 if exam.kind == "mcq":
                     st.dataframe(
-                        pd.DataFrame({"السؤال": range(1, 21), "الإجابة": spec.answer_key}), hide_index=True
+                        pd.DataFrame({"السؤال": range(1, len(spec.answer_key) + 1), "الإجابة": spec.answer_key}), hide_index=True
                     )
                 else:
                     st.caption(f"عدد الأسئلة: {len(spec.essay_questions())}")
@@ -309,7 +319,7 @@ def upload_page():
         return
     exam_summary(exam, ExamSpec.model_validate(exam.spec))
     st.info(
-        "اختيارات: ارفع قالب OMR v1 كاملًا وباتجاه رأسي."
+        f"اختيارات: نزّل قالب هذا الاختبار ({len(ExamSpec.model_validate(exam.spec).answer_key)} سؤالًا)، ثم ارفعه كاملًا وباتجاه رأسي."
         if exam.kind == "mcq"
         else "مقالي: ارفع صورة ورقة الإجابة كاملة. راجع النص ووزّع إجابات الأسئلة واحفظها قبل اعتماد الدرجة."
     )
@@ -390,7 +400,7 @@ def upload_page():
                   args=("التصحيح والمراجعة", exam.id, uploaded["sid"], True), width="stretch")
     if exam.kind == "mcq":
         with st.expander("تحميل القالب وعينة للتجربة"):
-            downloads()
+            downloads(len(ExamSpec.model_validate(exam.spec).answer_key))
 
 
 def mcq_review(row, spec, reviewer):
@@ -962,7 +972,7 @@ def settings_page():
     )
     st.markdown("#### حدود النسخة")
     st.write(
-        "قالب OMR واحد، وصورة PNG/JPEG واحدة في كل عملية، وأسئلة مقالية متعددة بمعايير ودرجات مستقلة. "
+        "اختيارات من 1 إلى 50 سؤالًا بقالب مطابق للعدد، وصورة PNG/JPEG واحدة في كل عملية، وأسئلة مقالية متعددة بمعايير ودرجات مستقلة. "
         "لم تُعتمد جودة التعرف على خط اليد أو اتفاق التصحيح الآلي على بيانات طلاب حقيقية. "
         "التصدير متاح بصيغ Excel وCSV وPDF عربي. راجع تقرير حدود الجودة قبل استخدام الدرجات المقترحة."
     )

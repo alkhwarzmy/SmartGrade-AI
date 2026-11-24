@@ -9,7 +9,7 @@ def build_complete_notebook(root=ROOT):
     notebook["cells"][0] = markdown("""
     # SmartGrade AI — الدفتر الشامل
     نسخة المؤسسات الفعلية مع جميع التحديثات: أسئلة مقالية متعددة، إجابة ومعايير ودرجة لكل سؤال،
-    مراجعة واعتماد المعلم، اختيارات OMR، OCR عربي، تقارير، حسابات وصلاحيات، نسخ مشفر، ومصدر Flutter Android.
+    مراجعة واعتماد المعلم، اختيارات OMR من 1 إلى 50 سؤالًا، OCR عربي، تقارير، حسابات وصلاحيات، نسخ مشفر، ومصدر Flutter Android.
     اختر Python 3 / CPU ثم **Runtime → Run all**. أدخل حساب مؤسستك عند الطلب وافتح رابط الواجهة في نافذة مستقلة.
     يبدأ التشغيل بقاعدة فارغة؛ لا يتصل بمزود تصحيح مدفوع تلقائيًا.
 
@@ -68,7 +68,7 @@ def build_complete_notebook(root=ROOT):
     notebook["metadata"]["colab"]["name"] = "SmartGrade_Complete_Colab.ipynb"
     notebook["metadata"]["smartgrade_features"] = [
         "commercial-auth", "multi-question-essay", "scoped-evidence", "teacher-approval",
-        "grading-diagnostics", "arabic-ocr", "omr20", "encrypted-backup", "flutter-android-source", "separate-window",
+        "grading-diagnostics", "arabic-ocr", "omr1-50", "omr20-legacy", "encrypted-backup", "flutter-android-source", "separate-window",
     ]
     return notebook
 

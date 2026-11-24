@@ -68,7 +68,67 @@ class SearchWidgetApi extends WidgetApi {
   ];
 }
 
+class CaptureExamApi extends WidgetApi {
+  CaptureExamApi() : super('teacher');
+  Json? created;
+  @override
+  Future<dynamic> json(String method, String path, {Json? body, Map<String, String>? query}) async {
+    if (method == 'POST' && path == 'exams') {
+      created = Map<String, dynamic>.from(body!);
+      return {'id': 'new-test'};
+    }
+    throw StateError('Unexpected request');
+  }
+}
+
 void main() {
+  testWidgets('MCQ count reaches 50 and shrinking preserves choices and submits only active answers', (tester) async {
+    tester.view.physicalSize = const Size(1200, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final session = identity('teacher');
+    final api = CaptureExamApi();
+    session.accept(api, session.actor!);
+    await tester.pumpWidget(MaterialApp(home: Builder(builder: (context) => Scaffold(
+      body: FilledButton(onPressed: () => Navigator.push<void>(context, MaterialPageRoute(
+        builder: (_) => NewExamScreen(session: session))), child: const Text('ابدأ')),
+    ))));
+    await tester.tap(find.text('ابدأ'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextField, 'عنوان الاختبار'), 'متغير');
+    await tester.tap(find.text('اختيارات'));
+    await tester.pumpAndSettle();
+    final counter = find.byKey(const ValueKey('mcq-count'));
+    final countField = tester.widget<DropdownButtonFormField<int>>(counter);
+    expect(countField.items!.first.value, 1);
+    expect(countField.items!.last.value, 50);
+    countField.onChanged!(2);
+    await tester.pumpAndSettle();
+    tester.widget<DropdownButtonFormField<String>>(find.byKey(const ValueKey('key0'))).onChanged!('A');
+    await tester.pumpAndSettle();
+    tester.widget<DropdownButtonFormField<String>>(find.byKey(const ValueKey('key1'))).onChanged!('B');
+    await tester.pumpAndSettle();
+    tester.widget<DropdownButtonFormField<int>>(counter).onChanged!(50);
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.byKey(const ValueKey('key49')), 700,
+      scrollable: find.byType(Scrollable).first);
+    expect(find.byKey(const ValueKey('key49')), findsOneWidget);
+    expect(find.byKey(const ValueKey('key50')), findsNothing);
+    await tester.scrollUntilVisible(counter, -700, scrollable: find.byType(Scrollable).first);
+    tester.widget<DropdownButtonFormField<int>>(counter).onChanged!(2);
+    await tester.pumpAndSettle();
+    expect(tester.widget<DropdownButtonFormField<String>>(find.byKey(const ValueKey('key0'))).initialValue, 'A');
+    expect(tester.widget<DropdownButtonFormField<String>>(find.byKey(const ValueKey('key1'))).initialValue, 'B');
+    await tester.ensureVisible(find.text('إنشاء الاختبار'));
+    await tester.tap(find.text('إنشاء الاختبار'));
+    await tester.pumpAndSettle();
+    expect(api.created?['answer_key'], ['A', 'B']);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    session.dispose();
+  });
+
   testWidgets(
     'Narrow Android workspace searches exams without layout overflow',
     (tester) async {

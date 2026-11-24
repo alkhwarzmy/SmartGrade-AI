@@ -219,3 +219,64 @@ def test_mobile_and_multi_essay_endpoints(client):
     assert client.get(f"/submissions/{sid}/image?preview_width=200", headers=headers).status_code == 200
     for kind in ["xlsx", "csv", "pdf"]:
         assert client.get(f"/exams/{eid}/report.{kind}", headers=headers).status_code == 200
+
+
+@pytest.mark.parametrize("count", [1, 7, 50])
+def test_api_dynamic_mcq_template_upload_and_approval(client, count):
+    headers = login(client)
+    created = client.post("/exams", json={"title": "اختبار متغير", "kind": "mcq",
+                          "answer_key": ["A"] * count, "points_per_question": 2}, headers=headers)
+    assert created.status_code == 201, created.text
+    eid = created.json()["id"]
+    exam = client.get(f"/exams/{eid}", headers=headers).json()
+    assert exam["question_count"] == count and exam["maximum"] == 2 * count
+    assert next(e for e in client.get("/exams", headers=headers).json() if e["id"] == eid)["question_count"] == count
+    assert client.get(f"/exams/{eid}/omr-template").status_code == 401
+    for kind in ["pdf", "png"]:
+        response = client.get(f"/exams/{eid}/omr-template?format={kind}", headers=headers)
+        assert response.status_code == 200 and response.headers["cache-control"] == "no-store"
+        if kind == "png":
+            from modules.preprocessing import decode_image
+            from modules.mcq_grader import read_answers
+            _, rows = read_answers(decode_image(response.content), question_count=count)
+            assert len(rows) == count and all(r["state"] == "blank" for r in rows)
+        else:
+            assert response.content.startswith(b"%PDF-")
+    image = png_bytes(template({i: ["A"] for i in range(count)}, True, question_count=count))
+    response = client.post(f"/exams/{eid}/submissions", data={"student_code": "SYNTHETIC-DYNAMIC"},
+                           files={"file": ("dynamic.png", image, "image/png")}, headers=headers)
+    assert response.status_code == 201, response.text
+    sid = response.json()["id"]
+    wrong = ["A"] * (count - 1 if count > 1 else 2)
+    response = client.post(f"/submissions/{sid}/approve-mcq",
+                          json={"answers": wrong, "revision": 1, "reviewed": True}, headers=headers)
+    assert response.status_code in {400, 422}
+    assert client.get(f"/submissions/{sid}", headers=headers).json()["total"] is None
+    response = client.post(f"/submissions/{sid}/approve-mcq",
+                          json={"answers": ["A"] * count, "revision": 1, "reviewed": True}, headers=headers)
+    assert response.status_code == 200 and response.json()["total"] == 2 * count
+    assert client.get(f"/exams/{eid}/report.xlsx", headers=headers).status_code == 200
+
+
+@pytest.mark.parametrize("count", [0, 51])
+def test_api_rejects_empty_or_over_limit_mcq(client, count):
+    headers = login(client)
+    response = client.post("/exams", json={"title": "خارج الحد", "kind": "mcq",
+                           "answer_key": ["A"] * count}, headers=headers)
+    assert response.status_code == 422
+
+
+def test_mcq_template_is_scoped_to_institution_and_read_permission(client):
+    headers = login(client)
+    eid = client.post("/exams", json={"title": "خاص", "kind": "mcq", "answer_key": ["A"] * 7},
+                      headers=headers).json()["id"]
+    client.app.state.auth.provision_organization("academy-two", "ثانية", "admin@two.test", "مدير", PASSWORD)
+    other = login(client, "academy-two", "admin@two.test")
+    assert client.get(f"/exams/{eid}/omr-template", headers=other).status_code == 400
+    client.post("/admin/users", json={"email": "viewer@one.test", "name": "مشاهد",
+                "temporary_password": PASSWORD, "role": "viewer"}, headers=headers)
+    viewer = login(client, email="viewer@one.test")
+    new = "New-viewer-password-2027!"
+    client.post("/auth/change-password", json={"current_password": PASSWORD, "new_password": new}, headers=viewer)
+    viewer = login(client, email="viewer@one.test", password=new)
+    assert client.get(f"/exams/{eid}/omr-template", headers=viewer).status_code == 403

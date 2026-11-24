@@ -166,7 +166,7 @@ class Store:
         # Fail closed on alignment errors. Do not create a misleading zero-score record.
         aligned = None
         if spec.kind == "mcq":
-            aligned, readings = read_answers(image, blank_threshold, marked_threshold)
+            aligned, readings = read_answers(image, blank_threshold, marked_threshold, question_count=len(spec.answer_key))
             original = {"readings": readings, "thresholds": [blank_threshold, marked_threshold]}
             current = {"answers": [r["answer"] for r in readings]}
         if max_storage_bytes is not None:

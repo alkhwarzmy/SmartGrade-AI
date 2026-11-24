@@ -17,7 +17,7 @@ from starlette.concurrency import run_in_threadpool
 from config import DATA_DIR, MAX_FILE_BYTES
 from modules.auth import AuthService, AuthError, PermissionDenied, CapacityError, LoginRateLimited
 from modules.workspace import Workspace
-from modules.schemas import ExamSpec, GradeProposal, EssayGradeProposal
+from modules.schemas import ExamSpec, GradeProposal, EssayGradeProposal, MAX_MCQ_QUESTIONS
 from modules.review import RevisionConflict
 from modules.http_limits import RequestSizeLimit
 from modules.proxy import client_address
@@ -78,7 +78,7 @@ class Review(Input):
 
 
 class MCQApproval(Review):
-    answers: list[Literal["A", "B", "C", "D"] | None] = Field(min_length=20, max_length=20)
+    answers: list[Literal["A", "B", "C", "D"] | None] = Field(min_length=1, max_length=MAX_MCQ_QUESTIONS)
 
 
 class EssayApproval(Review):
@@ -262,7 +262,7 @@ def create_app(root: Path = DATA_DIR):
         spec = ExamSpec.model_validate(exam.spec)
         return {
             "id": exam.id, "title": exam.title, "kind": exam.kind, "maximum": spec.maximum,
-            "question_count": 20 if spec.kind == "mcq" else len(spec.essay_questions()),
+            "question_count": len(spec.answer_key) if spec.kind == "mcq" else len(spec.essay_questions()),
             **({"spec": exam.spec} if include_spec else {}),
         }
 
@@ -276,6 +276,21 @@ def create_app(root: Path = DATA_DIR):
     def exam_detail(exam_id: str, workspace: Workspace = Depends(space)):
         actor = service.actor(workspace.token)
         return {**exam_info(workspace.exam(exam_id), actor.can("read")), "counts": workspace.counts(exam_id)}
+
+    @api.get("/exams/{exam_id}/omr-template")
+    @bounded_processing
+    def omr_template(exam_id: str, format: Literal["pdf", "png"] = "pdf",
+                     workspace: Workspace = Depends(space)):
+        workspace._actor("read")
+        spec = ExamSpec.model_validate(workspace.exam(exam_id).spec)
+        if spec.kind != "mcq":
+            raise ValueError("قالب التظليل متاح لاختبار الاختيارات فقط")
+        from modules.mcq_grader import template_pdf, template
+        from modules.preprocessing import png_bytes
+        count = len(spec.answer_key)
+        content = template_pdf(count) if format == "pdf" else png_bytes(template(question_count=count))
+        return Response(content, media_type="application/pdf" if format == "pdf" else "image/png",
+                        headers={"Content-Disposition": f'attachment; filename="smartgrade-omr-{count}.{format}"'})
 
     @api.post("/exams", status_code=201)
     def create_exam(body: ExamSpec, workspace: Workspace = Depends(space)):

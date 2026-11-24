@@ -202,6 +202,27 @@ Future<void> main() async {
             )
             as Json;
     check(result['total'] == 20, 'OMR total');
+    final large = await api.json('POST', 'exams', body: {
+      'title': 'OMR 50', 'kind': 'mcq', 'answer_key': List.filled(50, 'A'),
+    }) as Json;
+    final largeId = large['id'] as String;
+    check((await api.exam(largeId))['question_count'] == 50, 'fifty metadata');
+    for (final format in ['pdf', 'png']) {
+      check((await api.mcqTemplate(largeId, format)).length > 100, 'count-specific template');
+    }
+    await denied(other.mcqTemplate(largeId, 'pdf'));
+    await denied(viewer.mcqTemplate(largeId, 'pdf'));
+    await denied(api.upload(largeId, 'WRONG-COUNT', image, 'wrong.png', 'wrong-count'));
+    check((await api.papers(largeId, 0)).isEmpty, 'mismatched sheet not persisted');
+    final largeImage = await File(settings['image50'] as String).readAsBytes();
+    final largeSid = await api.upload(largeId, 'SYNTHETIC-50', largeImage, 'fifty.png', 'large-key');
+    final largePaper = await api.paper(largeSid);
+    check((largePaper['current']['answers'] as List).length == 50, 'fifty decoded answers');
+    final largeResult = await api.json('POST', 'submissions/$largeSid/approve-mcq', body: {
+      'revision': largePaper['revision'], 'reviewed': true, 'answers': List.filled(50, 'A'),
+    }) as Json;
+    check(largeResult['total'] == 50, 'fifty approved marks');
+    check((await api.report(largeId, 'xlsx')).length > 100, 'fifty report');
     await api.json('POST', 'auth/logout');
     await denied(api.me());
     stdout.writeln(

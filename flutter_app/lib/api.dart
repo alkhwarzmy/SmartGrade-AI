@@ -214,12 +214,18 @@ class SmartGradeApi {
         as String;
   }
 
+  Future<Uint8List> mcqTemplate(String id, String format) => send(
+    http.Request('GET', base.resolve('exams/$id/omr-template')
+      .replace(queryParameters: {'format': format})),
+  );
   Future<Uint8List> report(String id, String format) =>
       send(http.Request('GET', base.resolve('exams/$id/report.$format')));
   Future<Uint8List> jobResult(String id) =>
       send(http.Request('GET', base.resolve('jobs/$id/result')));
   void close() => client.close();
 }
+
+const maxMcqQuestions = 50;
 
 Json objectValue(dynamic value) =>
     value is Map ? Map<String, dynamic>.from(value) : <String, dynamic>{};

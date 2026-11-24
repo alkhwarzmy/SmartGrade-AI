@@ -150,7 +150,7 @@ class _ExamsState extends State<ExamsScreen> with TaskState<ExamsScreen> {
                           subtitle: Text(
                             row['kind'] == 'essay'
                                 ? '${row['question_count']} سؤال مقالي · ${row['maximum']} درجة'
-                                : 'اختيارات · 20 سؤالًا',
+                                : 'اختيارات · ${row['question_count']} سؤالًا',
                           ),
                           trailing: const Icon(Icons.chevron_left),
                           onTap: () async {
@@ -260,7 +260,8 @@ class _NewExamState extends State<NewExamScreen> with TaskState<NewExamScreen> {
       instructions = TextEditingController(),
       points = TextEditingController(text: '1');
   final questions = [QuestionDraft()];
-  final List<String?> keyAnswers = List.filled(20, null);
+  final List<String?> keyAnswers = List.filled(maxMcqQuestions, null);
+  int mcqCount = 20;
   String kind = 'essay';
   bool dirty = false;
   @override
@@ -285,10 +286,10 @@ class _NewExamState extends State<NewExamScreen> with TaskState<NewExamScreen> {
         spec['instructions'] = instructions.text;
       } else {
         final n = parseNumber(points.text);
-        if (n == null || n <= 0 || n > 1000 || keyAnswers.contains(null)) {
+        if (n == null || n <= 0 || n > 1000 || keyAnswers.take(mcqCount).contains(null)) {
           throw ApiError('أكمل مفتاح الإجابة ودرجة كل سؤال.');
         }
-        spec['answer_key'] = keyAnswers;
+        spec['answer_key'] = keyAnswers.take(mcqCount).toList();
         spec['points_per_question'] = n;
       }
       await widget.session.api!.json('POST', 'exams', body: spec);
@@ -338,13 +339,27 @@ class _NewExamState extends State<NewExamScreen> with TaskState<NewExamScreen> {
                   }),
           ),
           if (kind == 'mcq') ...[
+            const SizedBox(height: 12),
+            DropdownButtonFormField<int>(
+              key: const ValueKey('mcq-count'),
+              initialValue: mcqCount,
+              decoration: const InputDecoration(labelText: 'عدد أسئلة الاختيارات (1–50)'),
+              items: List.generate(maxMcqQuestions, (i) => DropdownMenuItem(
+                value: i + 1, child: Text('${i + 1} سؤالًا'))),
+              onChanged: busy ? null : (v) => setState(() {
+                mcqCount = v!;
+                dirty = true;
+              }),
+            ),
+            const Padding(padding: EdgeInsets.symmetric(vertical: 12),
+              child: Text('نزّل القالب المطابق للاختبار من صفحته بعد الإنشاء.')),
             input(
               points,
               'درجة كل سؤال',
               keyboard: const TextInputType.numberWithOptions(decimal: true),
               onChanged: (_) => setState(() => dirty = true),
             ),
-            for (var i = 0; i < 20; i++)
+            for (var i = 0; i < mcqCount; i++)
               DropdownButtonFormField<String>(
                 key: ValueKey('key$i'),
                 initialValue: keyAnswers[i],
@@ -586,6 +601,18 @@ class _ExamState extends State<ExamScreen> with TaskState<ExamScreen> {
     });
   }
 
+  Future<void> saveTemplate(String format) async {
+    await task(() async {
+      final bytes = await widget.session.api!.mcqTemplate(widget.id, format);
+      if (!mounted) return;
+      await FilePicker.saveFile(
+        fileName: 'smartgrade-omr-${exam?['question_count'] ?? ''}.$format',
+        bytes: bytes,
+        mimeType: format == 'pdf' ? 'application/pdf' : 'image/png',
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
@@ -636,6 +663,16 @@ class _ExamState extends State<ExamScreen> with TaskState<ExamScreen> {
               )
               .toList(),
         ),
+        if (widget.session.canWrite && exam?['kind'] == 'mcq')
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            OutlinedButton.icon(
+              onPressed: busy ? null : () => saveTemplate('pdf'),
+              icon: const Icon(Icons.print_outlined),
+              label: const Text('قالب الإجابة PDF')),
+            OutlinedButton(
+              onPressed: busy ? null : () => saveTemplate('png'),
+              child: const Text('قالب الإجابة PNG')),
+          ]),
         if (exam != null)
           Padding(
             padding: const EdgeInsets.all(16),
