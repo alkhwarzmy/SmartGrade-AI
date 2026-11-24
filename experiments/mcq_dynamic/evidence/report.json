@@ -1,0 +1,18 @@
+{
+  "source_commit": "2325a5266f6283a676703b00b5802082a0259060",
+  "synthetic_only": true,
+  "external_calls": 0,
+  "checks": {
+    "teacher_created_50_via_browser": true,
+    "actual_template_pdf_download": true,
+    "downloaded_template_has_50_blank_answers": true,
+    "real_browser_upload_decoded_50": true
+  },
+  "permanent_hosting_created": false,
+  "passed": false,
+  "failure": {
+    "type": "TimeoutError",
+    "detail": "Locator.check: Timeout 30000ms exceeded.\nCall log:\n  - waiting for get_by_label(\"راجعت الصورة والحالات غير الواضحة وأوافق على اعتماد الإجابات\", exact=True)\n    - locator resolved to <input title=\"\" tabindex=\"0\" type=\"checkbox\" data-react-aria-pressable=\"true\" aria-label=\"راجعت الصورة والحالات غير الواضحة وأوافق على اعتماد الإجابات\"/>\n  - attempting click action\n    - waiting for element to be visible, enabled and stable\n    - element is visible, enabled and stable\n    - scrolling into view if needed\n    - done scrolling\n    - <label data-rac=\"\" data-react-aria-pressable=\"true\" class=\"st-emotion-cache-1r279vt e1hn2pbo4\">…</label> intercepts pointer events\n  - retrying click action\n    - waiting for element to be visible, enabled and stable\n    - element is visible, enabled and stable\n    - scrolling into view if needed\n    - done scrolling\n    - <div overflow=\"visible\" data-testid=\"stForm\" class=\"stForm st-emotion-cache-1a6wlbm eb7eaku1\">…</div> intercepts pointer events\n  - retrying click action\n    - waiting 20ms\n    - waiting for element to be visible, enabled and stable\n    - element is visible, enabled and stable\n    - scrolling into view if needed\n    - done scrolling\n    - <div overflow=\"visible\" data-testid=\"stForm\" class=\"stForm st-emotion-cache-1a6wlbm eb7eaku1\">…</div> intercepts pointer events\n  2 × retrying click action\n      - waiting 100ms\n      - waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <div class=\"st-emotion-cache-1hupmon e1hn2pbo5\"></div> intercepts pointer events\n  14 × retrying click action\n       - waiting 500ms\n       - waiting for element to be visible, enabled and stable\n       - element is visible, enabled and stable\n  "
+  },
+  "temporary_servers_stopped": true
+}
