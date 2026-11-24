@@ -6,6 +6,8 @@
 
 **واجهات العمل:** [دليل الويب وAndroid ومسارات المعلم](docs/COMMERCIAL_WORKSPACE_AR.md) — بحث وتصفية الأوراق، معاينة الصور قبل الحفظ، وتنقل مباشر بين خطوات التصحيح.
 
+**حزمة اختبارات متنوعة:** [الدليل](docs/acceptance_pack/README_AR.md) · [20 سؤالًا محلولًا ومعايير التصحيح](docs/acceptance_pack/EXAMS_AND_ANSWERS_AR.md) · [الحزمة ZIP](examples/acceptance_pack/generated/SmartGrade_TestPack_AR_v1.zip) · [توليد وتنزيل الحزمة في Colab](https://colab.research.google.com/github/alkhwarzmy/SmartGrade-AI/blob/main/notebooks/SmartGrade_TestPack_Colab.ipynb). أربع مواد و32 ورقة مقالية و12 صورة OMR وملفات رفض وسيناريوهات استخدام، ببيانات اصطناعية ودرجات مرجعية مؤلفة.
+
 ## ما يعمل في هذا الإصدار
 
 | المجال | السلوك المنفذ |
