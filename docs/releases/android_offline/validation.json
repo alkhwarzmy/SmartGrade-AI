@@ -1,0 +1,26 @@
+{
+  "synthetic_only": true,
+  "external_ai_calls": 0,
+  "checks": [
+    "native_omr_1",
+    "native_omr_7",
+    "native_omr_20",
+    "native_omr_49",
+    "native_omr_50",
+    "native_wrong_count_invalid_image_blank_multiple_faint",
+    "native_upside_down_rejected",
+    "native_bundled_arabic_ocr",
+    "local_mcq_approval_xlsx_csv_pdf_template",
+    "local_essay_manual_approval_and_encrypted_reopen",
+    "encrypted_backup_wrong_password_and_recovery",
+    "production_default_launch_without_server_or_login",
+    "local_backup_screen_without_server"
+  ],
+  "printed_arabic_characters": 952,
+  "blocked_http_client_attempts": 0,
+  "limitations": [
+    "Synthetic printed pages, not physical camera or handwriting accuracy",
+    "Essay grades are manual teacher decisions, no local essay language model",
+    "Internal debug APK; no production store signing"
+  ]
+}

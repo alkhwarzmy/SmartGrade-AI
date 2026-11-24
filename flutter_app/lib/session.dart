@@ -23,16 +23,19 @@ class SecureVault implements SessionVault {
 }
 
 class Session extends ChangeNotifier {
-  Session({SessionVault? vault, SmartGradeApi Function(String)? factory, Future<SmartGradeApi> Function()? localFactory})
-    : localFactory = localFactory ?? (() => LocalApi.open()),
-      vault = vault ?? SecureVault(),
-      factory =
-          factory ??
-          ((s) => SmartGradeApi(
-            s,
-            allowHttp:
-                kDebugMode && const bool.fromEnvironment('ALLOW_HTTP_DEV'),
-          ));
+  Session({
+    SessionVault? vault,
+    SmartGradeApi Function(String)? factory,
+    Future<SmartGradeApi> Function()? localFactory,
+  }) : localFactory = localFactory ?? (() => LocalApi.open()),
+       vault = vault ?? SecureVault(),
+       factory =
+           factory ??
+           ((s) => SmartGradeApi(
+             s,
+             allowHttp:
+                 kDebugMode && const bool.fromEnvironment('ALLOW_HTTP_DEV'),
+           ));
   final Future<SmartGradeApi> Function() localFactory;
   bool get isLocal => api is LocalApi;
   final SessionVault vault;
@@ -85,7 +88,9 @@ class Session extends ChangeNotifier {
       notice = '';
       accept(local, user);
     } catch (e) {
-      notice = e is ApiError ? e.message : 'تعذر فتح البيانات المحلية؛ لم تُحذف بياناتك. أعد المحاولة.';
+      notice = e is ApiError
+          ? e.message
+          : 'تعذر فتح البيانات المحلية؛ لم تُحذف بياناتك. أعد المحاولة.';
     } finally {
       restoring = false;
       notifyListeners();

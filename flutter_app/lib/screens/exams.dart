@@ -48,7 +48,9 @@ class _ExamsState extends State<ExamsScreen> with TaskState<ExamsScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: Text(widget.session.isLocal ? 'اختباراتي على الجهاز' : 'الاختبارات'),
+      title: Text(
+        widget.session.isLocal ? 'اختباراتي على الجهاز' : 'الاختبارات',
+      ),
       actions: [
         IconButton(
           tooltip: 'تحديث',
@@ -56,14 +58,30 @@ class _ExamsState extends State<ExamsScreen> with TaskState<ExamsScreen> {
           icon: const Icon(Icons.refresh),
         ),
         IconButton(
-          tooltip: widget.session.isLocal ? 'البيانات والنسخ الاحتياطي' : 'خروج',
-          onPressed: busy ? null : () async {
-            if(widget.session.isLocal) {
-              await Navigator.push<void>(context,MaterialPageRoute(builder:(_)=>LocalDataScreen(session:widget.session)));
-              if(mounted) { await load(0); }
-            } else { await widget.session.logout(); }
-          },
-          icon: Icon(widget.session.isLocal ? Icons.backup_outlined : Icons.logout),
+          tooltip: widget.session.isLocal
+              ? 'البيانات والنسخ الاحتياطي'
+              : 'خروج',
+          onPressed: busy
+              ? null
+              : () async {
+                  if (widget.session.isLocal) {
+                    await Navigator.push<void>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            LocalDataScreen(session: widget.session),
+                      ),
+                    );
+                    if (mounted) {
+                      await load(0);
+                    }
+                  } else {
+                    await widget.session.logout();
+                  }
+                },
+          icon: Icon(
+            widget.session.isLocal ? Icons.backup_outlined : Icons.logout,
+          ),
         ),
       ],
     ),
@@ -624,7 +642,9 @@ class _ExamState extends State<ExamScreen> with TaskState<ExamScreen> {
   Future<void> saveTemplate(String format) async {
     await task(() async {
       final bytes = await widget.session.api!.mcqTemplate(widget.id, format);
-      if (!mounted) { return; }
+      if (!mounted) {
+        return;
+      }
       await FilePicker.saveFile(
         fileName: 'smartgrade-omr-${exam?['question_count'] ?? ''}.$format',
         bytes: bytes,

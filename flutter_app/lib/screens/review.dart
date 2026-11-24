@@ -136,11 +136,24 @@ class _UploadState extends State<UploadScreen> with TaskState<UploadScreen> {
             ),
           ],
         ),
-        if(widget.session.isLocal && bytes!=null)
-          OutlinedButton.icon(onPressed:busy?null:()=>task(() async {
-            final rotated=await (widget.session.api! as LocalApi).vision.rotate(bytes!);
-            if(mounted) { setState(() { bytes=rotated; requestKey=const Uuid().v4(); }); }
-          }),icon:const Icon(Icons.rotate_right),label:const Text('تدوير الصورة 90°')),
+        if (widget.session.isLocal && bytes != null)
+          OutlinedButton.icon(
+            onPressed: busy
+                ? null
+                : () => task(() async {
+                    final rotated = await (widget.session.api! as LocalApi)
+                        .vision
+                        .rotate(bytes!);
+                    if (mounted) {
+                      setState(() {
+                        bytes = rotated;
+                        requestKey = const Uuid().v4();
+                      });
+                    }
+                  }),
+            icon: const Icon(Icons.rotate_right),
+            label: const Text('تدوير الصورة 90°'),
+          ),
         if (bytes != null)
           Image.memory(
             bytes!,
@@ -154,7 +167,11 @@ class _UploadState extends State<UploadScreen> with TaskState<UploadScreen> {
           onPressed: busy || bytes == null ? null : upload,
           child: const Text('رفع وبدء المراجعة'),
         ),
-        Text(widget.session.isLocal ? 'تُحفظ الصورة وتُعالج على هذا الجهاز. لا يلزم اتصال بالإنترنت.' : 'عند انقطاع الاتصال أعد الطلب دون تغيير الصورة أو رمز الطالب لتجنب التكرار.'),
+        Text(
+          widget.session.isLocal
+              ? 'تُحفظ الصورة وتُعالج على هذا الجهاز. لا يلزم اتصال بالإنترنت.'
+              : 'عند انقطاع الاتصال أعد الطلب دون تغيير الصورة أو رمز الطالب لتجنب التكرار.',
+        ),
       ],
     ),
   );
@@ -390,10 +407,16 @@ class _ReviewState extends State<ReviewScreen> with TaskState<ReviewScreen> {
     }
     await task(() async {
       final api = widget.session.api!;
-      if(widget.session.isLocal) {
-        await api.json('POST','submissions/${widget.id}/ocr',body:{'revision':row!['revision']});
-        final fresh=await api.paper(widget.id);
-        if(mounted) { setState(()=>hydrate(fresh)); }
+      if (widget.session.isLocal) {
+        await api.json(
+          'POST',
+          'submissions/${widget.id}/ocr',
+          body: {'revision': row!['revision']},
+        );
+        final fresh = await api.paper(widget.id);
+        if (mounted) {
+          setState(() => hydrate(fresh));
+        }
         return;
       }
       final job =
@@ -792,24 +815,31 @@ class _ReviewState extends State<ReviewScreen> with TaskState<ReviewScreen> {
         onPressed: busy || sourceDirty || !answersNeedSave ? null : saveAnswers,
         child: const Text('حفظ إجابات الأسئلة'),
       ),
-    if(widget.session.isLocal)
-      const Padding(padding:EdgeInsets.symmetric(vertical:16),
-        child:Text('قيّم الإجابات وفق المعايير ثم اعتمد الدرجة. التصحيح المقالي هنا يدوي؛ لا تُرسل الإجابات إلى أي مزود.')),
-    if(!widget.session.isLocal) CheckboxListTile(
-      value: aiConsent,
-      onChanged: busy ? null : (v) => setState(() => aiConsent = v!),
-      title: const Text(
-        'أوافق على إرسال الإجابات لمزود التصحيح الخارجي وتحمل تكلفة الطلب',
+    if (widget.session.isLocal)
+      const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Text(
+          'قيّم الإجابات وفق المعايير ثم اعتمد الدرجة. التصحيح المقالي هنا يدوي؛ لا تُرسل الإجابات إلى أي مزود.',
+        ),
       ),
-    ),
-    if(!widget.session.isLocal) OutlinedButton(
-      onPressed: busy || dirty || answersNeedSave || !aiConsent
-          ? null
-          : propose,
-      child: const Text('طلب اقتراح درجات'),
-    ),
-    if(!widget.session.isLocal) const Text(
-      'اقتراح النموذج يحتاج مراجعتك. يلزم تفعيل المزود وسياسة المؤسسة من المسؤول.',
-    ),
+    if (!widget.session.isLocal)
+      CheckboxListTile(
+        value: aiConsent,
+        onChanged: busy ? null : (v) => setState(() => aiConsent = v!),
+        title: const Text(
+          'أوافق على إرسال الإجابات لمزود التصحيح الخارجي وتحمل تكلفة الطلب',
+        ),
+      ),
+    if (!widget.session.isLocal)
+      OutlinedButton(
+        onPressed: busy || dirty || answersNeedSave || !aiConsent
+            ? null
+            : propose,
+        child: const Text('طلب اقتراح درجات'),
+      ),
+    if (!widget.session.isLocal)
+      const Text(
+        'اقتراح النموذج يحتاج مراجعتك. يلزم تفعيل المزود وسياسة المؤسسة من المسؤول.',
+      ),
   ];
 }

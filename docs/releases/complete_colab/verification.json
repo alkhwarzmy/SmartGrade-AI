@@ -1,6 +1,6 @@
 {
-  "tested_source_commit": "19ee57dbb39381685ba3759c5b2b4e8ad0cd9d89",
-  "workflow_run": "https://github.com/alkhwarzmy/SmartGrade-AI/actions/runs/45404512536",
+  "tested_source_commit": "6525f1fa4c5455b9cfcd630dcbb58df37f97e323",
+  "workflow_run": "https://github.com/alkhwarzmy/SmartGrade-AI/actions/runs/45419730043",
   "passed": [
     "python_tests",
     "direct_launcher_tests",
@@ -13,7 +13,9 @@
     "dart_real_api_smoke",
     "android_debug_apk_build",
     "reference_grading_diagnosis",
-    "printed_arabic_ocr"
+    "printed_arabic_ocr",
+    "android_offline_native_omr_ocr",
+    "android_offline_encrypted_storage_backup_and_default_launch"
   ],
   "limits": [
     "No live Google Colab account execution",
