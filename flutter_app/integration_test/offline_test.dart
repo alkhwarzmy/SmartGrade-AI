@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -134,8 +135,10 @@ void main() {
       'Essay grades are manual teacher decisions, no local essay language model',
       'Internal debug APK; no production store signing'];
     await File(support.path+'/offline-evidence.json').writeAsString(jsonEncode(evidence));
-    // Leave a useful screen visible in device evidence.
-    await tester.pageBack();
+    // Use the actual Material back control: pageBack searches an English tooltip.
+    // The Arabic UI uses its localized tooltip.
+    expect(find.byType(BackButton),findsOneWidget);
+    await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
   },timeout:const Timeout(Duration(minutes:10)));
 }
