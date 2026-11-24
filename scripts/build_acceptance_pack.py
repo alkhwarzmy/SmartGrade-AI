@@ -65,7 +65,15 @@ def answer_sheet(dataset, case, path):
              ("Student code: " + case["id"], False)]
     for number, question in enumerate(dataset["exam"]["questions"], 1):
         lines.append((f"السؤال {number}", True))
-        lines.extend((line, True) for line in wrapped(case["answers"][question["id"]], font))
+        answer = case["answers"][question["id"]]
+        if dataset["id"] == "math":
+            # Use Arabic words in printed answers so operator direction cannot reverse a calculation.
+            for symbol, word in [("=", " يساوي "), ("×", " مضروبًا في "), ("÷", " مقسومًا على "),
+                                 ("−", " ناقص "), ("+", " زائد "), ("/", " على "),
+                                 ("٪", " بالمئة "), ("%", " بالمئة ")]:
+                answer = answer.replace(symbol, word)
+            answer = " ".join(answer.split())
+        lines.extend((line, True) for line in wrapped(answer, font))
         lines.append(("", True))
     image = Image.new("RGB", (1240, max(1754, 100 + len(lines) * 48)), "white")
     draw = ImageDraw.Draw(image)
