@@ -18,8 +18,8 @@
     },
     {
       "path": "essays/arabic/arabic-A.png",
-      "bytes": 85039,
-      "sha256": "89170ec8ac42c13a62c2d40e6c0af2c67907b4f41f872be26de900259f80b0f6"
+      "bytes": 83036,
+      "sha256": "2a0313e7012619fbfbf5e9b1ac1794bbafb987eb22c513c6c030b84c7425a5a6"
     },
     {
       "path": "essays/arabic/arabic-A.txt",
@@ -33,8 +33,8 @@
     },
     {
       "path": "essays/arabic/arabic-B.png",
-      "bytes": 96279,
-      "sha256": "a91f1c631eeabb14e5a7ec314ad8bf19ea4f81a3c57de4c12cfa16d3e300ac80"
+      "bytes": 93497,
+      "sha256": "e659761448b6e521d7b21d7d44b32e6ea2d33106d57e1301b73fed8d0cfb0819"
     },
     {
       "path": "essays/arabic/arabic-B.txt",
@@ -48,8 +48,8 @@
     },
     {
       "path": "essays/arabic/arabic-C.png",
-      "bytes": 67726,
-      "sha256": "bcf5e36047292d652596269259c392c9bd61c21deecf6759d7699a108c48fd59"
+      "bytes": 66659,
+      "sha256": "9b3f415be867335f194075c1fcfe674949f8a657c59fde1dc9f602c52e2b3267"
     },
     {
       "path": "essays/arabic/arabic-C.txt",
@@ -63,8 +63,8 @@
     },
     {
       "path": "essays/arabic/arabic-D.png",
-      "bytes": 79805,
-      "sha256": "e5aed369e1a01722c8e51b15169cb7009d6967fbbd8a09dd12d438e9223fdc6e"
+      "bytes": 77524,
+      "sha256": "9de3096b837718ff9ac3996ce30d1c1807fea6d6218c1ef3df16015e1edc7d6f"
     },
     {
       "path": "essays/arabic/arabic-D.txt",
@@ -78,8 +78,8 @@
     },
     {
       "path": "essays/arabic/arabic-E.png",
-      "bytes": 102351,
-      "sha256": "60f8cfc0197ea07386f622bc83ca62b13f8cfb28087e2b33eb48cc3d40fba0f4"
+      "bytes": 100952,
+      "sha256": "42c1dbcb0bd0a92c657df24df17838ce0edef23809d86553845f7853f6677f6d"
     },
     {
       "path": "essays/arabic/arabic-E.txt",
@@ -93,8 +93,8 @@
     },
     {
       "path": "essays/arabic/arabic-F.png",
-      "bytes": 38422,
-      "sha256": "b03999f03cb298842debf9bf60dc205abb6a6399cfc37221644ab7a2e962051e"
+      "bytes": 38112,
+      "sha256": "467f727ecc114db7a79625ef190dd2f24c01970ea29a8eceabefae5baeb0f3a6"
     },
     {
       "path": "essays/arabic/arabic-F.txt",
@@ -108,8 +108,8 @@
     },
     {
       "path": "essays/arabic/arabic-G.png",
-      "bytes": 76354,
-      "sha256": "0bbc2650047decf586b7b2c4110bed389f2c80cfb3f3ab45e8dbefd4ea109ba4"
+      "bytes": 75019,
+      "sha256": "b93c0a9f29d5e7ce541868613b6c9f67da941811db82e34e7da065610c6601c6"
     },
     {
       "path": "essays/arabic/arabic-G.txt",
@@ -123,8 +123,8 @@
     },
     {
       "path": "essays/arabic/arabic-H.png",
-      "bytes": 85588,
-      "sha256": "edb4f6878a299f0e1fd84729cecf67d662a40b25c5fcc2338fe7956d2f6007b8"
+      "bytes": 82703,
+      "sha256": "0b119c6c5211d75ac6f11bc5d8f57290b4c60b5a63bdc7e245a7ab73384cfb2e"
     },
     {
       "path": "essays/arabic/arabic-H.txt",
@@ -138,8 +138,8 @@
     },
     {
       "path": "essays/geography/geography-A.png",
-      "bytes": 130463,
-      "sha256": "047bf993903675f10ab87661565fa4d3ca6e6849f958e9a0c59a465c2b5a9848"
+      "bytes": 129076,
+      "sha256": "69be1be4cadae00d5b11a8e89313061cadb7e66077f4b221e1955997ebf05b04"
     },
     {
       "path": "essays/geography/geography-A.txt",
@@ -153,8 +153,8 @@
     },
     {
       "path": "essays/geography/geography-B.png",
-      "bytes": 132425,
-      "sha256": "03880b8268659eedcbf8f8daaf1a5847d1c9631825c1288f52c62f842dc6b06a"
+      "bytes": 128546,
+      "sha256": "6bf080b3d82d2cc56fc05ef709634ff4213e5216b8d1f2ef5e83ec929f29cf48"
     },
     {
       "path": "essays/geography/geography-B.txt",
@@ -168,8 +168,8 @@
     },
     {
       "path": "essays/geography/geography-C.png",
-      "bytes": 80775,
-      "sha256": "f21f1953edc1e26d63c10f06480e76c814d4063094e91f19a338bba58ce88079"
+      "bytes": 79607,
+      "sha256": "be2e911096a20e8a4d0435a2556afdb9b263277295d5fd13a0b8e29d754b52c8"
     },
     {
       "path": "essays/geography/geography-C.txt",
@@ -183,8 +183,8 @@
     },
     {
       "path": "essays/geography/geography-D.png",
-      "bytes": 107079,
-      "sha256": "3bc5d282b00a675bd3b3f4a8f0670011c01c0bd2b3efc7e236f39322e8995556"
+      "bytes": 105150,
+      "sha256": "47e168bf641b73af74212ebaa26f20fb2038b8184edc37138c5ef801822b2457"
     },
     {
       "path": "essays/geography/geography-D.txt",
@@ -198,8 +198,8 @@
     },
     {
       "path": "essays/geography/geography-E.png",
-      "bytes": 104013,
-      "sha256": "4c4ba8ef723b68413ab11ad732c9d3528208fdad693b1f3975ac60dd0279914d"
+      "bytes": 102544,
+      "sha256": "fb4b4a9fd45e15624f589c283f29805d1a61d72bf8ae6bcc9b6d92ad2228459e"
     },
     {
       "path": "essays/geography/geography-E.txt",
@@ -213,8 +213,8 @@
     },
     {
       "path": "essays/geography/geography-F.png",
-      "bytes": 40316,
-      "sha256": "8523827022ed4f0f80a1e3f023580f9c953d6d315df617ce13de121f75301394"
+      "bytes": 39870,
+      "sha256": "c1a913058d61ae7f7fdbc9e87ba98dd012eb736d0d6614ce19c320f09432d90f"
     },
     {
       "path": "essays/geography/geography-F.txt",
@@ -228,8 +228,8 @@
     },
     {
       "path": "essays/geography/geography-G.png",
-      "bytes": 111851,
-      "sha256": "624bd3503a5461a8a4de659661522c0d0f668351da02c944ac2cac109a04d855"
+      "bytes": 110867,
+      "sha256": "8f419028af356b476515454bc2422ed202bfa18942d0299707ee457cc0903069"
     },
     {
       "path": "essays/geography/geography-G.txt",
@@ -243,8 +243,8 @@
     },
     {
       "path": "essays/geography/geography-H.png",
-      "bytes": 125681,
-      "sha256": "e6b89ae995947d91117e7e93179c218f3040852fc483da99ca01810398f7d227"
+      "bytes": 123250,
+      "sha256": "7028c8b70b96878365b44b16b9c40b72db015e05d2479e51ef577aa5d4e6b00e"
     },
     {
       "path": "essays/geography/geography-H.txt",
@@ -258,8 +258,8 @@
     },
     {
       "path": "essays/math/math-A.png",
-      "bytes": 100710,
-      "sha256": "f8b6ed95b69f0d0d280a2f79c0bc09e1f6879b21d8f4dbad400acf5b0dbc769a"
+      "bytes": 99541,
+      "sha256": "911b0c05a4c7d4f0c03b0bab0e8a570826a52f3c7271daf1718181ddf48fc727"
     },
     {
       "path": "essays/math/math-A.txt",
@@ -273,8 +273,8 @@
     },
     {
       "path": "essays/math/math-B.png",
-      "bytes": 122340,
-      "sha256": "ef60fd1ef1d1aa0691b388bd05275a3031aa68f48247c0fcb05131ccdd8da6e8"
+      "bytes": 120424,
+      "sha256": "56add3a3d1f7442d78e23556098de0cb80aefcaec24c3f4814aab5dc20228e63"
     },
     {
       "path": "essays/math/math-B.txt",
@@ -288,8 +288,8 @@
     },
     {
       "path": "essays/math/math-C.png",
-      "bytes": 67827,
-      "sha256": "bd0de2c8bf6523a232680653ae87b62d1f923d11c12592ea1921dbb40a28fd5e"
+      "bytes": 66996,
+      "sha256": "ca671d3e93be048d2a5f6b36d809700f91959f8698ffa35def5e602dd9f2a728"
     },
     {
       "path": "essays/math/math-C.txt",
@@ -303,8 +303,8 @@
     },
     {
       "path": "essays/math/math-D.png",
-      "bytes": 75475,
-      "sha256": "5eeb90af368c8b992a18aad3e5ab21e2c5d89161dcbc9a01bc293c556abc6af0"
+      "bytes": 74742,
+      "sha256": "de3a37836a8a5e4d92211a9b497b4e26d7493a73dda6b64a509f2510bee0c34d"
     },
     {
       "path": "essays/math/math-D.txt",
@@ -318,8 +318,8 @@
     },
     {
       "path": "essays/math/math-E.png",
-      "bytes": 102152,
-      "sha256": "ac75c092caf8806721be02039be63d6b00daa187eb307a171c19e73f314c37c7"
+      "bytes": 100725,
+      "sha256": "160e7def780375f056b7e3523d2824035328ebb05d954b6fc25dee5e29ecc55e"
     },
     {
       "path": "essays/math/math-E.txt",
@@ -333,8 +333,8 @@
     },
     {
       "path": "essays/math/math-F.png",
-      "bytes": 38248,
-      "sha256": "fe5354a53b309a73534d48d337bdf2d273d531d6700c1e5f0a6465cb239d2418"
+      "bytes": 37915,
+      "sha256": "8fac3f5d7cd28b3060016f690c3927fd46d7575152fb5a645facea9459145d2d"
     },
     {
       "path": "essays/math/math-F.txt",
@@ -348,8 +348,8 @@
     },
     {
       "path": "essays/math/math-G.png",
-      "bytes": 89684,
-      "sha256": "218e13074ea322cb7f9dc3bc72a9dd7c421326e1f5d5c650de9b9ef79dc66f7b"
+      "bytes": 88536,
+      "sha256": "5a48f98fe56a577e249c9b54d0cbf9bfc0a054b9a9c20053cf2b5c898e892973"
     },
     {
       "path": "essays/math/math-G.txt",
@@ -363,8 +363,8 @@
     },
     {
       "path": "essays/math/math-H.png",
-      "bytes": 90450,
-      "sha256": "07b7a3ad242b1486c3a1eba4b5a8369faa8ed645f4e40bef5b37e4d07a99aa36"
+      "bytes": 89270,
+      "sha256": "13556c1583c519a54eced2816a34635fcf3bf3fc4a21b2c175d365376f6089bd"
     },
     {
       "path": "essays/math/math-H.txt",
@@ -378,8 +378,8 @@
     },
     {
       "path": "essays/science/science-A.png",
-      "bytes": 180544,
-      "sha256": "1c7ea17ed48e85eed95c687703306a9bb5e2b8dc35075dc15e84c2d79a50e2c3"
+      "bytes": 177208,
+      "sha256": "4264ba95d6eac0be91f3064ff2b8c0af7f39598480a031ce4a24078ae19c7ed0"
     },
     {
       "path": "essays/science/science-A.txt",
@@ -393,8 +393,8 @@
     },
     {
       "path": "essays/science/science-B.png",
-      "bytes": 156837,
-      "sha256": "efb7d19e9138550dde263f80f6f5a5ed2f890839ffe45e953b06f28c57b8a565"
+      "bytes": 154308,
+      "sha256": "0ff2d52b80a16adc051cffff47ee0e97917c477bfeff54fcc6c5db33d5c3b226"
     },
     {
       "path": "essays/science/science-B.txt",
@@ -408,8 +408,8 @@
     },
     {
       "path": "essays/science/science-C.png",
-      "bytes": 103963,
-      "sha256": "9588d7e8853ab79b20f6ed82269ad07fa86aca969c16a0f89d29e0153c8e5e07"
+      "bytes": 101713,
+      "sha256": "be8b2558f474f889f4c230adecd8b1657a3f71974f6e9bba1fff3b0ccff68c53"
     },
     {
       "path": "essays/science/science-C.txt",
@@ -423,8 +423,8 @@
     },
     {
       "path": "essays/science/science-D.png",
-      "bytes": 132032,
-      "sha256": "57ed2123cf7aae660972797599c0159b44a0333ee3de2fea1602269a2323690a"
+      "bytes": 128705,
+      "sha256": "b19d7f731f4f45c15804fb8f0325c1aeead037e67204e24b9ec3acfc50dfd9b4"
     },
     {
       "path": "essays/science/science-D.txt",
@@ -438,8 +438,8 @@
     },
     {
       "path": "essays/science/science-E.png",
-      "bytes": 110274,
-      "sha256": "7c97eec42c488d160c91502247a8c361562cc589c8a72cb24b52a1860df55b0d"
+      "bytes": 108704,
+      "sha256": "f518b1312519c3d130dfb6ee32d9eabd26c7533ed9e6be91d0d23030a81191df"
     },
     {
       "path": "essays/science/science-E.txt",
@@ -453,8 +453,8 @@
     },
     {
       "path": "essays/science/science-F.png",
-      "bytes": 37994,
-      "sha256": "3c60effd4b0cc747b48a9ef57d42a393134ece6edf14cdb6753035ec5fc21f7e"
+      "bytes": 37690,
+      "sha256": "eecc4d9f819f5dac584072dc509e7ca66c7404a0fbc1f6045ba5dd60d91c02b1"
     },
     {
       "path": "essays/science/science-F.txt",
@@ -468,8 +468,8 @@
     },
     {
       "path": "essays/science/science-G.png",
-      "bytes": 153566,
-      "sha256": "91093be749de8f8503a2fd49b24586d6d205a7ff67326b8defe6dc2b50460ede"
+      "bytes": 150738,
+      "sha256": "98dcb6f58cc44afdd8c3d60366484c863240f3cc98f6ff79042faa7fd8caabbd"
     },
     {
       "path": "essays/science/science-G.txt",
@@ -483,8 +483,8 @@
     },
     {
       "path": "essays/science/science-H.png",
-      "bytes": 169905,
-      "sha256": "544b822a16899a4b2c9178984ab73810e1989e33fdd53e3fed5f89eca75eb93e"
+      "bytes": 166236,
+      "sha256": "6a4e1ac397c6c276215f3bedc1d586220a5e4379bcca738b61e9160a4bad1bb3"
     },
     {
       "path": "essays/science/science-H.txt",
@@ -579,7 +579,7 @@
     {
       "path": "ocr_references/geography-A.txt",
       "bytes": 1252,
-      "sha256": "e372ebeaaf90fff33fc92f85b386f19691097bcda1f694a439ddd6c8663db0e9"
+      "sha256": "5040e44e92c37dfff6bfa5a669c1b458cc0b10d5b20a016940f39c3e413eec17"
     },
     {
       "path": "ocr_references/geography-B.txt",
@@ -609,7 +609,7 @@
     {
       "path": "ocr_references/geography-G.txt",
       "bytes": 1036,
-      "sha256": "42b608c9a358bf6819eb130b015533b5bff27f3d94f08592e4afdb2563493972"
+      "sha256": "4fd72dbe0c7f58a70c0e01e9480977a7d5aa14b71806a77eafc9a036796b5b9b"
     },
     {
       "path": "ocr_references/geography-H.txt",
@@ -758,38 +758,38 @@
     },
     {
       "path": "print/all_student_papers.pdf",
-      "bytes": 2839452,
-      "sha256": "0e183992f7a956490b108ac9703b2c6b4f58758d3292a10c30e9c1f470e6d05c"
+      "bytes": 2775816,
+      "sha256": "9eed6fd8b12a922cd81fd514de0cfa390900bf028f30b59cd917bf13c4445f19"
     },
     {
       "path": "print/arabic-handwriting.png",
-      "bytes": 68282,
-      "sha256": "664f59c9e7af653d728a539dc5ba7c0d467124f22559edcd263613583e34afb3"
+      "bytes": 66735,
+      "sha256": "5ba0e4cc853d8a6e0780efdc3b1f18c315a6aeee3867d3dad9abbed344188a09"
     },
     {
       "path": "print/geography-handwriting.png",
-      "bytes": 69335,
-      "sha256": "6b76341a0e4b8e309284e128c3485d3372c3a0072474455b268f3000edfa219b"
+      "bytes": 68344,
+      "sha256": "d744e48785a4119f125d3ec4f5059dcef5cbb8dbd4f251ce69e8dd0ff41baa38"
     },
     {
       "path": "print/handwriting_sheets.pdf",
-      "bytes": 254916,
-      "sha256": "9a8eef3eb12486ba13e7e24c08494b670b63b0834c4c1a7a6899dac554bda18e"
+      "bytes": 248726,
+      "sha256": "c43b5aea62efee5d91a9d4b11cf9614b658237c2197726c392ecac3edcc9f4ef"
     },
     {
       "path": "print/math-handwriting.png",
-      "bytes": 67590,
-      "sha256": "818656c249829cf6e6f22c9110b62b554d5de0a6e03c43c30cbdbaea59800059"
+      "bytes": 66914,
+      "sha256": "89f5c2421c3a730960ccb668bf785a964a328ec1c1903f722b0630989d6aef4a"
     },
     {
       "path": "print/omr_papers.pdf",
       "bytes": 1934583,
-      "sha256": "b7a37635813e1c44c4445fd3404d797d58f81620e82b6ed770aa71cbaf3e8d0c"
+      "sha256": "eb65774db468f1dd7d47f854ae235cf50b09aecee8b0d2f540b0b64840a8ca35"
     },
     {
       "path": "print/science-handwriting.png",
-      "bytes": 68243,
-      "sha256": "9573b5a5c1602668584cf6c7162431b6d715c35678ffee6784b149077fd1e3e7"
+      "bytes": 67264,
+      "sha256": "9097eb51723443e846e2bda5482aa49b38b99c5b8e01eb2e0cb7ba90f40c6c19"
     },
     {
       "path": "references/expected_criteria.csv",
