@@ -18,7 +18,7 @@ class MemoryFiles implements LocalFiles {
   Future<Uint8List?> read(String name) async => data[name] == null ? null : Uint8List.fromList(data[name]!);
   @override
   Future<void> write(String name,Uint8List bytes) async {
-    if(failIndex && name=='index.sg') throw const FileSystemException('synthetic full disk');
+    if(failIndex && name=='index.sg') { throw const FileSystemException('synthetic full disk'); }
     data[name]=Uint8List.fromList(bytes);
   }
   @override
@@ -32,7 +32,7 @@ class TestVision implements LocalVision {
   ]};
   @override
   Future<String> ocr(Uint8List bytes) async {
-    if(failOcr) throw ApiError('تعذر OCR');
+    if(failOcr) { throw ApiError('تعذر OCR'); }
     return 'الماء يتبخر بالحرارة';
   }
   @override

@@ -17,7 +17,7 @@ class _NoNetwork extends http.BaseClient {
 Json cloneJson(Object value) => objectValue(jsonDecode(jsonEncode(value)));
 String _now() => DateTime.now().toUtc().toIso8601String();
 String _id() => const Uuid().v4();
-void requireLocal(bool value, String message) { if (!value) throw ApiError(message); }
+void requireLocal(bool value, String message) { if (!value) { throw ApiError(message); } }
 double bounded(dynamic value, double low, double high) {
   requireLocal(value is num && value.toDouble().isFinite &&
     value >= low && value <= high, 'درجة أو قيمة عددية خارج الحدود.');
@@ -105,16 +105,16 @@ class LocalApi extends SmartGradeApi {
   }
   Json _exam(String id) {
     final e = _exams[id];
-    if(e is! Map) throw ApiError('الاختبار غير موجود على الجهاز.');
+    if(e is! Map) { throw ApiError('الاختبار غير موجود على الجهاز.'); }
     return e as Json;
   }
   Json _paper(String id) {
     final p = _papers[id];
-    if(p is! Map) throw ApiError('الورقة غير موجودة على الجهاز.');
+    if(p is! Map) { throw ApiError('الورقة غير موجودة على الجهاز.'); }
     return p as Json;
   }
   void _revision(Json row, dynamic revision) {
-    if(row['revision'] != revision) throw ApiError('تغيرت الورقة؛ حمّل أحدث نسخة. مسودتك محفوظة.',409,'stale_revision',row['revision'] as int);
+    if(row['revision'] != revision) { throw ApiError('تغيرت الورقة؛ حمّل أحدث نسخة. مسودتك محفوظة.',409,'stale_revision',row['revision'] as int); }
   }
   Json _counts(String id) {
     final rows = _papers.values.cast<Json>().where((p)=>p['exam_id']==id).toList();
@@ -240,7 +240,7 @@ class LocalApi extends SmartGradeApi {
   Future<Uint8List> image(String id) async {
     await _tail; _paper(id);
     final bytes=await files.read('images/$id.preview');
-    if(bytes==null) throw ApiError('معاينة الصورة غير موجودة.');
+    if(bytes==null) { throw ApiError('معاينة الصورة غير موجودة.'); }
     return bytes;
   }
   @override
@@ -295,14 +295,14 @@ class LocalApi extends SmartGradeApi {
     body ??= <String,dynamic>{};
     final pieces=path.split('/');
     if(method=='GET') {
-      if(path=='auth/me') return me();
+      if(path=='auth/me') { return me(); }
       if(pieces.length==3 && pieces[0]=='submissions' && pieces[2]=='history') {
         await _tail;
         return (_state['history'] as List).where((v)=>v['submission_id']==pieces[1]).map((v)=>cloneJson(v)).toList();
       }
       throw ApiError('قراءة محلية غير مدعومة.');
     }
-    if(method=='POST' && path=='auth/logout') return null;
+    if(method=='POST' && path=='auth/logout') { return null; }
     if(method=='POST' && pieces.length==3 && pieces[0]=='submissions' && pieces[2]=='ocr') {
       return extract(pieces[1],body['revision']);
     }
@@ -366,7 +366,7 @@ class LocalApi extends SmartGradeApi {
     final row=await paper(id);
     _revision(row,revision);
     final raw=await files.read('images/$id.source');
-    if(raw==null) throw ApiError('الصورة الأصلية غير موجودة.');
+    if(raw==null) { throw ApiError('الصورة الأصلية غير موجودة.'); }
     final text=await vision.ocr(raw);
     return objectValue(await json('PUT','submissions/$id/text',body:{'revision':revision,'text':text}));
   }
@@ -386,8 +386,8 @@ class LocalApi extends SmartGradeApi {
     final e=await exam(id);
     requireLocal(e['kind']=='mcq','القالب مخصص للاختيارات.');
     final bytes=await vision.template(e['question_count'] as int);
-    if(format=='png') return bytes;
-    if(format=='pdf') return localTemplatePdf(bytes);
+    if(format=='png') { return bytes; }
+    if(format=='pdf') { return localTemplatePdf(bytes); }
     throw ApiError('صيغة قالب غير مدعومة.');
   }
   @override
@@ -403,7 +403,7 @@ class LocalApi extends SmartGradeApi {
       for(final kind in ['source','preview']) {
         final name='images/$id.$kind';
         final bytes=await files.read(name);
-        if(bytes==null) throw ApiError('صورة مفقودة؛ لم تُنشأ نسخة ناقصة.');
+        if(bytes==null) { throw ApiError('صورة مفقودة؛ لم تُنشأ نسخة ناقصة.'); }
         size+=bytes.length;
         requireLocal(size<=backupLimit*3~/4,'الصور تتجاوز حد النسخة الاحتياطية المحلية.');
         assets[name]=base64Encode(bytes);

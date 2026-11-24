@@ -60,7 +60,7 @@ class _ExamsState extends State<ExamsScreen> with TaskState<ExamsScreen> {
           onPressed: busy ? null : () async {
             if(widget.session.isLocal) {
               await Navigator.push<void>(context,MaterialPageRoute(builder:(_)=>LocalDataScreen(session:widget.session)));
-              if(mounted) await load(0);
+              if(mounted) { await load(0); }
             } else { await widget.session.logout(); }
           },
           icon: Icon(widget.session.isLocal ? Icons.backup_outlined : Icons.logout),
@@ -624,7 +624,7 @@ class _ExamState extends State<ExamScreen> with TaskState<ExamScreen> {
   Future<void> saveTemplate(String format) async {
     await task(() async {
       final bytes = await widget.session.api!.mcqTemplate(widget.id, format);
-      if (!mounted) return;
+      if (!mounted) { return; }
       await FilePicker.saveFile(
         fileName: 'smartgrade-omr-${exam?['question_count'] ?? ''}.$format',
         bytes: bytes,

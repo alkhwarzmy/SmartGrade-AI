@@ -14,7 +14,7 @@ class DeviceVision implements LocalVision {
   Future<T> invoke<T>(String name, Json args) async {
     try {
       final value = await channel.invokeMethod<T>(name, args).timeout(const Duration(seconds: 75));
-      if (value == null) throw ApiError('لم تكتمل المعالجة المحلية.');
+      if (value == null) { throw ApiError('لم تكتمل المعالجة المحلية.'); }
       return value;
     } on PlatformException catch (e) {
       throw ApiError(e.message ?? 'تعذرت معالجة الصورة على الجهاز.');

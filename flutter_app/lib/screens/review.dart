@@ -139,7 +139,7 @@ class _UploadState extends State<UploadScreen> with TaskState<UploadScreen> {
         if(widget.session.isLocal && bytes!=null)
           OutlinedButton.icon(onPressed:busy?null:()=>task(() async {
             final rotated=await (widget.session.api! as LocalApi).vision.rotate(bytes!);
-            if(mounted) setState(() { bytes=rotated; requestKey=const Uuid().v4(); });
+            if(mounted) { setState(() { bytes=rotated; requestKey=const Uuid().v4(); }); }
           }),icon:const Icon(Icons.rotate_right),label:const Text('تدوير الصورة 90°')),
         if (bytes != null)
           Image.memory(
@@ -393,7 +393,7 @@ class _ReviewState extends State<ReviewScreen> with TaskState<ReviewScreen> {
       if(widget.session.isLocal) {
         await api.json('POST','submissions/${widget.id}/ocr',body:{'revision':row!['revision']});
         final fresh=await api.paper(widget.id);
-        if(mounted) setState(()=>hydrate(fresh));
+        if(mounted) { setState(()=>hydrate(fresh)); }
         return;
       }
       final job =

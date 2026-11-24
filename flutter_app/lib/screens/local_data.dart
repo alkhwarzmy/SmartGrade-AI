@@ -20,25 +20,25 @@ class _LocalDataState extends State<LocalDataScreen> with TaskState<LocalDataScr
   void dispose() { password.dispose(); confirmation.dispose(); super.dispose(); }
   Future<void> backup() async {
     await task(() async {
-      if(password.text != confirmation.text) throw ApiError('كلمتا مرور النسخة غير متطابقتين.');
+      if(password.text != confirmation.text) { throw ApiError('كلمتا مرور النسخة غير متطابقتين.'); }
       final bytes=await local.backup(password.text);
       final path=await FilePicker.saveFile(fileName:'smartgrade-offline.sgbackup',bytes:bytes,
         mimeType:'application/octet-stream');
-      if(mounted && path!=null) setState(() { notice='حُفظت النسخة المشفرة. احتفظ بكلمة مرورها خارج الهاتف.'; });
+      if(mounted && path!=null) { setState(() { notice='حُفظت النسخة المشفرة. احتفظ بكلمة مرورها خارج الهاتف.'; }); }
       password.clear(); confirmation.clear();
     });
   }
   Future<void> restore() async {
-    if(!await confirm(context,'تُستعاد النسخة إلى مساحة فارغة فقط. سيُستخدم هذا الملف لاسترجاع الاختبارات والصور والدرجات. متابعة؟')) return;
+    if(!await confirm(context,'تُستعاد النسخة إلى مساحة فارغة فقط. سيُستخدم هذا الملف لاسترجاع الاختبارات والصور والدرجات. متابعة؟')) { return; }
     await task(() async {
-      final selection=await FilePicker.pickFiles(withData:false);
-      final path=selection?.files.single.path;
-      if(path==null) return;
+      final selection=await FilePicker.pickFiles();
+      final path=selection.isEmpty ? null : selection.single.path;
+      if(path==null) { return; }
       final file=File(path);
-      if(await file.length()>125*1024*1024) throw ApiError('ملف النسخة الاحتياطية كبير جدًا.');
+      if(await file.length()>125*1024*1024) { throw ApiError('ملف النسخة الاحتياطية كبير جدًا.'); }
       await local.restoreBackup(await file.readAsBytes(),password.text);
       password.clear(); confirmation.clear();
-      if(mounted) setState(() { notice='اكتملت الاستعادة. عُد إلى الاختبارات لعرض بياناتك.'; });
+      if(mounted) { setState(() { notice='اكتملت الاستعادة. عُد إلى الاختبارات لعرض بياناتك.'; }); }
     });
   }
   @override

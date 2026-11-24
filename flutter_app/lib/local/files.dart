@@ -30,10 +30,10 @@ Future<Uint8List> seal(Uint8List bytes, SecretKey key, String purpose) async {
 
 Future<Uint8List> unseal(Uint8List bytes, SecretKey key, String purpose) async {
   final envelope = objectValue(jsonDecode(utf8.decode(bytes)));
-  if (envelope['format'] != purpose) throw ApiError('تنسيق الملف أو هويته غير صحيح.');
+  if (envelope['format'] != purpose) { throw ApiError('تنسيق الملف أو هويته غير صحيح.'); }
   final nonce = base64Decode(envelope['nonce'] as String);
   final mac = base64Decode(envelope['mac'] as String);
-  if (nonce.length != 12 || mac.length != 16) throw ApiError('ملف مشفر غير صالح.');
+  if (nonce.length != 12 || mac.length != 16) { throw ApiError('ملف مشفر غير صالح.'); }
   final clear = await localCipher.decrypt(SecretBox(base64Decode(envelope['cipher'] as String),
     nonce: nonce, mac: Mac(mac)), secretKey: key, aad: utf8.encode(purpose));
   return Uint8List.fromList(clear);
@@ -46,7 +46,7 @@ class DeviceFiles implements LocalFiles {
   static Future<DeviceFiles> open({Directory? directory, SecretKey? key, String keyName = 'smartgrade_local_key_v1'}) async {
     final root = directory ?? Directory('${(await getApplicationSupportDirectory()).path}/smartgrade-local-v1');
     await root.create(recursive: true);
-    if (key != null) return DeviceFiles._(root, key);
+    if (key != null) { return DeviceFiles._(root, key); }
     const vault = FlutterSecureStorage();
     var encoded = await vault.read(key: keyName);
     if (encoded == null) {
@@ -57,7 +57,7 @@ class DeviceFiles implements LocalFiles {
       await vault.write(key: keyName, value: encoded);
     }
     final bytes = base64Decode(encoded);
-    if (bytes.length != 32) throw ApiError('مفتاح التخزين المحلي غير صالح.');
+    if (bytes.length != 32) { throw ApiError('مفتاح التخزين المحلي غير صالح.'); }
     return DeviceFiles._(root, SecretKey(bytes));
   }
   File file(String name) {
@@ -69,7 +69,7 @@ class DeviceFiles implements LocalFiles {
   @override
   Future<Uint8List?> read(String name) async {
     final path = file(name);
-    if (!await path.exists()) return null;
+    if (!await path.exists()) { return null; }
     try {
       return await unseal(await path.readAsBytes(), key, 'sg-local-file-v1:$name');
     } catch (_) {
@@ -85,24 +85,24 @@ class DeviceFiles implements LocalFiles {
       await temporary.writeAsBytes(await seal(bytes, key, 'sg-local-file-v1:$name'), flush: true);
       await temporary.rename(path.path);
     } finally {
-      if (await temporary.exists()) await temporary.delete();
+      if (await temporary.exists()) { await temporary.delete(); }
     }
   }
   @override
   Future<void> remove(String name) async {
     final path = file(name);
-    if (await path.exists()) await path.delete();
+    if (await path.exists()) { await path.delete(); }
   }
 }
 
 const backupLimit = 64 * 1024 * 1024;
 Future<SecretKey> backupKey(String password, List<int> salt) {
-  if (password.length < 12 || password.length > 256) throw ApiError('كلمة النسخة الاحتياطية من 12 إلى 256 حرفًا.');
+  if (password.length < 12 || password.length > 256) { throw ApiError('كلمة النسخة الاحتياطية من 12 إلى 256 حرفًا.'); }
   return Pbkdf2(macAlgorithm: Hmac.sha256(), iterations: 210000, bits: 256)
     .deriveKey(secretKey: SecretKey(utf8.encode(password)), nonce: salt);
 }
 Future<Uint8List> encryptBackup(Uint8List bytes, String password) async {
-  if (bytes.length > backupLimit) throw ApiError('النسخة تتجاوز حد 64 MB لهذه النسخة من التطبيق.');
+  if (bytes.length > backupLimit) { throw ApiError('النسخة تتجاوز حد 64 MB لهذه النسخة من التطبيق.'); }
   final salt = randomBytes(16);
   final encrypted = await seal(bytes, await backupKey(password, salt), 'smartgrade-offline-backup-v1');
   return Uint8List.fromList(utf8.encode(jsonEncode({
@@ -110,15 +110,15 @@ Future<Uint8List> encryptBackup(Uint8List bytes, String password) async {
   })));
 }
 Future<Uint8List> decryptBackup(Uint8List bytes, String password) async {
-  if (bytes.length > 125 * 1024 * 1024) throw ApiError('ملف النسخة الاحتياطية كبير جدًا.');
+  if (bytes.length > 125 * 1024 * 1024) { throw ApiError('ملف النسخة الاحتياطية كبير جدًا.'); }
   try {
     final envelope = objectValue(jsonDecode(utf8.decode(bytes)));
-    if (envelope['format'] != 'smartgrade-backup-envelope-v1') throw const FormatException();
+    if (envelope['format'] != 'smartgrade-backup-envelope-v1') { throw const FormatException(); }
     final salt = base64Decode(envelope['salt'] as String);
-    if (salt.length != 16) throw const FormatException();
+    if (salt.length != 16) { throw const FormatException(); }
     final clear = await unseal(base64Decode(envelope['payload'] as String),
       await backupKey(password, salt), 'smartgrade-offline-backup-v1');
-    if (clear.length > backupLimit) throw const FormatException();
+    if (clear.length > backupLimit) { throw const FormatException(); }
     return clear;
   } catch (_) {
     throw ApiError('لم تُفتح النسخة: تحقق من كلمة المرور وسلامة الملف. لم تتغير بيانات الجهاز.');

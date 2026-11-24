@@ -79,4 +79,4 @@ Future<Uint8List> localTemplatePdf(Uint8List image) async {
   return document.save();
 }
 
-void requireLocalPdfSize(int rows) { if(rows>2001) throw ApiError('PDF يدعم حتى 2000 نتيجة؛ استخدم Excel أو CSV.'); }
+void requireLocalPdfSize(int rows) { if(rows>2001) { throw ApiError('PDF يدعم حتى 2000 نتيجة؛ استخدم Excel أو CSV.'); } }
