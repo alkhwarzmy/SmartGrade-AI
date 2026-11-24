@@ -101,8 +101,10 @@ void main() {
     await tester.pumpAndSettle();
     final counter = find.byKey(const ValueKey('mcq-count'));
     final countField = tester.widget<DropdownButtonFormField<int>>(counter);
-    expect(countField.items!.first.value, 1);
-    expect(countField.items!.last.value, 50);
+    final renderedCount = tester.widget<DropdownButton<int>>(
+      find.descendant(of: counter, matching: find.byType(DropdownButton<int>)));
+    expect(renderedCount.items!.first.value, 1);
+    expect(renderedCount.items!.last.value, 50);
     countField.onChanged!(2);
     await tester.pumpAndSettle();
     tester.widget<DropdownButtonFormField<String>>(find.byKey(const ValueKey('key0'))).onChanged!('A');

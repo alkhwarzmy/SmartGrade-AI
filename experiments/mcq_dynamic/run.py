@@ -115,7 +115,9 @@ def main():
                     check("real_browser_upload_decoded_50", workspace.submission(sid).current["answers"] == key)
                     page.get_by_role("button", name="مراجعة الورقة المرفوعة", exact=True).click()
                     expect(page.get_by_role("heading", name="التصحيح والمراجعة", exact=True)).to_be_visible()
-                    page.get_by_label("راجعت الصورة والحالات غير الواضحة وأوافق على اعتماد الإجابات", exact=True).check()
+                    agreement = "راجعت الصورة والحالات غير الواضحة وأوافق على اعتماد الإجابات"
+                    page.get_by_text(agreement, exact=True).click()
+                    expect(page.get_by_label(agreement, exact=True)).to_be_checked()
                     page.get_by_role("button", name="اعتماد النتيجة", exact=True).click()
                     wait_for(lambda: workspace.submission(sid).status == "approved")
                     check("real_browser_approval_50_of_50", workspace.submission(sid).total == 50)
