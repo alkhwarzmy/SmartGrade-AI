@@ -1,0 +1,276 @@
+{
+  "synthetic": true,
+  "reference_labels_independently_validated": false,
+  "model_evaluated": false,
+  "external_calls": 0,
+  "handwriting_evaluated": false,
+  "exams": 4,
+  "essay_papers": 32,
+  "questions": 20,
+  "omr_images": 12,
+  "invalid_files": 4,
+  "functional_scenarios": 18,
+  "reference_contract_checks": [
+    {
+      "case": "science-A",
+      "expected_total": 30.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "science-B",
+      "expected_total": 30.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "science-C",
+      "expected_total": 17.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "science-D",
+      "expected_total": 0.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "science-E",
+      "expected_total": 0.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "science-F",
+      "expected_total": 0.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "science-G",
+      "expected_total": 24.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "science-H",
+      "expected_total": 18.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "math-A",
+      "expected_total": 20.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "math-B",
+      "expected_total": 20.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "math-C",
+      "expected_total": 10.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "math-D",
+      "expected_total": 0.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "math-E",
+      "expected_total": 0.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "math-F",
+      "expected_total": 0.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "math-G",
+      "expected_total": 16.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "math-H",
+      "expected_total": 12.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "arabic-A",
+      "expected_total": 20.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "arabic-B",
+      "expected_total": 20.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "arabic-C",
+      "expected_total": 10.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "arabic-D",
+      "expected_total": 0.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "arabic-E",
+      "expected_total": 0.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "arabic-F",
+      "expected_total": 0.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "arabic-G",
+      "expected_total": 16.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "arabic-H",
+      "expected_total": 12.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "geography-A",
+      "expected_total": 20.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "geography-B",
+      "expected_total": 20.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "geography-C",
+      "expected_total": 10.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "geography-D",
+      "expected_total": 0.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "geography-E",
+      "expected_total": 0.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "geography-F",
+      "expected_total": 0.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "geography-G",
+      "expected_total": 16.0,
+      "schema_and_bounds_valid": true
+    },
+    {
+      "case": "geography-H",
+      "expected_total": 12.0,
+      "schema_and_bounds_valid": true
+    }
+  ],
+  "omr_fixture_checks": [
+    {
+      "file": "01-perfect.png",
+      "expected": 20,
+      "actual": 20,
+      "passed": true
+    },
+    {
+      "file": "02-wrong.png",
+      "expected": 0,
+      "actual": 0,
+      "passed": true
+    },
+    {
+      "file": "03-half.png",
+      "expected": 10,
+      "actual": 10,
+      "passed": true
+    },
+    {
+      "file": "04-blank.png",
+      "expected": 0,
+      "actual": 0,
+      "passed": true
+    },
+    {
+      "file": "05-multiple.png",
+      "expected": 19,
+      "actual": 19,
+      "passed": true
+    },
+    {
+      "file": "06-weak.png",
+      "expected": 19,
+      "actual": 19,
+      "passed": true
+    },
+    {
+      "file": "07-rotation.png",
+      "expected": 20,
+      "actual": 20,
+      "passed": true
+    },
+    {
+      "file": "08-perspective.png",
+      "expected": 20,
+      "actual": 20,
+      "passed": true
+    },
+    {
+      "file": "09-lighting.png",
+      "expected": 20,
+      "actual": 20,
+      "passed": true
+    },
+    {
+      "file": "10-upside-down.png",
+      "expected": "reject",
+      "actual": "reject",
+      "passed": true
+    },
+    {
+      "file": "11-missing-marker.png",
+      "expected": "reject",
+      "actual": "reject",
+      "passed": true
+    },
+    {
+      "file": "12-jpeg.jpg",
+      "expected": 20,
+      "actual": 20,
+      "passed": true
+    }
+  ],
+  "invalid_fixture_checks": [
+    {
+      "file": "fake.png",
+      "expected": "reject",
+      "actual": "reject",
+      "passed": true
+    },
+    {
+      "file": "too-many-pixels.png",
+      "expected": "reject",
+      "actual": "reject",
+      "passed": true
+    },
+    {
+      "file": "too-small.png",
+      "expected": "reject",
+      "actual": "reject",
+      "passed": true
+    },
+    {
+      "file": "unsupported.txt",
+      "expected": "reject",
+      "actual": "reject",
+      "passed": true
+    }
+  ],
+  "passed": true
+}

@@ -1,0 +1,27 @@
+{
+  "title": "TEST-SG | OMR 20 سؤالًا",
+  "kind": "mcq",
+  "answer_key": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "A",
+    "B",
+    "C",
+    "D",
+    "A",
+    "B",
+    "C",
+    "D",
+    "A",
+    "B",
+    "C",
+    "D",
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "points_per_question": 1
+}

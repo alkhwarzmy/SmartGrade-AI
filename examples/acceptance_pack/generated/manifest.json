@@ -1,0 +1,830 @@
+{
+  "pack_id": "smartgrade-acceptance-ar-v1",
+  "files": [
+    {
+      "path": "FONT_LICENSE.txt",
+      "bytes": 3857,
+      "sha256": "e81d9dced49fea2a7d576cbea283873de58563c5d488f954deb282843c3ea79c"
+    },
+    {
+      "path": "README_AR.md",
+      "bytes": 9003,
+      "sha256": "4e4dcdea320e5ff38ed2a0f9fccdf063f9f901fefda2da3ff1c9361cb991400a"
+    },
+    {
+      "path": "essays/arabic/arabic-A.answers.json",
+      "bytes": 674,
+      "sha256": "90269b8ec4e1460b4c283b9b511951c8aa6a4da4bc2308ce8f0019e4da00a725"
+    },
+    {
+      "path": "essays/arabic/arabic-A.png",
+      "bytes": 85039,
+      "sha256": "89170ec8ac42c13a62c2d40e6c0af2c67907b4f41f872be26de900259f80b0f6"
+    },
+    {
+      "path": "essays/arabic/arabic-A.txt",
+      "bytes": 670,
+      "sha256": "df68f359c6c42f7836d8f4456e92389bc2a5267bb50e9536ba2042a42b8ce0fd"
+    },
+    {
+      "path": "essays/arabic/arabic-B.answers.json",
+      "bytes": 769,
+      "sha256": "f29a1e91bc006367779de5cf95e9da41bbf92ea56241b9d64fbc74d68041eb02"
+    },
+    {
+      "path": "essays/arabic/arabic-B.png",
+      "bytes": 96279,
+      "sha256": "a91f1c631eeabb14e5a7ec314ad8bf19ea4f81a3c57de4c12cfa16d3e300ac80"
+    },
+    {
+      "path": "essays/arabic/arabic-B.txt",
+      "bytes": 765,
+      "sha256": "8f903cf02527134c62341adf7d378973d16907e8fa59e5eef2779d620d9cdd3f"
+    },
+    {
+      "path": "essays/arabic/arabic-C.answers.json",
+      "bytes": 371,
+      "sha256": "9660492173d23b31e97b3a8cda5a8edfd4e8df4ce8b28b62460065b1ddfdf2ed"
+    },
+    {
+      "path": "essays/arabic/arabic-C.png",
+      "bytes": 67726,
+      "sha256": "bcf5e36047292d652596269259c392c9bd61c21deecf6759d7699a108c48fd59"
+    },
+    {
+      "path": "essays/arabic/arabic-C.txt",
+      "bytes": 367,
+      "sha256": "a3b6297e1d0689991c6aaae0a483fdf3440a7db92ea5d197a013dbee94ac9410"
+    },
+    {
+      "path": "essays/arabic/arabic-D.answers.json",
+      "bytes": 572,
+      "sha256": "29f6a159f72e8913e72dd06c984343f3848e52b0536cb5bc0214201b25ea100a"
+    },
+    {
+      "path": "essays/arabic/arabic-D.png",
+      "bytes": 79805,
+      "sha256": "e5aed369e1a01722c8e51b15169cb7009d6967fbbd8a09dd12d438e9223fdc6e"
+    },
+    {
+      "path": "essays/arabic/arabic-D.txt",
+      "bytes": 568,
+      "sha256": "0115ce26ba081c47b5ece138606bc7ee25e5c3edd07e5f1ad755a5ba77d9a320"
+    },
+    {
+      "path": "essays/arabic/arabic-E.answers.json",
+      "bytes": 862,
+      "sha256": "f6ce6643dcad2e6d202928a2458328e720010062d56948f4a271a041d9a89227"
+    },
+    {
+      "path": "essays/arabic/arabic-E.png",
+      "bytes": 102351,
+      "sha256": "60f8cfc0197ea07386f622bc83ca62b13f8cfb28087e2b33eb48cc3d40fba0f4"
+    },
+    {
+      "path": "essays/arabic/arabic-E.txt",
+      "bytes": 858,
+      "sha256": "45ae6d9ad68a8100ef3ef48762889d72064d64b2c47ed65e848bff7dab36aa32"
+    },
+    {
+      "path": "essays/arabic/arabic-F.answers.json",
+      "bytes": 92,
+      "sha256": "bbe91f49d29e653899673bcad465fffdfad7c9ffe6cbcab37ac6ba389066e8f4"
+    },
+    {
+      "path": "essays/arabic/arabic-F.png",
+      "bytes": 38422,
+      "sha256": "b03999f03cb298842debf9bf60dc205abb6a6399cfc37221644ab7a2e962051e"
+    },
+    {
+      "path": "essays/arabic/arabic-F.txt",
+      "bytes": 88,
+      "sha256": "d09a06bbda081977a7d6a85ab55f94a4bf2c2352dd291b6b0c0d0650030b6bc6"
+    },
+    {
+      "path": "essays/arabic/arabic-G.answers.json",
+      "bytes": 568,
+      "sha256": "7d7bb137202b3ad8dc5b9128a83cf757f5c7c33ddb1d9a29ef0644465e51d645"
+    },
+    {
+      "path": "essays/arabic/arabic-G.png",
+      "bytes": 76354,
+      "sha256": "0bbc2650047decf586b7b2c4110bed389f2c80cfb3f3ab45e8dbefd4ea109ba4"
+    },
+    {
+      "path": "essays/arabic/arabic-G.txt",
+      "bytes": 564,
+      "sha256": "30d214e836209285b392d808940bfb65721cec70dc85a8a335c0651006e2ced2"
+    },
+    {
+      "path": "essays/arabic/arabic-H.answers.json",
+      "bytes": 647,
+      "sha256": "6b5c39d6ff27cbdcf9889371db99ffa9514bf76d42b99c85854a4ad02927c594"
+    },
+    {
+      "path": "essays/arabic/arabic-H.png",
+      "bytes": 85588,
+      "sha256": "edb4f6878a299f0e1fd84729cecf67d662a40b25c5fcc2338fe7956d2f6007b8"
+    },
+    {
+      "path": "essays/arabic/arabic-H.txt",
+      "bytes": 643,
+      "sha256": "74deb457aabfb32fbd2daa2aa8e9b01f0b9c67f29311cf9610583a6ca9e91b1b"
+    },
+    {
+      "path": "essays/geography/geography-A.answers.json",
+      "bytes": 1127,
+      "sha256": "87b43115fc479673ac810477afad04a044035fe0317699549ec08d71a6c8b6b4"
+    },
+    {
+      "path": "essays/geography/geography-A.png",
+      "bytes": 130463,
+      "sha256": "047bf993903675f10ab87661565fa4d3ca6e6849f958e9a0c59a465c2b5a9848"
+    },
+    {
+      "path": "essays/geography/geography-A.txt",
+      "bytes": 1123,
+      "sha256": "c2db9432cd7ede2821570f119c74425a0cb29a49a109374c298b41a9c583c7bf"
+    },
+    {
+      "path": "essays/geography/geography-B.answers.json",
+      "bytes": 1228,
+      "sha256": "08e84612b2994e1b8667716dfc123bfbdda7d9bf3f74d55460efcc30eb40f623"
+    },
+    {
+      "path": "essays/geography/geography-B.png",
+      "bytes": 132425,
+      "sha256": "03880b8268659eedcbf8f8daaf1a5847d1c9631825c1288f52c62f842dc6b06a"
+    },
+    {
+      "path": "essays/geography/geography-B.txt",
+      "bytes": 1224,
+      "sha256": "48c293115dc7d440338441ee03292bc41572ef1a4966bc324559ae245e8e0416"
+    },
+    {
+      "path": "essays/geography/geography-C.answers.json",
+      "bytes": 571,
+      "sha256": "4facf29949706f3e3d3f963c09bea3e4c14e541b7cbcaff5a77d85fafae09fbd"
+    },
+    {
+      "path": "essays/geography/geography-C.png",
+      "bytes": 80775,
+      "sha256": "f21f1953edc1e26d63c10f06480e76c814d4063094e91f19a338bba58ce88079"
+    },
+    {
+      "path": "essays/geography/geography-C.txt",
+      "bytes": 567,
+      "sha256": "bdf3bb410faf488d860455dd88728ecef3ba930e19e40a57ab7cc5bd32baed02"
+    },
+    {
+      "path": "essays/geography/geography-D.answers.json",
+      "bytes": 859,
+      "sha256": "127efcc8568795b05b9cb2e215018d8b71096428c62c345d61f0aa757f7cb3a9"
+    },
+    {
+      "path": "essays/geography/geography-D.png",
+      "bytes": 107079,
+      "sha256": "3bc5d282b00a675bd3b3f4a8f0670011c01c0bd2b3efc7e236f39322e8995556"
+    },
+    {
+      "path": "essays/geography/geography-D.txt",
+      "bytes": 855,
+      "sha256": "53c742ca03f1c3aa4fe14a26896830747628352ed9a846ce6b5f0eab0e054f9e"
+    },
+    {
+      "path": "essays/geography/geography-E.answers.json",
+      "bytes": 862,
+      "sha256": "f6ce6643dcad2e6d202928a2458328e720010062d56948f4a271a041d9a89227"
+    },
+    {
+      "path": "essays/geography/geography-E.png",
+      "bytes": 104013,
+      "sha256": "4c4ba8ef723b68413ab11ad732c9d3528208fdad693b1f3975ac60dd0279914d"
+    },
+    {
+      "path": "essays/geography/geography-E.txt",
+      "bytes": 858,
+      "sha256": "45ae6d9ad68a8100ef3ef48762889d72064d64b2c47ed65e848bff7dab36aa32"
+    },
+    {
+      "path": "essays/geography/geography-F.answers.json",
+      "bytes": 92,
+      "sha256": "bbe91f49d29e653899673bcad465fffdfad7c9ffe6cbcab37ac6ba389066e8f4"
+    },
+    {
+      "path": "essays/geography/geography-F.png",
+      "bytes": 40316,
+      "sha256": "8523827022ed4f0f80a1e3f023580f9c953d6d315df617ce13de121f75301394"
+    },
+    {
+      "path": "essays/geography/geography-F.txt",
+      "bytes": 88,
+      "sha256": "d09a06bbda081977a7d6a85ab55f94a4bf2c2352dd291b6b0c0d0650030b6bc6"
+    },
+    {
+      "path": "essays/geography/geography-G.answers.json",
+      "bytes": 911,
+      "sha256": "e63bf6b47b8fbad791588861f2b65fd761eefc12ffd15fc7bdde314c59568b14"
+    },
+    {
+      "path": "essays/geography/geography-G.png",
+      "bytes": 111851,
+      "sha256": "624bd3503a5461a8a4de659661522c0d0f668351da02c944ac2cac109a04d855"
+    },
+    {
+      "path": "essays/geography/geography-G.txt",
+      "bytes": 907,
+      "sha256": "380a766bcf63344377b2d765493a06c218dbb7a78a48468d8b57118a460c3167"
+    },
+    {
+      "path": "essays/geography/geography-H.answers.json",
+      "bytes": 1045,
+      "sha256": "51e01e59c1398e3f0f0f8b2a3d0e650f292290cf6a621eb7fbec43f6852b3354"
+    },
+    {
+      "path": "essays/geography/geography-H.png",
+      "bytes": 125681,
+      "sha256": "e6b89ae995947d91117e7e93179c218f3040852fc483da99ca01810398f7d227"
+    },
+    {
+      "path": "essays/geography/geography-H.txt",
+      "bytes": 1041,
+      "sha256": "edd2b82957a3b06c87ac3f7e8f3e7886aec4ee8ae60fb5f2330a6b1248248a86"
+    },
+    {
+      "path": "essays/math/math-A.answers.json",
+      "bytes": 744,
+      "sha256": "4f4bec52fd912b6370cb907a0f6275a30e93a82aa3e895fb325d8b71baf3a258"
+    },
+    {
+      "path": "essays/math/math-A.png",
+      "bytes": 100710,
+      "sha256": "f8b6ed95b69f0d0d280a2f79c0bc09e1f6879b21d8f4dbad400acf5b0dbc769a"
+    },
+    {
+      "path": "essays/math/math-A.txt",
+      "bytes": 740,
+      "sha256": "3ec539344b49bbfeec0e1b240abc64ff69e685aeb672eea28758b12975e97552"
+    },
+    {
+      "path": "essays/math/math-B.answers.json",
+      "bytes": 924,
+      "sha256": "35b4c20ad8a6ddca673a1f223ed527e2455b60c9d5558a0a4432b5073c334949"
+    },
+    {
+      "path": "essays/math/math-B.png",
+      "bytes": 122340,
+      "sha256": "ef60fd1ef1d1aa0691b388bd05275a3031aa68f48247c0fcb05131ccdd8da6e8"
+    },
+    {
+      "path": "essays/math/math-B.txt",
+      "bytes": 920,
+      "sha256": "f3ca74e7fd0362f65c56ac4a211d074745a61dada5c4c23a203602f37a0ff773"
+    },
+    {
+      "path": "essays/math/math-C.answers.json",
+      "bytes": 351,
+      "sha256": "ad24f469f1f40809311ae6c9376e473e3f6e9a72cfac4a3f93816ad15fe27240"
+    },
+    {
+      "path": "essays/math/math-C.png",
+      "bytes": 67827,
+      "sha256": "bd0de2c8bf6523a232680653ae87b62d1f923d11c12592ea1921dbb40a28fd5e"
+    },
+    {
+      "path": "essays/math/math-C.txt",
+      "bytes": 347,
+      "sha256": "abaeb9dd215c62d1b8561fdefc8f2b72223b89cf6fbd97a10783290769289201"
+    },
+    {
+      "path": "essays/math/math-D.answers.json",
+      "bytes": 447,
+      "sha256": "ce15ac3dc286477a3886897a48f49cff982581b0f68bf78757f7cff1977e0c4a"
+    },
+    {
+      "path": "essays/math/math-D.png",
+      "bytes": 75475,
+      "sha256": "5eeb90af368c8b992a18aad3e5ab21e2c5d89161dcbc9a01bc293c556abc6af0"
+    },
+    {
+      "path": "essays/math/math-D.txt",
+      "bytes": 443,
+      "sha256": "7e34eeb11f9a57f86929ba3f25aca1b8840e7f87bca7895ea9b486449315b6dc"
+    },
+    {
+      "path": "essays/math/math-E.answers.json",
+      "bytes": 862,
+      "sha256": "f6ce6643dcad2e6d202928a2458328e720010062d56948f4a271a041d9a89227"
+    },
+    {
+      "path": "essays/math/math-E.png",
+      "bytes": 102152,
+      "sha256": "ac75c092caf8806721be02039be63d6b00daa187eb307a171c19e73f314c37c7"
+    },
+    {
+      "path": "essays/math/math-E.txt",
+      "bytes": 858,
+      "sha256": "45ae6d9ad68a8100ef3ef48762889d72064d64b2c47ed65e848bff7dab36aa32"
+    },
+    {
+      "path": "essays/math/math-F.answers.json",
+      "bytes": 92,
+      "sha256": "bbe91f49d29e653899673bcad465fffdfad7c9ffe6cbcab37ac6ba389066e8f4"
+    },
+    {
+      "path": "essays/math/math-F.png",
+      "bytes": 38248,
+      "sha256": "fe5354a53b309a73534d48d337bdf2d273d531d6700c1e5f0a6465cb239d2418"
+    },
+    {
+      "path": "essays/math/math-F.txt",
+      "bytes": 88,
+      "sha256": "d09a06bbda081977a7d6a85ab55f94a4bf2c2352dd291b6b0c0d0650030b6bc6"
+    },
+    {
+      "path": "essays/math/math-G.answers.json",
+      "bytes": 624,
+      "sha256": "1572c3284fe50d6ae756b2c31e01788d40790d60d658780eb2ea20510ae283f1"
+    },
+    {
+      "path": "essays/math/math-G.png",
+      "bytes": 89684,
+      "sha256": "218e13074ea322cb7f9dc3bc72a9dd7c421326e1f5d5c650de9b9ef79dc66f7b"
+    },
+    {
+      "path": "essays/math/math-G.txt",
+      "bytes": 620,
+      "sha256": "9fb584bdf9dd35ac7892f3c2518ce6cb9b68a0f08e4040e149d4581a158ebde6"
+    },
+    {
+      "path": "essays/math/math-H.answers.json",
+      "bytes": 643,
+      "sha256": "8a4ecdf39cc2cac747381c5a9f317ab4bf483cfd7e2603e2dd5b1b771c6117c0"
+    },
+    {
+      "path": "essays/math/math-H.png",
+      "bytes": 90450,
+      "sha256": "07b7a3ad242b1486c3a1eba4b5a8369faa8ed645f4e40bef5b37e4d07a99aa36"
+    },
+    {
+      "path": "essays/math/math-H.txt",
+      "bytes": 639,
+      "sha256": "fae22c1bb9cce66f2ceb30cfaf7cb4c44d07e1eba808ec36f7c7fd6170bc9815"
+    },
+    {
+      "path": "essays/science/science-A.answers.json",
+      "bytes": 1746,
+      "sha256": "07b4cddcc01183369fba4b66fa15aa5328119452b3976ff02b79d1bad8349b52"
+    },
+    {
+      "path": "essays/science/science-A.png",
+      "bytes": 180544,
+      "sha256": "1c7ea17ed48e85eed95c687703306a9bb5e2b8dc35075dc15e84c2d79a50e2c3"
+    },
+    {
+      "path": "essays/science/science-A.txt",
+      "bytes": 1742,
+      "sha256": "08a0ce9b4b8bc8dcbffe5cafa412324f96415d9d6ebdf8e9143eee9157cc7701"
+    },
+    {
+      "path": "essays/science/science-B.answers.json",
+      "bytes": 1460,
+      "sha256": "f73b276e6611423b55104666ff77c99e012ed75431c383d625f25b77f4f14a58"
+    },
+    {
+      "path": "essays/science/science-B.png",
+      "bytes": 156837,
+      "sha256": "efb7d19e9138550dde263f80f6f5a5ed2f890839ffe45e953b06f28c57b8a565"
+    },
+    {
+      "path": "essays/science/science-B.txt",
+      "bytes": 1456,
+      "sha256": "937891fb2b5f650fe9a1bb96d44704f5195780bf4bd43fb0791d3c7324c9d436"
+    },
+    {
+      "path": "essays/science/science-C.answers.json",
+      "bytes": 815,
+      "sha256": "e8d20723c19562fce8950de468c705d0eb199f7387db6a1a51948af2ca5269dd"
+    },
+    {
+      "path": "essays/science/science-C.png",
+      "bytes": 103963,
+      "sha256": "9588d7e8853ab79b20f6ed82269ad07fa86aca969c16a0f89d29e0153c8e5e07"
+    },
+    {
+      "path": "essays/science/science-C.txt",
+      "bytes": 811,
+      "sha256": "0ccc9239dfa9989d3afe0b6d6a7cfe8e699d6fc855dc3c9a2f5722646ff8004b"
+    },
+    {
+      "path": "essays/science/science-D.answers.json",
+      "bytes": 1303,
+      "sha256": "621a4baaf4ead6391439bf0e4bcd8465f1ec29bcf9b6cbb9c6abd669165647b1"
+    },
+    {
+      "path": "essays/science/science-D.png",
+      "bytes": 132032,
+      "sha256": "57ed2123cf7aae660972797599c0159b44a0333ee3de2fea1602269a2323690a"
+    },
+    {
+      "path": "essays/science/science-D.txt",
+      "bytes": 1299,
+      "sha256": "0798a1f872cc650c14878a7d8a8a392671e5448e9feb684a12ba5393f7a08b22"
+    },
+    {
+      "path": "essays/science/science-E.answers.json",
+      "bytes": 932,
+      "sha256": "8004f0f61c3e2f4fe063590e58bf1594d9ce13b1999f09389a9c9ec01cbc8ec9"
+    },
+    {
+      "path": "essays/science/science-E.png",
+      "bytes": 110274,
+      "sha256": "7c97eec42c488d160c91502247a8c361562cc589c8a72cb24b52a1860df55b0d"
+    },
+    {
+      "path": "essays/science/science-E.txt",
+      "bytes": 928,
+      "sha256": "f87cff7b21f59fc5fa1099baadd41c1ec93e07bf03219ed0561554bd4b096cfd"
+    },
+    {
+      "path": "essays/science/science-F.answers.json",
+      "bytes": 92,
+      "sha256": "bbe91f49d29e653899673bcad465fffdfad7c9ffe6cbcab37ac6ba389066e8f4"
+    },
+    {
+      "path": "essays/science/science-F.png",
+      "bytes": 37994,
+      "sha256": "3c60effd4b0cc747b48a9ef57d42a393134ece6edf14cdb6753035ec5fc21f7e"
+    },
+    {
+      "path": "essays/science/science-F.txt",
+      "bytes": 88,
+      "sha256": "d09a06bbda081977a7d6a85ab55f94a4bf2c2352dd291b6b0c0d0650030b6bc6"
+    },
+    {
+      "path": "essays/science/science-G.answers.json",
+      "bytes": 1414,
+      "sha256": "fa712e291a18c3e305f76a3982e4a411a79a26d3a7588aa04b21527214a69bb8"
+    },
+    {
+      "path": "essays/science/science-G.png",
+      "bytes": 153566,
+      "sha256": "91093be749de8f8503a2fd49b24586d6d205a7ff67326b8defe6dc2b50460ede"
+    },
+    {
+      "path": "essays/science/science-G.txt",
+      "bytes": 1410,
+      "sha256": "03e5916430b35da65886bc86211af10667b9f674f7a95f6307ce79dbd43204d9"
+    },
+    {
+      "path": "essays/science/science-H.answers.json",
+      "bytes": 1709,
+      "sha256": "f908222cde26365f5b30344a4a08af1ed5f518b60f1851c8698d872df3a72279"
+    },
+    {
+      "path": "essays/science/science-H.png",
+      "bytes": 169905,
+      "sha256": "544b822a16899a4b2c9178984ab73810e1989e33fdd53e3fed5f89eca75eb93e"
+    },
+    {
+      "path": "essays/science/science-H.txt",
+      "bytes": 1705,
+      "sha256": "2e06ffe1cd86a2d74a4138324175342dd49904072e132df6fa5eed85d0c2626e"
+    },
+    {
+      "path": "exams/arabic.json",
+      "bytes": 5969,
+      "sha256": "e4c9c94792d5b1797aebb32fa6c4eecdde91ede1b1618ff08117058b757b8e67"
+    },
+    {
+      "path": "exams/geography.json",
+      "bytes": 6944,
+      "sha256": "54bc8407d50780674ab6157e3f3360ea92d300aa6076ed9abb792b37191adad4"
+    },
+    {
+      "path": "exams/math.json",
+      "bytes": 6151,
+      "sha256": "7b4ccc9050f686d347e2c78b35131cf6fd79cfae064eacd9f336b5d94b4b7104"
+    },
+    {
+      "path": "exams/science.json",
+      "bytes": 8702,
+      "sha256": "8f2b665882112100c8d87fbeecc5d0e25ae077645774252d59fc9537dd8be248"
+    },
+    {
+      "path": "functional_scenarios.json",
+      "bytes": 7092,
+      "sha256": "ef08852d0bea99a019cd5f4c57d194c6de0e028decb4520dde0dbfb24c4c4309"
+    },
+    {
+      "path": "invalid/fake.png",
+      "bytes": 34,
+      "sha256": "c132d0e96062c660fe227db68e439ce2ac2dddc89b389859a0e033d19f55f303"
+    },
+    {
+      "path": "invalid/too-many-pixels.png",
+      "bytes": 57249,
+      "sha256": "b985b3ee7a7b58e83aed19cc75ba725200ce94f99f96d058d6464badd0e98539"
+    },
+    {
+      "path": "invalid/too-small.png",
+      "bytes": 153,
+      "sha256": "772b05e2e72c0b9bee0afbb1f243d53849cf8b481d50646c5d92f1d63dc65689"
+    },
+    {
+      "path": "invalid/unsupported.txt",
+      "bytes": 54,
+      "sha256": "5de57ff7cb2aa0f232abfa410b94ca6544d37e10a21c9c2a593e3c6604b316eb"
+    },
+    {
+      "path": "ocr_references/arabic-A.txt",
+      "bytes": 803,
+      "sha256": "e8036f11bded148566157e8b7cdc8f773a8e335e96db1df53d9f460c614faab4"
+    },
+    {
+      "path": "ocr_references/arabic-B.txt",
+      "bytes": 898,
+      "sha256": "5517f4678b98e85be29a0aaff61dc3e7e08d93043f33f54310ca1e680f9af2f6"
+    },
+    {
+      "path": "ocr_references/arabic-C.txt",
+      "bytes": 500,
+      "sha256": "fd82804e05de4b2a0071bedade5cd07a71f85abdbcf5efb7496669ac5d397310"
+    },
+    {
+      "path": "ocr_references/arabic-D.txt",
+      "bytes": 701,
+      "sha256": "d85c8a0bbc13c1b9f651e84822ab6fe99f9f12fcfce8baaa5b45fc908e9b4b4f"
+    },
+    {
+      "path": "ocr_references/arabic-E.txt",
+      "bytes": 991,
+      "sha256": "d2b515efd9b00f7e5eea97a1a3b84f71fe2afa121800d916f0e3f614b40e398d"
+    },
+    {
+      "path": "ocr_references/arabic-F.txt",
+      "bytes": 221,
+      "sha256": "d2dfba919425359327986094f49b1976b27aaae7f97d7922052602c66c7d9b08"
+    },
+    {
+      "path": "ocr_references/arabic-G.txt",
+      "bytes": 697,
+      "sha256": "3edc0988ea2c8e37fd87a883ae20936f9c24d6501668a2cb27b5d9f94f375bb7"
+    },
+    {
+      "path": "ocr_references/arabic-H.txt",
+      "bytes": 776,
+      "sha256": "ebe61a7025a8c6964f8099a20e22475a036cfad1920f10dba33c9273c512c988"
+    },
+    {
+      "path": "ocr_references/geography-A.txt",
+      "bytes": 1252,
+      "sha256": "e372ebeaaf90fff33fc92f85b386f19691097bcda1f694a439ddd6c8663db0e9"
+    },
+    {
+      "path": "ocr_references/geography-B.txt",
+      "bytes": 1353,
+      "sha256": "a31b090eb72b4ce55e355799028d45af6bca3428bb42ff9b4455d375b28cfddd"
+    },
+    {
+      "path": "ocr_references/geography-C.txt",
+      "bytes": 696,
+      "sha256": "ddc94a443bb92453ac00630c8e95e512fb4a47dab8c6155bdb43a534968b078a"
+    },
+    {
+      "path": "ocr_references/geography-D.txt",
+      "bytes": 984,
+      "sha256": "607651c696971b7e43090dca703b2c0b57b802bb491aa389768fdce4cc931531"
+    },
+    {
+      "path": "ocr_references/geography-E.txt",
+      "bytes": 987,
+      "sha256": "78c4e665428bdc7378b284ecd94ba5ebe6cc63bd8a162fc6a0cbb2146406e297"
+    },
+    {
+      "path": "ocr_references/geography-F.txt",
+      "bytes": 217,
+      "sha256": "656a0c3d615487c6a95abcc6328146627aefcb2a72631d0b0eaa794d5cd860aa"
+    },
+    {
+      "path": "ocr_references/geography-G.txt",
+      "bytes": 1036,
+      "sha256": "42b608c9a358bf6819eb130b015533b5bff27f3d94f08592e4afdb2563493972"
+    },
+    {
+      "path": "ocr_references/geography-H.txt",
+      "bytes": 1170,
+      "sha256": "fb4cc60446f57266ef897bb01b9063617b2a03832ca93c00417b81454fc8f3e3"
+    },
+    {
+      "path": "ocr_references/math-A.txt",
+      "bytes": 864,
+      "sha256": "143cda27f1075e74591e8e0ed009955bc9f7bbd87292f30fd19990315a8339fd"
+    },
+    {
+      "path": "ocr_references/math-B.txt",
+      "bytes": 1044,
+      "sha256": "4c5dd02833f4dbf7c59ba5b687245f28534240b2a4102b75f37033683f8e2185"
+    },
+    {
+      "path": "ocr_references/math-C.txt",
+      "bytes": 471,
+      "sha256": "aa66fc42900494944267ef8a8247dd7f832acadb65e1c0a32c5fc043b7a41af3"
+    },
+    {
+      "path": "ocr_references/math-D.txt",
+      "bytes": 567,
+      "sha256": "7a3fe1d742254df65c56adcb32f0709d0bb3aab5eabc456e64c3ea36f840f1ef"
+    },
+    {
+      "path": "ocr_references/math-E.txt",
+      "bytes": 982,
+      "sha256": "e095bce993cd45a06b76b5bfbc5dfa38c417afffbd7c7fc3b852c344d7c7f028"
+    },
+    {
+      "path": "ocr_references/math-F.txt",
+      "bytes": 212,
+      "sha256": "6fe01eb0666f1ac3b310ef3dbfde915e77742bd4d7a204df43fd754d1095120b"
+    },
+    {
+      "path": "ocr_references/math-G.txt",
+      "bytes": 744,
+      "sha256": "47499eb6cd2790b5475694029fa0d0b4d998f05acc783e94e460c22ca1f025ab"
+    },
+    {
+      "path": "ocr_references/math-H.txt",
+      "bytes": 763,
+      "sha256": "7a66552d9221c1bf4fdf3816d9b9ba9d3ad8050b18cc06678bf33fd6ae31ee6d"
+    },
+    {
+      "path": "ocr_references/science-A.txt",
+      "bytes": 1863,
+      "sha256": "8085a45824e4cbfc3111f607ec746d824dfabf287c3a519727eebaf2e4457677"
+    },
+    {
+      "path": "ocr_references/science-B.txt",
+      "bytes": 1577,
+      "sha256": "a904c266044ed285b24a467e62b17788b8d2dcc131d9053214e4dc8f92a3bafa"
+    },
+    {
+      "path": "ocr_references/science-C.txt",
+      "bytes": 932,
+      "sha256": "033ac82fcd63e26528685e4f03865c5ee34a30134c15146fe14e5b156434e947"
+    },
+    {
+      "path": "ocr_references/science-D.txt",
+      "bytes": 1420,
+      "sha256": "bfddf03a962a6231c7754f78f49016bbc7a4ebda15ffc615765243018be533fe"
+    },
+    {
+      "path": "ocr_references/science-E.txt",
+      "bytes": 1049,
+      "sha256": "14ae059c6d61c9261e43591d73e92cc651724685862f7d3a5cb3d0495a5d769e"
+    },
+    {
+      "path": "ocr_references/science-F.txt",
+      "bytes": 209,
+      "sha256": "04f951e26f0bcefaf572b90b14fd0f5c10374acb982467cb1a579abc06810e87"
+    },
+    {
+      "path": "ocr_references/science-G.txt",
+      "bytes": 1531,
+      "sha256": "7fe99c872a0f2dffa1910d29679e6b241370030a6107949b6922d54add4c6203"
+    },
+    {
+      "path": "ocr_references/science-H.txt",
+      "bytes": 1826,
+      "sha256": "259efdaf68675db359e53a9627ba479518c4520edf36172350c3a66f151f3c1b"
+    },
+    {
+      "path": "omr/01-perfect.png",
+      "bytes": 97931,
+      "sha256": "8b95fd05e78dbb14db60df280a600b36e733a17f25e457db2ba0f4a04848477a"
+    },
+    {
+      "path": "omr/02-wrong.png",
+      "bytes": 97923,
+      "sha256": "902f8bf679a5643490e744592d3a2ffaff959ab9ba94723e6c122fdb5e6a981f"
+    },
+    {
+      "path": "omr/03-half.png",
+      "bytes": 97435,
+      "sha256": "5ef9eb910a67417c48cf7d62bb74d96b080c64aef18151c034e819f062a8ac90"
+    },
+    {
+      "path": "omr/04-blank.png",
+      "bytes": 90594,
+      "sha256": "5e5901a357a333cc1be5aa499c0ebe3133312a1579fafdfa8ee0a4bcf0c23be7"
+    },
+    {
+      "path": "omr/05-multiple.png",
+      "bytes": 97815,
+      "sha256": "71cc541cd277ff203dd577fd0c59deced77e18970354d3ab1fc43321d93ee8b7"
+    },
+    {
+      "path": "omr/06-weak.png",
+      "bytes": 98642,
+      "sha256": "74855eb4837624ad84a4dba0e9e314ac6453519dbc3eeec67792704d4766476d"
+    },
+    {
+      "path": "omr/07-rotation.png",
+      "bytes": 338582,
+      "sha256": "a90bd9362876b13986a8e2ad26e2996035a87b02e7459f5b88ec9a10cb3871d7"
+    },
+    {
+      "path": "omr/08-perspective.png",
+      "bytes": 286405,
+      "sha256": "d3d10bfc5bc39f984bd19a8f4337afd72f3fb434054fc9a9324edcef9107dc32"
+    },
+    {
+      "path": "omr/09-lighting.png",
+      "bytes": 220674,
+      "sha256": "6156af81ead3e90415b3e75197fd4599966aa04c4cfb4b9effa998a5d4651f1d"
+    },
+    {
+      "path": "omr/10-upside-down.png",
+      "bytes": 98390,
+      "sha256": "c52b50c71bf6f296678ad5a516f686f772602305c066f3331bc3fe04d0dfacb0"
+    },
+    {
+      "path": "omr/11-missing-marker.png",
+      "bytes": 97927,
+      "sha256": "0781862c959eea223b22be99fec9e7d270ee38741f8776a87b345370831026f9"
+    },
+    {
+      "path": "omr/12-jpeg.jpg",
+      "bytes": 89056,
+      "sha256": "bfc06bee04bf4520dce6283f5a8771626387c3e50a0466829da40ac0db571602"
+    },
+    {
+      "path": "print/all_student_papers.pdf",
+      "bytes": 2839452,
+      "sha256": "0e183992f7a956490b108ac9703b2c6b4f58758d3292a10c30e9c1f470e6d05c"
+    },
+    {
+      "path": "print/arabic-handwriting.png",
+      "bytes": 68282,
+      "sha256": "664f59c9e7af653d728a539dc5ba7c0d467124f22559edcd263613583e34afb3"
+    },
+    {
+      "path": "print/geography-handwriting.png",
+      "bytes": 69335,
+      "sha256": "6b76341a0e4b8e309284e128c3485d3372c3a0072474455b268f3000edfa219b"
+    },
+    {
+      "path": "print/handwriting_sheets.pdf",
+      "bytes": 254916,
+      "sha256": "9a8eef3eb12486ba13e7e24c08494b670b63b0834c4c1a7a6899dac554bda18e"
+    },
+    {
+      "path": "print/math-handwriting.png",
+      "bytes": 67590,
+      "sha256": "818656c249829cf6e6f22c9110b62b554d5de0a6e03c43c30cbdbaea59800059"
+    },
+    {
+      "path": "print/omr_papers.pdf",
+      "bytes": 1934583,
+      "sha256": "b7a37635813e1c44c4445fd3404d797d58f81620e82b6ed770aa71cbaf3e8d0c"
+    },
+    {
+      "path": "print/science-handwriting.png",
+      "bytes": 68243,
+      "sha256": "9573b5a5c1602668584cf6c7162431b6d715c35678ffee6784b149077fd1e3e7"
+    },
+    {
+      "path": "references/expected_criteria.csv",
+      "bytes": 10577,
+      "sha256": "def34b7769ccd4fdb6c47f791fd7a71a8f46c988664b3666135e17f7dc8982f4"
+    },
+    {
+      "path": "references/expected_totals.csv",
+      "bytes": 2065,
+      "sha256": "6e3292fd6483b0beebc125392b2edca7663271f0401cc913382833887b822d3d"
+    },
+    {
+      "path": "references/omr_exam.json",
+      "bytes": 294,
+      "sha256": "1eb4f41d9507d0c3c4bfd037f0f02609b3d90596c54de338a1c66fc512ec20f7"
+    },
+    {
+      "path": "references/omr_expected.csv",
+      "bytes": 901,
+      "sha256": "508aabafedb7ff22a7a507d9fc3471bc24003e6e12e0f726e6e70c7aa5660d7d"
+    },
+    {
+      "path": "results_template.csv",
+      "bytes": 6989,
+      "sha256": "6c61514d50116fe2b4ce3fb15e10b55a084499fabd44403e5965d6d5c320c01b"
+    },
+    {
+      "path": "teacher_guide.html",
+      "bytes": 66017,
+      "sha256": "c414cc9f1dc840bc648284f59b86d826be4f07bf7de3943380b4b1bf25888030"
+    },
+    {
+      "path": "validation.json",
+      "bytes": 5636,
+      "sha256": "4585fdeb6ae266345ee2e520fd1e786e0264b4c04995e62cb01882e674aef24c"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+﻿الاختبار,الورقة,الحالة,الدرجة المرجعية,الدرجة الكاملة
+science,science-A,إجابة كاملة,30,30.0
+science,science-B,صياغة بديلة صحيحة,30,30.0
+science,science-C,إجابة جزئية,17,30.0
+science,science-D,إجابة خاطئة أو معكوسة,0,30.0
+science,science-E,طلب درجات داخل الإجابة,0,30.0
+science,science-F,جميع الإجابات فارغة,0,30.0
+science,science-G,السؤال الأول متروك,24,30.0
+science,science-H,إجابات كاملة وخاطئة بالتناوب,18,30.0
+math,math-A,إجابة كاملة,20,20.0
+math,math-B,صياغة بديلة صحيحة,20,20.0
+math,math-C,إجابة جزئية,10,20.0
+math,math-D,إجابة خاطئة أو معكوسة,0,20.0
+math,math-E,طلب درجات داخل الإجابة,0,20.0
+math,math-F,جميع الإجابات فارغة,0,20.0
+math,math-G,السؤال الأول متروك,16,20.0
+math,math-H,إجابات كاملة وخاطئة بالتناوب,12,20.0
+arabic,arabic-A,إجابة كاملة,20,20.0
+arabic,arabic-B,صياغة بديلة صحيحة,20,20.0
+arabic,arabic-C,إجابة جزئية,10,20.0
+arabic,arabic-D,إجابة خاطئة أو معكوسة,0,20.0
+arabic,arabic-E,طلب درجات داخل الإجابة,0,20.0
+arabic,arabic-F,جميع الإجابات فارغة,0,20.0
+arabic,arabic-G,السؤال الأول متروك,16,20.0
+arabic,arabic-H,إجابات كاملة وخاطئة بالتناوب,12,20.0
+geography,geography-A,إجابة كاملة,20,20.0
+geography,geography-B,صياغة بديلة صحيحة,20,20.0
+geography,geography-C,إجابة جزئية,10,20.0
+geography,geography-D,إجابة خاطئة أو معكوسة,0,20.0
+geography,geography-E,طلب درجات داخل الإجابة,0,20.0
+geography,geography-F,جميع الإجابات فارغة,0,20.0
+geography,geography-G,السؤال الأول متروك,16,20.0
+geography,geography-H,إجابات كاملة وخاطئة بالتناوب,12,20.0
