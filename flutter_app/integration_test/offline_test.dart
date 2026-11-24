@@ -118,7 +118,7 @@ void main() {
     checks.add('production_default_launch_without_server_or_login');
     await binding.convertFlutterSurfaceToImage();
     await tester.pumpAndSettle();
-    await File(support.path+'/offline-home.png').writeAsBytes(await binding.takeScreenshot('offline-home'));
+    await binding.takeScreenshot('offline-home');
     final session=Session(localFactory:()=>Future.value(reopened));
     await session.restoreLocal();
     await tester.pumpWidget(app.SmartGradeApp(session:session,localFirst:true));
@@ -134,7 +134,7 @@ void main() {
     evidence['limitations']=['Synthetic printed pages, not physical camera or handwriting accuracy',
       'Essay grades are manual teacher decisions, no local essay language model',
       'Internal debug APK; no production store signing'];
-    await File(support.path+'/offline-evidence.json').writeAsString(jsonEncode(evidence));
+    binding.reportData = {...?binding.reportData, 'validation': evidence};
     // Use the actual Material back control: pageBack searches an English tooltip.
     // The Arabic UI uses its localized tooltip.
     expect(find.byType(BackButton),findsOneWidget);

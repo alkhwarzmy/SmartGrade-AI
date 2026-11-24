@@ -98,7 +98,7 @@ jobs:
         run: |
           flutter pub get
           dart fix --apply
-          dart format lib test tool integration_test
+          dart format lib test tool integration_test test_driver
       - name: Analyze and test native client
         working-directory: flutter_app
         run: |
@@ -157,7 +157,7 @@ jobs:
         run: |
           flutter pub get
           dart fix --apply
-          dart format lib test integration_test
+          dart format lib test integration_test test_driver
           flutter analyze
       - name: Configure Android SDK command paths
         run: |
@@ -198,13 +198,13 @@ jobs:
           adb shell cmd connectivity airplane-mode enable
       - name: Test actual local Android engines with network disabled
         working-directory: flutter_app
-        run: flutter test integration_test/offline_test.dart -d emulator-5554 --reporter expanded
+        env:
+          SMARTGRADE_EVIDENCE_DIR: ${{ github.workspace }}/offline-evidence
+        run: flutter drive --driver=test_driver/offline_driver.dart --target=integration_test/offline_test.dart -d emulator-5554
       - name: Collect synthetic native evidence
         if: always()
         run: |
           mkdir -p offline-evidence
-          adb exec-out run-as com.alkhwarzmy.smartgrade cat files/offline-evidence.json > offline-evidence/validation.json || true
-          adb exec-out run-as com.alkhwarzmy.smartgrade cat files/offline-home.png > offline-evidence/home.png || true
           adb shell dumpsys connectivity > offline-evidence/connectivity.txt || true
           cp "$RUNNER_TEMP/emulator.log" offline-evidence/emulator.log || true
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -329,7 +329,7 @@ jobs:
           test "$(git rev-parse origin/main)" = "$VERIFIED_HEAD"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add flutter_app/assets flutter_app/integration_test flutter_app/lib flutter_app/test flutter_app/tool flutter_app/android flutter_app/pubspec.lock docs/releases/complete_colab/verification.json docs/releases/android_offline docs/releases/grading_diagnostics/validation.json notebooks/SmartGrade_Colab.ipynb notebooks/SmartGrade_Institution_Colab.ipynb notebooks/SmartGrade_Complete_Colab.ipynb
+          git add flutter_app/test_driver flutter_app/assets flutter_app/integration_test flutter_app/lib flutter_app/test flutter_app/tool flutter_app/android flutter_app/pubspec.lock docs/releases/complete_colab/verification.json docs/releases/android_offline docs/releases/grading_diagnostics/validation.json notebooks/SmartGrade_Colab.ipynb notebooks/SmartGrade_Institution_Colab.ipynb notebooks/SmartGrade_Complete_Colab.ipynb
           if ! git diff --cached --quiet; then
             git commit -m "Package verified complete Colab notebooks and Android source"
             git push origin HEAD:main
