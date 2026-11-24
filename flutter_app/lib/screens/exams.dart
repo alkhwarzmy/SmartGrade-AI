@@ -286,7 +286,10 @@ class _NewExamState extends State<NewExamScreen> with TaskState<NewExamScreen> {
         spec['instructions'] = instructions.text;
       } else {
         final n = parseNumber(points.text);
-        if (n == null || n <= 0 || n > 1000 || keyAnswers.take(mcqCount).contains(null)) {
+        if (n == null ||
+            n <= 0 ||
+            n > 1000 ||
+            keyAnswers.take(mcqCount).contains(null)) {
           throw ApiError('أكمل مفتاح الإجابة ودرجة كل سؤال.');
         }
         spec['answer_key'] = keyAnswers.take(mcqCount).toList();
@@ -343,16 +346,27 @@ class _NewExamState extends State<NewExamScreen> with TaskState<NewExamScreen> {
             DropdownButtonFormField<int>(
               key: const ValueKey('mcq-count'),
               initialValue: mcqCount,
-              decoration: const InputDecoration(labelText: 'عدد أسئلة الاختيارات (1–50)'),
-              items: List.generate(maxMcqQuestions, (i) => DropdownMenuItem(
-                value: i + 1, child: Text('${i + 1} سؤالًا'))),
-              onChanged: busy ? null : (v) => setState(() {
-                mcqCount = v!;
-                dirty = true;
-              }),
+              decoration: const InputDecoration(
+                labelText: 'عدد أسئلة الاختيارات (1–50)',
+              ),
+              items: List.generate(
+                maxMcqQuestions,
+                (i) => DropdownMenuItem(
+                  value: i + 1,
+                  child: Text('${i + 1} سؤالًا'),
+                ),
+              ),
+              onChanged: busy
+                  ? null
+                  : (v) => setState(() {
+                      mcqCount = v!;
+                      dirty = true;
+                    }),
             ),
-            const Padding(padding: EdgeInsets.symmetric(vertical: 12),
-              child: Text('نزّل القالب المطابق للاختبار من صفحته بعد الإنشاء.')),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Text('نزّل القالب المطابق للاختبار من صفحته بعد الإنشاء.'),
+            ),
             input(
               points,
               'درجة كل سؤال',
@@ -664,15 +678,21 @@ class _ExamState extends State<ExamScreen> with TaskState<ExamScreen> {
               .toList(),
         ),
         if (widget.session.canWrite && exam?['kind'] == 'mcq')
-          Wrap(spacing: 8, runSpacing: 8, children: [
-            OutlinedButton.icon(
-              onPressed: busy ? null : () => saveTemplate('pdf'),
-              icon: const Icon(Icons.print_outlined),
-              label: const Text('قالب الإجابة PDF')),
-            OutlinedButton(
-              onPressed: busy ? null : () => saveTemplate('png'),
-              child: const Text('قالب الإجابة PNG')),
-          ]),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: busy ? null : () => saveTemplate('pdf'),
+                icon: const Icon(Icons.print_outlined),
+                label: const Text('قالب الإجابة PDF'),
+              ),
+              OutlinedButton(
+                onPressed: busy ? null : () => saveTemplate('png'),
+                child: const Text('قالب الإجابة PNG'),
+              ),
+            ],
+          ),
         if (exam != null)
           Padding(
             padding: const EdgeInsets.all(16),

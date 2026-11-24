@@ -215,8 +215,12 @@ class SmartGradeApi {
   }
 
   Future<Uint8List> mcqTemplate(String id, String format) => send(
-    http.Request('GET', base.resolve('exams/$id/omr-template')
-      .replace(queryParameters: {'format': format})),
+    http.Request(
+      'GET',
+      base
+          .resolve('exams/$id/omr-template')
+          .replace(queryParameters: {'format': format}),
+    ),
   );
   Future<Uint8List> report(String id, String format) =>
       send(http.Request('GET', base.resolve('exams/$id/report.$format')));

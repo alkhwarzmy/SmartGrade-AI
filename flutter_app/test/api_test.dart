@@ -29,16 +29,22 @@ http.Response reply(Object value, [int code = 200]) => http.Response(
 );
 void main() {
   diagnosticApiTests();
-  test('Count-specific template keeps auth and format in the actual API path', () async {
-    final api = SmartGradeApi('https://example.org/api', client: MockClient((request) async {
-      expect(request.url.path, '/api/exams/test-id/omr-template');
-      expect(request.url.queryParameters['format'], 'png');
-      expect(request.headers['Authorization'], 'Bearer synthetic');
-      return http.Response.bytes([137, 80, 78, 71], 200);
-    }))..token = 'synthetic';
-    expect(await api.mcqTemplate('test-id', 'png'), [137, 80, 78, 71]);
-    api.close();
-  });
+  test(
+    'Count-specific template keeps auth and format in the actual API path',
+    () async {
+      final api = SmartGradeApi(
+        'https://example.org/api',
+        client: MockClient((request) async {
+          expect(request.url.path, '/api/exams/test-id/omr-template');
+          expect(request.url.queryParameters['format'], 'png');
+          expect(request.headers['Authorization'], 'Bearer synthetic');
+          return http.Response.bytes([137, 80, 78, 71], 200);
+        }),
+      )..token = 'synthetic';
+      expect(await api.mcqTemplate('test-id', 'png'), [137, 80, 78, 71]);
+      api.close();
+    },
+  );
   test('HTTPS validation prevents credential URLs and production HTTP', () {
     expect(serverUrl('https://example.org/api').path, '/api/');
     for (final url in [
