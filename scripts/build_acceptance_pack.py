@@ -59,7 +59,7 @@ def wrapped(text, font, width=1080):
 
 
 def answer_sheet(dataset, case, path):
-    font = ImageFont.truetype(str(FONT), 31)
+    font = ImageFont.truetype(str(FONT), 31, layout_engine=ImageFont.Layout.BASIC)
     lines = [("SmartGrade | SYNTHETIC TEST PAPER", False),
              (dataset["subject"] + " — عينة إجابة مطبوعة اصطناعية", True),
              ("Student code: " + case["id"], False)]
@@ -95,7 +95,7 @@ def image_pdf(paths, path):
 
 
 def handwriting_pdf(datasets, path):
-    font = ImageFont.truetype(str(FONT), 30)
+    font = ImageFont.truetype(str(FONT), 30, layout_engine=ImageFont.Layout.BASIC)
     images = []
     for dataset in datasets:
         image = Image.new("RGB", (1240, 1754), "white")
