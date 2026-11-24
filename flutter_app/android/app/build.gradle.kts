@@ -43,3 +43,9 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    implementation("cz.adaptech.tesseract4android:tesseract4android:4.9.0")
+    implementation("org.opencv:opencv:4.12.0")
+    implementation("androidx.exifinterface:exifinterface:1.4.1")
+}

@@ -46,7 +46,7 @@ def source_files(root=ROOT):
         if path.is_file():
             files.append(path)
     excluded = {".gradle", ".dart_tool", ".kotlin", ".cxx", "captures", "build", ".idea", ".git", "__pycache__"}
-    for directory in ["lib", "test", "tool", "android"]:
+    for directory in ["lib", "test", "tool", "android", "assets", "integration_test"]:
         for path in (flutter / directory).rglob("*"):
             if (path.is_file() and not set(path.relative_to(flutter).parts) & excluded
                     and path.name not in {"local.properties", "key.properties", "GeneratedPluginRegistrant.java", ".DS_Store"}

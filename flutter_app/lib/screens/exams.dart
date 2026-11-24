@@ -7,6 +7,7 @@ import '../api.dart';
 import '../session.dart';
 import '../ui.dart';
 import 'review.dart';
+import 'local_data.dart';
 
 class ExamsScreen extends StatefulWidget {
   const ExamsScreen({super.key, required this.session});
@@ -47,7 +48,7 @@ class _ExamsState extends State<ExamsScreen> with TaskState<ExamsScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: const Text('الاختبارات'),
+      title: Text(widget.session.isLocal ? 'اختباراتي على الجهاز' : 'الاختبارات'),
       actions: [
         IconButton(
           tooltip: 'تحديث',
@@ -55,9 +56,14 @@ class _ExamsState extends State<ExamsScreen> with TaskState<ExamsScreen> {
           icon: const Icon(Icons.refresh),
         ),
         IconButton(
-          tooltip: 'خروج',
-          onPressed: busy ? null : widget.session.logout,
-          icon: const Icon(Icons.logout),
+          tooltip: widget.session.isLocal ? 'البيانات والنسخ الاحتياطي' : 'خروج',
+          onPressed: busy ? null : () async {
+            if(widget.session.isLocal) {
+              await Navigator.push<void>(context,MaterialPageRoute(builder:(_)=>LocalDataScreen(session:widget.session)));
+              if(mounted) await load(0);
+            } else { await widget.session.logout(); }
+          },
+          icon: Icon(widget.session.isLocal ? Icons.backup_outlined : Icons.logout),
         ),
       ],
     ),
@@ -571,7 +577,7 @@ class _ExamState extends State<ExamScreen> with TaskState<ExamScreen> {
       final api = widget.session.api!;
       final counts = exam?['counts'] as Json? ?? {};
       late final List<int> bytes;
-      if (number(counts['approved']) > 200) {
+      if (!widget.session.isLocal && number(counts['approved']) > 200) {
         final job =
             await api.json(
                   'POST',

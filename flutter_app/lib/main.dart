@@ -6,11 +6,12 @@ import 'screens/exams.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(SmartGradeApp(session: Session()));
+  runApp(SmartGradeApp(session: Session(), localFirst: const String.fromEnvironment('APP_MODE', defaultValue: 'local') != 'remote'));
 }
 
 class SmartGradeApp extends StatefulWidget {
-  const SmartGradeApp({super.key, required this.session});
+  const SmartGradeApp({super.key, required this.session, this.localFirst = false});
+  final bool localFirst;
   final Session session;
   @override
   State<SmartGradeApp> createState() => _AppState();
@@ -20,7 +21,7 @@ class _AppState extends State<SmartGradeApp> {
   @override
   void initState() {
     super.initState();
-    widget.session.restore();
+    if(widget.localFirst) { widget.session.restoreLocal(); } else { widget.session.restore(); }
   }
 
   @override
@@ -41,6 +42,16 @@ class _AppState extends State<SmartGradeApp> {
           );
         }
         if (session.actor == null) {
+          if(widget.localFirst) {
+            return Scaffold(body: Center(child: Padding(padding: const EdgeInsets.all(24),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                const Icon(Icons.lock_outline, size: 44),
+                const SizedBox(height: 16),
+                Text(session.notice, textAlign: TextAlign.center),
+                const SizedBox(height: 16),
+                FilledButton(onPressed: session.restoreLocal, child: const Text('إعادة فتح البيانات المحلية')),
+              ]))));
+          }
           return LoginScreen(session: session);
         }
         return Navigator(

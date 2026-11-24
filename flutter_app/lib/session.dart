@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'api.dart';
+import 'local/local_api.dart';
 
 abstract class SessionVault {
   Future<String?> read();
@@ -22,8 +23,9 @@ class SecureVault implements SessionVault {
 }
 
 class Session extends ChangeNotifier {
-  Session({SessionVault? vault, SmartGradeApi Function(String)? factory})
-    : vault = vault ?? SecureVault(),
+  Session({SessionVault? vault, SmartGradeApi Function(String)? factory, Future<SmartGradeApi> Function()? localFactory})
+    : localFactory = localFactory ?? (() => LocalApi.open()),
+      vault = vault ?? SecureVault(),
       factory =
           factory ??
           ((s) => SmartGradeApi(
@@ -31,6 +33,8 @@ class Session extends ChangeNotifier {
             allowHttp:
                 kDebugMode && const bool.fromEnvironment('ALLOW_HTTP_DEV'),
           ));
+  final Future<SmartGradeApi> Function() localFactory;
+  bool get isLocal => api is LocalApi;
   final SessionVault vault;
   final SmartGradeApi Function(String) factory;
   SmartGradeApi? api;
@@ -69,6 +73,23 @@ class Session extends ChangeNotifier {
     actor = null;
     generation++;
     notifyListeners();
+  }
+
+  Future<void> restoreLocal() async {
+    restoring = true;
+    notifyListeners();
+    try {
+      final local = await localFactory();
+      final user = await local.me();
+      server = '';
+      notice = '';
+      accept(local, user);
+    } catch (e) {
+      notice = e is ApiError ? e.message : 'تعذر فتح البيانات المحلية؛ لم تُحذف بياناتك. أعد المحاولة.';
+    } finally {
+      restoring = false;
+      notifyListeners();
+    }
   }
 
   Future<void> restore() async {
